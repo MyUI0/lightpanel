@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -19,14 +21,21 @@ var (
 )
 
 func init() {
+	ticker := time.NewTicker(10 * time.Minute)
 	go func() {
-		for range time.Tick(10 * time.Minute) {
+		defer func() { recover() }()
+		defer ticker.Stop()
+		for range ticker.C {
 			downloadTasks.Range(func(key, value any) bool {
 				if t, ok := value.(*models.DownloadTask); ok {
-					if t.Status == "completed" || t.Status == "error" {
-						if time.Since(t.last) > 30*time.Minute {
+					status := t.GetStatus()
+					if status == "completed" || status == "error" {
+						if time.Since(t.Last) > 30*time.Minute {
 							downloadTasks.Delete(key)
 						}
+					} else if status == "downloading" && time.Since(t.Last) > 60*time.Minute {
+						t.SetStatus("error")
+						downloadTasks.Delete(key)
 					}
 				}
 				return true
@@ -35,26 +44,34 @@ func init() {
 	}()
 }
 
-func downloadPage(w http.ResponseWriter, r *http.Request) {
+func getDownloadTask(id string) (*models.DownloadTask, bool) {
+	val, ok := downloadTasks.Load(id)
+	if !ok {
+		return nil, false
+	}
+	t, ok := val.(*models.DownloadTask)
+	return t, ok
+}
+
+func snapshotTasks() []models.DownloadTask {
 	var tasks []models.DownloadTask
 	downloadTasks.Range(func(_, value any) bool {
 		if t, ok := value.(*models.DownloadTask); ok {
-			tasks = append(tasks, *t)
+			tasks = append(tasks, t.Snapshot())
 		}
 		return true
 	})
+	return tasks
+}
+
+func downloadPage(w http.ResponseWriter, r *http.Request) {
+	tasks := snapshotTasks()
 	_ = htmlRender.ExecuteTemplate(w, "downloads", tasks)
 }
 
 func apiDownloads(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var tasks []models.DownloadTask
-	downloadTasks.Range(func(_, value any) bool {
-		if t, ok := value.(*models.DownloadTask); ok {
-			tasks = append(tasks, *t)
-		}
-		return true
-	})
+	tasks := snapshotTasks()
 	_ = json.NewEncoder(w).Encode(tasks)
 }
 
@@ -67,31 +84,30 @@ func apiDownloadAction(w http.ResponseWriter, r *http.Request) {
 	}
 	id, act := parts[0], parts[1]
 
-	val, ok := downloadTasks.Load(id)
+	task, ok := getDownloadTask(id)
 	if !ok {
 		w.WriteHeader(404)
 		return
 	}
-	task := val.(*models.DownloadTask)
 
 	switch act {
 	case "pause":
-		if task.Status == "downloading" {
-			task.Status = "paused"
+		if task.GetStatus() == "downloading" {
+			task.SetStatus("paused")
 		}
 	case "resume":
-		if task.Status == "paused" {
-			task.Status = "downloading"
+		if task.GetStatus() == "paused" {
+			task.SetStatus("downloading")
 			go resumeDownload(id)
 		}
 	case "delete":
 		downloadTasks.Delete(id)
-		if task.Status == "downloading" || task.Status == "paused" {
+		if s := task.GetStatus(); s == "downloading" || s == "paused" {
 			fpath := filepath.Join(config.AppsDir, task.Name, filepath.Base(task.URL))
-			os.Remove(fpath)
+			_ = os.Remove(fpath)
 		}
 	case "install":
-		if task.Status == "completed" {
+		if task.GetStatus() == "completed" {
 			installDownloadedApp(id)
 			downloadTasks.Delete(id)
 		}
@@ -101,11 +117,11 @@ func apiDownloadAction(w http.ResponseWriter, r *http.Request) {
 }
 
 func resumeDownload(id string) {
-	val, ok := downloadTasks.Load(id)
+	defer func() { recover() }()
+	task, ok := getDownloadTask(id)
 	if !ok {
 		return
 	}
-	task := val.(*models.DownloadTask)
 
 	sandbox := filepath.Join(config.AppsDir, task.Name)
 	fname := filepath.Base(task.URL)
@@ -120,81 +136,111 @@ func resumeDownload(id string) {
 	}
 
 	client := &http.Client{Timeout: 60 * time.Second}
-	req, _ := http.NewRequest("GET", task.URL, nil)
+	req, err := http.NewRequest("GET", task.URL, nil)
+	if err != nil {
+		task.SetStatus("error")
+		task.Last = time.Now()
+		return
+	}
 	if startOffset > 0 {
 		req.Header.Set("Range", "bytes="+strconv.FormatInt(startOffset, 10)+"-")
 	}
 	resp, e := client.Do(req)
 	if e != nil {
-		task.Status = "error"
-		task.last = time.Now()
+		task.SetStatus("error")
+		task.Last = time.Now()
 		return
 	}
 	defer resp.Body.Close()
 
+	if startOffset > 0 && resp.StatusCode != http.StatusPartialContent {
+		_ = os.Remove(fpath)
+		startOffset = 0
+		task.UpdateProgress(0, 0, 0)
+	}
+
 	f, err := os.OpenFile(fpath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
-		task.Status = "error"
-		task.last = time.Now()
+		task.SetStatus("error")
+		task.Last = time.Now()
 		return
 	}
 	defer f.Close()
 
 	if startOffset == 0 {
-		task.Size = resp.ContentLength
-		if task.Size <= 0 {
-			task.Size = 0
-		}
+		task.UpdateSize(resp.ContentLength)
+		task.UpdateProgress(0, 0, 0)
 	} else {
-		task.Downloaded = startOffset
+		task.UpdateProgress(startOffset, task.GetSize(), 0)
 	}
 
-	for task.Status == "downloading" {
-		buf := make([]byte, 32*1024)
+	buf := make([]byte, 32*1024)
+	for task.IsDownloading() {
 		n, readErr := resp.Body.Read(buf)
 		if n > 0 {
-			f.Write(buf[:n])
-			task.Downloaded += int64(n)
-			if task.Size > 0 {
-				task.Progress = int(float64(task.Downloaded) / float64(task.Size) * 100)
+			if _, err := f.Write(buf[:n]); err != nil {
+				task.SetStatus("error")
+				task.Last = time.Now()
+				break
 			}
+			downloaded := task.GetDownloaded() + int64(n)
+			size := task.GetSize()
+			var prog int
+			if size > 0 {
+				prog = int(float64(downloaded) / float64(size) * 100)
+			}
+			task.UpdateProgress(downloaded, size, prog)
 		}
 		if readErr != nil {
+			if !errors.Is(readErr, io.EOF) {
+				task.SetStatus("error")
+				task.Last = time.Now()
+			}
 			break
 		}
 	}
 
-	if task.Status == "downloading" {
-		task.Status = "completed"
-		task.Progress = 100
-		task.last = time.Now()
+	if task.GetStatus() == "downloading" {
+		task.SetStatus("completed")
+		task.UpdateProgress(task.GetDownloaded(), task.GetSize(), 100)
 	}
 }
 
 func installDownloadedApp(id string) {
-	val, ok := downloadTasks.Load(id)
+	task, ok := getDownloadTask(id)
 	if !ok {
 		return
 	}
-	task := val.(*models.DownloadTask)
+
+	appOpMu.Lock()
+	defer appOpMu.Unlock()
 
 	sandbox := filepath.Join(config.AppsDir, task.Name)
 	fname := filepath.Base(task.URL)
 	fpath := filepath.Join(sandbox, fname)
 
-	if strings.HasSuffix(fname, ".sh") {
-		os.Chmod(fpath, 0755)
+	if extractArchive(fpath, sandbox) {
+		_ = os.Remove(fpath)
+	} else if strings.HasSuffix(fname, ".sh") {
+		_ = os.Chmod(fpath, 0755)
 	}
+
+	scanTime := time.Now().Add(-20 * time.Second)
+	result := combinedDetect(sandbox, scanTime)
 
 	var apps map[string]models.Project
 	_ = LoadJSON(config.ConfigApps, &apps)
 	apps[task.Name] = models.Project{
-		Path:    sandbox,
-		Cmd:     task.Cmd,
-		Created: time.Now().Format("2006-01-02 15:04"),
+		Path:      sandbox,
+		Cmd:       task.Cmd,
+		WorkDir:   result.WorkDir,
+		Created:   time.Now().Format("2006-01-02 15:04"),
 	}
 	_ = WriteJSON(config.ConfigApps, apps)
+	_ = os.WriteFile(filepath.Join(sandbox, "install_note.txt"), []byte(result.Note), 0644)
 }
+
+const maxStoreResponseSize = 10 * 1024 * 1024 // 10MB
 
 func startStoreInstall(w http.ResponseWriter, r *http.Request) {
 	idx, _ := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/install/"))
@@ -208,112 +254,316 @@ func startStoreInstall(w http.ResponseWriter, r *http.Request) {
 
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, e := client.Get(srcs[srcIdx].URL)
-	if e != nil || resp.StatusCode != 200 {
+	if e != nil {
 		http.Redirect(w, r, "/store", 302)
 		return
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		http.Redirect(w, r, "/store", 302)
+		return
+	}
 
 	var apps []models.StoreApp
-	_ = json.NewDecoder(resp.Body).Decode(&apps)
+	limitedReader := io.LimitReader(resp.Body, maxStoreResponseSize)
+	if err := json.NewDecoder(limitedReader).Decode(&apps); err != nil {
+		http.Redirect(w, r, "/store", 302)
+		return
+	}
 	if idx >= len(apps) {
 		http.Redirect(w, r, "/store", 302)
 		return
 	}
 	app := apps[idx]
 	name := strings.TrimSpace(app.Name)
-	if strings.ContainsAny(name, `./\ `) {
+	if name == "" || strings.ContainsAny(name, `./\ `) || strings.HasPrefix(name, ".") || strings.Contains(name, "..") {
 		http.Redirect(w, r, "/store", 302)
 		return
 	}
 
 	if app.URL == "" {
-		sandbox := filepath.Join(config.AppsDir, name)
-		os.MkdirAll(sandbox, 0755)
+		appOpMu.Lock()
 		var list map[string]models.Project
 		_ = LoadJSON(config.ConfigApps, &list)
-		list[name] = models.Project{
-			Path:    sandbox,
-			Cmd:     app.Cmd,
-			Created: time.Now().Format("2006-01-02 15:04"),
+		if _, exists := list[name]; !exists {
+			sandbox := filepath.Join(config.AppsDir, name)
+			_ = os.MkdirAll(sandbox, 0755)
+
+			scanTime := time.Now().Add(-20 * time.Second)
+			result := combinedDetect(sandbox, scanTime)
+
+			list[name] = models.Project{
+				Path:      sandbox,
+				Cmd:       app.Cmd,
+				WorkDir:   result.WorkDir,
+				Version:   app.Version,
+				Created:   time.Now().Format("2006-01-02 15:04"),
+			}
+			_ = WriteJSON(config.ConfigApps, list)
+			_ = os.WriteFile(filepath.Join(sandbox, "install_note.txt"), []byte(result.Note), 0644)
 		}
-		_ = WriteJSON(config.ConfigApps, list)
+		appOpMu.Unlock()
 		http.Redirect(w, r, "/", 302)
 		return
 	}
 
+	if !strings.HasPrefix(app.URL, "http://") && !strings.HasPrefix(app.URL, "https://") {
+		http.Redirect(w, r, "/store", 302)
+		return
+	}
+	if isPrivateURL(app.URL) {
+		http.Redirect(w, r, "/store", 302)
+		return
+	}
+
+	dlURL := app.URL
+	dlName := name
+	dlCmd := app.Cmd
+	dlVersion := app.Version
 	id := "dl_" + strconv.FormatInt(time.Now().UnixNano(), 36)
 	task := &models.DownloadTask{
-		ID:   id,
-		Name: name,
-		URL:  app.URL,
-		Cmd:  app.Cmd,
-		Size: 0,
+		ID:     id,
+		Name:   dlName,
+		URL:    dlURL,
+		Cmd:    dlCmd,
+		Size:   0,
 		Status: "downloading",
-		last: time.Now(),
+		Last:   time.Now(),
 	}
 	downloadTasks.Store(id, task)
 
 	go func() {
-		sandbox := filepath.Join(config.AppsDir, name)
-		os.MkdirAll(sandbox, 0755)
+		defer func() { recover() }()
+		sandbox := filepath.Join(config.AppsDir, dlName)
+		_ = os.MkdirAll(sandbox, 0755)
 
-		fname := filepath.Base(app.URL)
+		fname := filepath.Base(dlURL)
 		if fname == "" || fname == "." || fname == "/" {
 			fname = "download"
 		}
 		fpath := filepath.Join(sandbox, fname)
 
 		dlClient := &http.Client{Timeout: 60 * time.Second}
-		dlResp, e := dlClient.Get(app.URL)
+		dlResp, e := dlClient.Get(dlURL)
 		if e != nil {
-			task.Status = "error"
-			task.last = time.Now()
+			task.SetStatus("error")
+			task.Last = time.Now()
 			return
 		}
 		defer dlResp.Body.Close()
 
-		task.Size = dlResp.ContentLength
+		task.UpdateSize(dlResp.ContentLength)
 
 		f, err := os.Create(fpath)
 		if err != nil {
-			task.Status = "error"
+			task.SetStatus("error")
 			return
 		}
 
 		buf := make([]byte, 32*1024)
-		for task.Status == "downloading" {
+		for task.IsDownloading() {
 			n, readErr := dlResp.Body.Read(buf)
 			if n > 0 {
-				f.Write(buf[:n])
-				task.Downloaded += int64(n)
-				if task.Size > 0 {
-					task.Progress = int(float64(task.Downloaded) / float64(task.Size) * 100)
+				if _, err := f.Write(buf[:n]); err != nil {
+					task.SetStatus("error")
+					task.Last = time.Now()
+					break
 				}
+				downloaded := task.GetDownloaded() + int64(n)
+				size := task.GetSize()
+				var prog int
+				if size > 0 {
+					prog = int(float64(downloaded) / float64(size) * 100)
+				}
+				task.UpdateProgress(downloaded, size, prog)
 			}
 			if readErr != nil {
+				if !errors.Is(readErr, io.EOF) {
+					task.SetStatus("error")
+					task.Last = time.Now()
+				}
 				break
 			}
 		}
-		f.Close()
+		_ = f.Close()
 
-		if task.Status == "downloading" {
-			task.Status = "completed"
-			task.Progress = 100
-			task.last = time.Now()
-			if strings.HasSuffix(fname, ".sh") {
-				os.Chmod(fpath, 0755)
+		if task.GetStatus() == "downloading" {
+			task.SetStatus("completed")
+			task.UpdateProgress(task.GetDownloaded(), task.GetSize(), 100)
+			if extractArchive(fpath, sandbox) {
+				_ = os.Remove(fpath)
+			} else if strings.HasSuffix(fname, ".sh") {
+				_ = os.Chmod(fpath, 0755)
 			}
-			var list map[string]models.Project
-			_ = LoadJSON(config.ConfigApps, &list)
-			list[name] = models.Project{
-				Path:    sandbox,
-				Cmd:     app.Cmd,
-				Created: time.Now().Format("2006-01-02 15:04"),
+
+			time.Sleep(15 * time.Second)
+			scanTime := time.Now().Add(-20 * time.Second)
+			result := combinedDetect(sandbox, scanTime)
+			appOpMu.Lock()
+			var updated map[string]models.Project
+			if err := LoadJSON(config.ConfigApps, &updated); err == nil {
+				if proj, ok := updated[dlName]; ok {
+					if result.WorkDir != "" {
+						proj.WorkDir = result.WorkDir
+					}
+					if result.Binary != "" {
+						proj.Cmd = result.Binary
+					}
+					proj.Version = dlVersion
+					updated[dlName] = proj
+					_ = WriteJSON(config.ConfigApps, updated)
+				}
 			}
-			_ = WriteJSON(config.ConfigApps, list)
+			appOpMu.Unlock()
+			_ = os.WriteFile(filepath.Join(sandbox, "install_note.txt"), []byte(result.Note), 0644)
 		}
 	}()
 
 	http.Redirect(w, r, "/downloads", 302)
+}
+
+func storePage(w http.ResponseWriter, r *http.Request) {
+	var srcs []models.StoreSource
+	_ = LoadJSON(config.ConfigSrc, &srcs)
+	idx, _ := strconv.Atoi(r.URL.Query().Get("source"))
+	if idx < 0 || idx >= len(srcs) {
+		idx = 0
+	}
+
+	var apps []models.StoreApp
+	storeErr := ""
+	storeErrType := ""
+	if len(srcs) > 0 {
+		client := &http.Client{Timeout: 10 * time.Second}
+		resp, e := client.Get(srcs[idx].URL)
+		if e != nil {
+			storeErr = "无法连接到商店源"
+			storeErrType = "network"
+		} else {
+			defer resp.Body.Close()
+			if resp.StatusCode != 200 {
+				storeErr = "商店源返回错误: " + fmt.Sprint(resp.StatusCode)
+				storeErrType = "http"
+			} else {
+				limitedReader := io.LimitReader(resp.Body, maxStoreResponseSize)
+				if err := json.NewDecoder(limitedReader).Decode(&apps); err != nil {
+					storeErr = "商店数据格式错误"
+					storeErrType = "parse"
+				}
+			}
+		}
+	}
+	if len(apps) == 0 {
+		if storeErr == "" {
+			storeErr = "没有可用的应用"
+		}
+		apps = []models.StoreApp{{
+			Name:   "获取失败",
+			Desc:   storeErr,
+			Icon:   "",
+			Author: "system",
+		}}
+	}
+
+	_ = htmlRender.ExecuteTemplate(w, "store", map[string]any{
+		"Apps":         apps,
+		"Sources":      srcs,
+		"Active":       idx,
+		"StoreErr":     storeErr,
+		"StoreErrType": storeErrType,
+	})
+}
+
+func checkAppUpdates(apps map[string]models.Project) map[string]string {
+	updates := make(map[string]string)
+
+	var srcs []models.StoreSource
+	if err := LoadJSON(config.ConfigSrc, &srcs); err != nil || len(srcs) == 0 {
+		return updates
+	}
+
+	storeAppsByName := make(map[string]map[string]string)
+	for _, src := range srcs {
+		client := &http.Client{Timeout: 10 * time.Second}
+		resp, err := client.Get(src.URL)
+		if err != nil {
+			continue
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 200 {
+			continue
+		}
+		var storeApps []models.StoreApp
+		if err := json.NewDecoder(io.LimitReader(resp.Body, maxStoreResponseSize)).Decode(&storeApps); err != nil {
+			continue
+		}
+		for _, app := range storeApps {
+			if app.Version == "" {
+				continue
+			}
+			if storeAppsByName[app.Name] == nil {
+				storeAppsByName[app.Name] = make(map[string]string)
+			}
+			storeAppsByName[app.Name][src.URL] = app.Version
+		}
+	}
+
+	for name, app := range apps {
+		if app.SourceURL == "" || app.Version == "" {
+			continue
+		}
+		if storeVersions, ok := storeAppsByName[name]; ok {
+			if newVer, ok := storeVersions[app.SourceURL]; ok {
+				if newVer != app.Version {
+					updates[name] = newVer
+				}
+			}
+		}
+	}
+
+	return updates
+}
+
+	var apps []models.StoreApp
+	storeErr := ""
+	storeErrType := ""
+	if len(srcs) > 0 {
+		client := &http.Client{Timeout: 10 * time.Second}
+		resp, e := client.Get(srcs[idx].URL)
+		if e != nil {
+			storeErr = "无法连接到商店源"
+			storeErrType = "network"
+		} else {
+			defer resp.Body.Close()
+			if resp.StatusCode != 200 {
+				storeErr = "商店源返回错误: " + fmt.Sprint(resp.StatusCode)
+				storeErrType = "http"
+			} else {
+				limitedReader := io.LimitReader(resp.Body, maxStoreResponseSize)
+				if err := json.NewDecoder(limitedReader).Decode(&apps); err != nil {
+					storeErr = "商店数据格式错误"
+					storeErrType = "parse"
+				}
+			}
+		}
+	}
+	if len(apps) == 0 {
+		if storeErr == "" {
+			storeErr = "没有可用的应用"
+		}
+		apps = []models.StoreApp{{
+			Name:   "获取失败",
+			Desc:   storeErr,
+			Icon:   "",
+			Author: "system",
+		}}
+	}
+
+	_ = htmlRender.ExecuteTemplate(w, "store", map[string]any{
+		"Apps":        apps,
+		"Sources":     srcs,
+		"Active":      idx,
+		"StoreErr":    storeErr,
+		"StoreErrType": storeErrType,
+	})
 }

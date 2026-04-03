@@ -2,12 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
-	"net/http"
 	"os"
 	"path/filepath"
 
 	"lightpanel/config"
-	"lightpanel/models"
 )
 
 func LoadJSON(path string, v any) error {
@@ -44,6 +42,7 @@ func WriteJSON(path string, v any) error {
 		return err
 	}
 
+	_ = os.Chmod(tmp, 0600)
 	return os.Rename(tmp, path)
 }
 
@@ -51,35 +50,11 @@ func EnsureDir(path string) error {
 	return os.MkdirAll(path, 0755)
 }
 
-func InitConfig() error {
-	if err := EnsureDir(config.ConfigDir); err != nil {
-		return err
+func getLogoURL() string {
+	type LogoConfig struct {
+		URL string `json:"url"`
 	}
-	if err := EnsureDir(config.AppsDir); err != nil {
-		return err
-	}
-
-	if _, e := os.Stat(config.ConfigApps); e != nil {
-		if err := WriteJSON(config.ConfigApps, map[string]models.Project{}); err != nil {
-			return err
-		}
-	}
-	if _, e := os.Stat(config.ConfigSrc); e != nil {
-		if err := WriteJSON(config.ConfigSrc, []models.StoreSource{
-			{"默认演示源", "https://raw.githubusercontent.com/example/test/main/apps.json"},
-		}); err != nil {
-			return err
-		}
-	}
-	if _, e := os.Stat(config.ConfigUsr); e != nil {
-		if err := WriteJSON(config.ConfigUsr, models.UserConfig{"admin", "admin"}); err != nil {
-			return err
-		}
-	}
-	if _, e := os.Stat(config.ConfigBg); e != nil {
-		if err := WriteJSON(config.ConfigBg, models.BgConfig{Type: "gradient", URL: ""}); err != nil {
-			return err
-		}
-	}
-	return nil
+	var logo LogoConfig
+	_ = LoadJSON(config.ConfigDir+"/logo.json", &logo)
+	return logo.URL
 }

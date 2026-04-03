@@ -32,8 +32,8 @@ func getCpuPercent() int {
 	cpuFirstLock.Lock()
 	if cpuFirst {
 		cpuFirst = false
-		cpuFirstLock.Unlock()
 		val, _ := cpu.Percent(time.Second, false)
+		cpuFirstLock.Unlock()
 		if len(val) > 0 {
 			return int(val[0])
 		}
@@ -55,7 +55,7 @@ func InitTemplates() {
 			if b <= 0 {
 				return "0 B"
 			}
-			u := []string{"B", "KB", "MB", "GB"}
+			u := []string{"B", "KB", "MB", "GB", "TB"}
 			i := 0
 			v := float64(b)
 			for v >= 1024 && i < len(u)-1 {
@@ -64,37 +64,55 @@ func InitTemplates() {
 			}
 			return fmt.Sprintf("%.1f %s", v, u[i])
 		},
-	}).Parse(`{{define "index"}}`+htmlIndex+`{{end}}`+
+		"getBgUrl": func() string {
+			var bg models.BgConfig
+			_ = LoadJSON(config.ConfigBg, &bg)
+			return bg.URL
+		},
+		"getLogoUrl": func() string {
+			return getLogoURL()
+		},
+		"tolower": strings.ToLower,
+		"escape": func(s string) string { return template.HTMLEscapeString(s) },
+	}).Parse(`{{define "login"}}`+htmlLogin+`{{end}}`+
+		`{{define "index"}}`+htmlIndex+`{{end}}`+
 		`{{define "store"}}`+htmlStore+`{{end}}`+
 		`{{define "source"}}`+htmlSource+`{{end}}`+
 		`{{define "system"}}`+htmlSystem+`{{end}}`+
 		`{{define "log"}}`+htmlLog+`{{end}}`+
 		`{{define "setting"}}`+htmlSetting+`{{end}}`+
 		`{{define "edit"}}`+htmlEdit+`{{end}}`+
-		`{{define "downloads"}}`+htmlDownloads+`{{end}}`))
+		`{{define "downloads"}}`+htmlDownloads+`{{end}}`+
+		`{{define "script_analyze"}}`+htmlScriptAnalyze+`{{end}}`))
 }
 
 func autoStartApps() {
+	appOpMu.Lock()
 	apps := make(map[string]models.Project)
 	if err := LoadJSON(config.ConfigApps, &apps); err != nil {
+		appOpMu.Unlock()
 		return
 	}
+	appOpMu.Unlock()
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	for name, app := range apps {
 		if app.AutoStart {
-			if launchApp(name, app) {
+			appOpMu.Lock()
+			if launchApp(name, &app) {
 				log.Printf("[auto-start] 已启动: %s", name)
 			}
+			appOpMu.Unlock()
 		}
 	}
 }
 
 type FailInfo struct {
-	Name string
-	Log  string
-	Deps []string
+	Name  string
+	Log   string
+	Deps  []string
+	Count int
 }
 
 var depPatterns = map[string][]string{
@@ -124,6 +142,8 @@ func detectDeps(logContent string) []string {
 }
 
 func getFailInfo(apps map[string]models.Project) *FailInfo {
+	var firstFail *FailInfo
+	count := 0
 	for name, app := range apps {
 		pidFile := filepath.Join(app.Path, "pid.pid")
 		if _, e := os.Stat(pidFile); os.IsNotExist(e) {
@@ -144,16 +164,22 @@ func getFailInfo(apps map[string]models.Project) *FailInfo {
 					}
 				}
 				if hasError {
-					return &FailInfo{
-						Name: name,
-						Log:  recentLog,
-						Deps: detectDeps(recentLog),
+					count++
+					if firstFail == nil {
+						firstFail = &FailInfo{
+							Name:  name,
+							Log:   recentLog,
+							Deps:  detectDeps(recentLog),
+						}
 					}
 				}
 			}
 		}
 	}
-	return nil
+	if firstFail != nil {
+		firstFail.Count = count
+	}
+	return firstFail
 }
 
 func indexPage(w http.ResponseWriter, r *http.Request) {
@@ -178,8 +204,10 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
 		uptimeStr = fmt.Sprintf("%d天%d时", uptime/86400, (uptime%86400)/3600)
 	} else if uptime > 3600 {
 		uptimeStr = fmt.Sprintf("%d时%d分", uptime/3600, (uptime%3600)/60)
-	} else {
+	} else if uptime > 60 {
 		uptimeStr = fmt.Sprintf("%d分", uptime/60)
+	} else {
+		uptimeStr = fmt.Sprintf("%d秒", uptime)
 	}
 
 	var bgConfig models.BgConfig
@@ -194,35 +222,60 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
 		diskVal = int(diskInfo.UsedPercent)
 	}
 
+	createErr := ""
+	if r.URL.Query().Get("err") == "download" {
+		createErr = r.URL.Query().Get("msg")
+	}
+
+	updates := checkAppUpdates(list)
+
 	_ = htmlRender.ExecuteTemplate(w, "index", map[string]any{
-		"Apps":    list,
-		"Cpu":     cpuVal,
-		"Mem":     memVal,
-		"Disk":    diskVal,
-		"ProcNum": len(procs),
-		"Uptime":  uptimeStr,
-		"BgUrl":   bgConfig.URL,
-		"FailInfo": getFailInfo(apps),
+		"Apps":       list,
+		"Cpu":        cpuVal,
+		"Mem":        memVal,
+		"Disk":       diskVal,
+		"ProcNum":    len(procs),
+		"Uptime":     uptimeStr,
+		"BgUrl":      bgConfig.URL,
+		"FailInfo":   getFailInfo(list),
+		"CreateErr":  createErr,
+		"FirstLogin": isFirstLogin(r),
+		"Updates":    updates,
 	})
 }
 
 func systemPage(w http.ResponseWriter, r *http.Request) {
 	var list []models.ProcInfo
 	ps, _ := process.Processes()
+	pidSet := make(map[int32]bool)
 	for _, p := range ps {
-		n, _ := p.Name()
-		list = append(list, models.ProcInfo{PID: p.Pid, Name: n})
-	}
-
-	// Batch CPU/MEM collection for better performance
-	for i := range list {
-		p, err := process.NewProcess(list[i].PID)
-		if err != nil {
+		if pidSet[p.Pid] {
 			continue
 		}
-		list[i].Cpu, _ = p.CPUPercent()
-		list[i].Mem, _ = p.MemoryPercent()
+		pidSet[p.Pid] = true
+		n, _ := p.Name()
+		cpuVal, _ := p.CPUPercent()
+		memVal, _ := p.MemoryPercent()
+		list = append(list, models.ProcInfo{PID: p.Pid, Name: n, Cpu: cpuVal, Mem: float64(memVal)})
 	}
 
-	_ = htmlRender.ExecuteTemplate(w, "system", list)
+	cpuVal := getCpuPercent()
+	memInfo, _ := mem.VirtualMemory()
+	diskInfo, _ := disk.Usage("/")
+	memVal := 0
+	if memInfo != nil {
+		memVal = int(memInfo.UsedPercent)
+	}
+	diskVal := 0
+	if diskInfo != nil {
+		diskVal = int(diskInfo.UsedPercent)
+	}
+
+	_ = htmlRender.ExecuteTemplate(w, "system", map[string]any{
+		"Cpu":     cpuVal,
+		"Mem":     memVal,
+		"Disk":    diskVal,
+		"ProcNum": len(list),
+		"Procs":   list,
+	})
 }

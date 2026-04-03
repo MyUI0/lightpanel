@@ -1,55 +1,109 @@
-# LightPanel
+<p align="center">
+  <h1 align="center">🚀 LightPanel</h1>
+  <p align="center">一个极简的 Linux 服务器自部署二进制项目管理面板</p>
+  <p align="center">
+    <img src="https://img.shields.io/badge/version-v3.0.1-blue.svg" alt="Version">
+    <img src="https://img.shields.io/badge/Go-1.21+-00ADD8.svg?logo=go" alt="Go">
+    <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
+  </p>
+</p>
 
-一个极简的 Linux 服务器自部署二进制项目管理面板。
+---
 
-> ⚠️ 本项目为**初始版本**，功能尚不完善，仍在持续迭代中。如有不足请见谅，欢迎反馈和贡献。
+> 💡 **为什么做这个面板？**
 >
-> 本项目由 AI 辅助编写，代码可能存在未发现的边界情况，请自行测试后部署。
+> 很多路由器、小服务器、软路由等轻量设备跑不了 Docker，无法使用传统的一体式容器管理方案。LightPanel 让你**在任何机器上都能使用**，无需 Docker，无需 systemd，一个二进制文件即可运行整个面板。
 
-## 特性
+## ✨ 特性
 
-- **零依赖部署** — 单二进制文件，无需 Docker / systemd
-- **应用商店** — 支持多源 JSON 拉取，一键部署
-- **下载管理** — 异步下载、暂停/继续、断点续传、实时进度
-- **进程守护** — 启停/重启/删除、开机自启、崩溃自动重启（最多 3 次/5 分钟）
-- **日志管理** — 自动轮转、按错误/警告/信息/崩溃过滤
-- **系统监控** — CPU/内存/磁盘/实时进程列表
-- **启动失败检测** — 自动分析日志，提示缺失依赖
-- **安全** — Basic Auth + POST 防护 + 路径遍历过滤 + 原子配置写入
-- **模块化** — 14 个文件职责清晰，UI 集中在 `templates.go`，易于二改
+| 模块 | 说明 |
+|------|------|
+| 🚀 **零依赖部署** | 单二进制文件，无需 Docker / systemd / 数据库 |
+| 🏪 **二进制应用商店** | 支持多源 JSON 拉取，一键下载部署，自动检测启动命令 |
+| 📥 **下载管理** | 异步下载、暂停/继续、断点续传、实时进度 |
+| 🛡️ **进程守护** | 启停/重启/删除、开机自启、崩溃自动重启（最多 3 次/5 分钟） |
+| 📝 **日志管理** | 自动轮转、按错误关键词过滤、一键清空 |
+| 📊 **系统监控** | CPU/内存/磁盘/实时进程列表、进程管理 |
+| 🔍 **启动失败检测** | 自动分析日志，提示缺失依赖 |
+| ✏️ **编辑应用** | 修改路径、命令、工作目录、网页地址、重命名 |
+| 📜 **脚本分析** | 分析安装脚本，提取依赖包、端口号、环境变量 |
+| 🎨 **主题切换** | 深色/浅色模式即时切换，侧栏折叠记忆 |
+| 🖼️ **自定义 Logo** | 侧栏页头支持自定义图片 |
+| 🔒 **安全加固** | 登录限流、CSRF Token、命令白名单、SSRF 防护 |
 
-## 适用场景
+## 🎯 适用场景
 
 适用于管理单二进制或脚本类自部署项目，如：
-- [AList](https://github.com/alist-org/alist) · [Memos](https://github.com/usememos/memos) · [哪吒探针](https://github.com/nezhahq/agent) · [frp](https://github.com/fatedier/frp) · [sing-box](https://github.com/SagerNet/sing-box) 等
 
-## 快速部署
+[AList](https://github.com/alist-org/alist) · [Memos](https://github.com/usememos/memos) · [哪吒探针](https://github.com/nezhahq/agent) · [frp](https://github.com/fatedier/frp) · [sing-box](https://github.com/SagerNet/sing-box) 等
+
+## 📦 快速部署
+
+### 一键安装 (Linux)
 
 ```bash
-# 1. 下载源码
+curl -L https://raw.githubusercontent.com/你的用户名/lightpanel/main/install.sh | bash -s v3.0.1
+```
+
+自动检测并下载对应架构版本 (amd64 / arm64 / armv7)
+
+或手动安装:
+
+```bash
+# amd64 - 主流VPS/服务器
+wget https://github.com/你的用户名/lightpanel/releases/download/v3.0.1/lightpanel-v3.0.1-linux-amd64.tar.gz
+tar -xzf lightpanel-v3.0.1-linux-amd64.tar.gz
+chmod +x lightpanel
+./lightpanel
+```
+
+> 注意: 树莓派请使用 arm64/armv7 版本
+
+### Windows 安装
+
+```powershell
+# 使用 PowerShell 安装脚本
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/你的用户名/lightpanel/main/install.ps1" -OutFile install.ps1
+.\install.ps1 v3.0.1
+```
+
+### 编译安装
+
+```bash
+# 1. 下载源码（或解压 tar.gz）
 git clone https://github.com/你的用户名/LightPanel.git
 cd LightPanel
 
-# 2. 编译
-go mod download
-go build -o lightpanel .
+# 2. 一键编译（自动检测 Go、设置代理、下载依赖、编译）
+bash build.sh
 
 # 3. 运行
 chmod +x lightpanel
 ./lightpanel
 ```
 
+> 💬 如遇编译问题，请查看 [FAQ.md](FAQ.md)
+
 默认访问 `http://127.0.0.1:31956`，账号密码 `admin / admin`。
 
-## 项目结构
+> ⚠️ **首次登录后请立即修改密码！**
+
+## 🛡️ 安全提醒
+
+- ❌ **不建议将面板端口暴露到公网**，本项目安全性有限，建议通过内网访问或使用 Nginx/Caddy 反代 + HTTPS
+- ✅ 如需公网访问，请务必配置反向代理、防火墙规则，并修改默认密码
+- 🛡️ 命令白名单和 SSRF 防护可降低部分风险，但无法完全消除
+
+## 📂 项目结构
 
 ```
 main.go              # 入口
 config/config.go     # 配置常量
 models/models.go     # 数据模型
 handlers/
-  auth.go            # 认证 + POST 中间件
-  routes.go          # 路由注册
+  auth.go            # 认证 + 登录限流 + CSRF + 会话管理
+  routes.go          # 路由注册 + 安全中间件
+  security.go        # 命令白名单 + 内网 IP 拦截
   utils.go           # JSON 读写 + 初始化
   templates.go       # 所有页面 HTML/CSS/JS（改 UI 只需改此文件）
   page_dashboard.go  # 仪表盘 + 系统监控
@@ -60,19 +114,41 @@ handlers/
   app_control.go     # 应用控制
   app_create.go      # 应用创建
   downloads.go       # 下载管理
+  script_analyze.go  # 脚本分析
+  detect.go          # 可执行文件检测
+  extract.go         # 压缩包解压
 ```
 
-## 修改 UI
+## 🎨 修改 UI
 
 所有页面集中在 `handlers/templates.go`，改完 `go build` 即可，无需构建工具。
 
-## 免责声明
+## 🏪 制作商店源
+
+欢迎制作自己的应用商店源！只需提供一个返回 JSON 数组的 HTTP 地址即可，格式如下：
+
+```json
+[
+  {
+    "name": "应用名称",
+    "desc": "应用描述",
+    "icon": "图标 URL",
+    "url": "下载地址",
+    "cmd": "启动命令",
+    "author": "作者"
+  }
+]
+```
+
+然后在面板的"源管理"页面添加你的源地址即可。
+
+## ⚖️ 免责声明
 
 1. 本项目为个人学习/工具用途，作者不对使用本项目造成的任何数据丢失、系统故障或安全事件负责。
-2. 本项目由 AI 辅助编写，代码可能存在未发现的边界情况，请自行测试后部署。
+2. 本项目由 AI 辅助编写，结合个人需求简单开发，代码可能存在未发现的边界情况，请自行测试后部署。
 3. 请勿在生产环境中直接使用，建议先在测试环境验证。
 4. 使用本项目即表示您同意自行承担所有风险。
 
-## 许可证
+## 📄 许可证
 
-MIT License — 可自由拉取、修改、二次发布，仅需保留原作者信息。
+[MIT License](LICENSE)

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 
 	"lightpanel/config"
 	"lightpanel/handlers"
@@ -9,21 +9,23 @@ import (
 
 func main() {
 	if err := handlers.InitConfig(); err != nil {
-		fmt.Printf("配置初始化失败: %v\n", err)
-		return
+		log.Fatalf("配置初始化失败: %v", err)
 	}
 
+	handlers.CleanupSessions()
 	handlers.InitTemplates()
 	handlers.SetupRoutes()
 
-	fmt.Printf("LightPanel %s\n", config.Version)
-	fmt.Printf("端口: %s\n", config.Port)
-	fmt.Printf("地址: http://127.0.0.1:%s\n", config.Port)
-	fmt.Printf("数据: %s\n", config.DataDir)
-	fmt.Printf("默认: admin / admin\n")
-	fmt.Println("---")
+	go handlers.RunHook("panel_start")
+
+	log.Printf("LightPanel %s", config.Version)
+	log.Printf("端口: %s", config.Port)
+	log.Printf("数据目录: %s", config.DataDir)
+	log.Printf("配置文件: %s", config.ConfigDir)
+	log.Printf("沙盒目录: %s", config.AppsDir)
+	log.Printf("默认账号: admin / admin")
 
 	if err := handlers.ListenAndServe(); err != nil {
-		fmt.Printf("启动失败: %v\n", err)
+		log.Fatalf("启动失败: %v", err)
 	}
 }
