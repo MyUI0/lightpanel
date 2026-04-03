@@ -42,16 +42,16 @@
 ### 一键安装 (Linux)
 
 ```bash
-curl -L https://raw.githubusercontent.com/你的用户名/lightpanel/main/install.sh | bash -s v3.0.1
+curl -L https://raw.githubusercontent.com/MyUI0/lightpanel/main/install.sh | bash -s v3.0.1
 ```
 
 自动检测并下载对应架构版本 (amd64 / arm64 / armv7)
 
-或手动安装:
+或手动安装(例子,版本号会更新):
 
 ```bash
 # amd64 - 主流VPS/服务器
-wget https://github.com/你的用户名/lightpanel/releases/download/v3.0.1/lightpanel-v3.0.1-linux-amd64.tar.gz
+wget https://github.com/MyUI0/lightpanel/releases/download/v3.0.1/lightpanel-v3.0.1-linux-amd64.tar.gz
 tar -xzf lightpanel-v3.0.1-linux-amd64.tar.gz
 chmod +x lightpanel
 ./lightpanel
@@ -59,19 +59,12 @@ chmod +x lightpanel
 
 > 注意: 树莓派请使用 arm64/armv7 版本
 
-### Windows 安装
-
-```powershell
-# 使用 PowerShell 安装脚本
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/你的用户名/lightpanel/main/install.ps1" -OutFile install.ps1
-.\install.ps1 v3.0.1
-```
 
 ### 编译安装
 
 ```bash
 # 1. 下载源码（或解压 tar.gz）
-git clone https://github.com/你的用户名/LightPanel.git
+git clone https://github.com/MyUI0/LightPanel.git
 cd LightPanel
 
 # 2. 一键编译（自动检测 Go、设置代理、下载依赖、编译）
