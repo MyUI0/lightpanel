@@ -1,0 +1,92 @@
+[
+  {
+    "name": "Alist",
+    "desc": "支持多网盘的目录列表程序",
+    "icon": "https://img.icons8.com/color/96/alist.png",
+    "url": "https://github.com/alist-org/alist/releases/download/v3.37.1/amd64.tar.gz",
+    "cmd": "./alist server",
+    "author": "alist",
+    "version": "3.37.1"
+  },
+  {
+    "name": "OpenList",
+    "desc": "Alist原版分支，完全开源",
+    "icon": "https://img.icons8.com/color/96/cloud.png",
+    "url": "https://github.com/openlist-team/openlist/releases/download/v1.0.0/amd64.tar.gz",
+    "cmd": "./openlist server",
+    "author": "openlist",
+    "version": "1.0.0"
+  },
+  {
+    "name": "FRP",
+    "desc": "简单高效的内网穿透工具",
+    "icon": "https://img.icons8.com/color/96/network.png",
+    "url": "https://github.com/fatedier/frp/releases/download/v0.61.0/frp_0.61.0_linux_amd64.tar.gz",
+    "cmd": "./frpc -c frpc.toml",
+    "author": "fatedier",
+    "version": "0.61.0"
+  },
+  {
+    "name": "AdGuard Home",
+    "desc": "广告拦截和DNS服务",
+    "icon": "https://img.icons8.com/color/96/shield.png",
+    "url": "https://github.com/AdGuardTeam/AdGuardHome/releases/download/v0.107.58/AdGuardHome_linux_amd64.tar.gz",
+    "cmd": "./AdGuardHome -c AdGuardHome.yaml",
+    "author": "AdGuardTeam",
+    "version": "0.107.58"
+  },
+  {
+    "name": "Caddy",
+    "desc": "自动HTTPS的Web服务器",
+    "icon": "https://img.icons8.com/color/96/web.png",
+    "url": "https://github.com/caddyserver/caddy/releases/download/v2.8.4/caddy_2.8.4_linux_amd64.tar.gz",
+    "cmd": "./caddy run",
+    "author": "caddyserver",
+    "version": "2.8.4"
+  },
+  {
+    "name": "NPS",
+    "desc": "轻量级内网穿透代理服务器",
+    "icon": "https://img.icons8.com/color/96/server.png",
+    "url": "https://github.com/ehang-io/nps/releases/download/v0.26.10/linux_amd64.tar.gz",
+    "cmd": "./nps",
+    "author": "ehang-io",
+    "version": "0.26.10"
+  },
+  {
+    "name": "Sing-Box",
+    "desc": "通用代理工具",
+    "icon": "https://img.icons8.com/color/96/gateway.png",
+    "url": "https://github.com/SagerNet/sing-box/releases/download/v1.9.9/sing-box-1.9.9-linux-amd64.tar.gz",
+    "cmd": "./sing-box run -c config.json",
+    "author": "SagerNet",
+    "version": "1.9.9"
+  },
+  {
+    "name": "MinIO",
+    "desc": "高性能对象存储服务",
+    "icon": "https://img.icons8.com/color/96/cloud-storage.png",
+    "url": "https://github.com/minio/minio/releases/download/RELEASE.2024-06-13T19-53-34Z/minio_20240613T195334Z_linux_amd64.tar.gz",
+    "cmd": "./minio server /data",
+    "author": "minio",
+    "version": "2024-06-13"
+  },
+  {
+    "name": "Mosquitto",
+    "desc": "MQTT消息 broker",
+    "icon": "https://img.icons8.com/color/96/message.png",
+    "url": "https://github.com/eclipse/mosquitto/releases/download/v2.0.18/mosquitto-2.0.18-linux-x86_64.tar.gz",
+    "cmd": "./mosquitto -c mosquitto.conf",
+    "author": "eclipse",
+    "version": "2.0.18"
+  },
+  {
+    "name": "FileBrowser",
+    "desc": "基于Web的文件管理器",
+    "icon": "https://img.icons8.com/color/96/folder.png",
+    "url": "https://github.com/filebrowser/filebrowser/releases/download/v3.0.0/linux-amd64.tar.gz",
+    "cmd": "./filebrowser --config config.json",
+    "author": "filebrowser",
+    "version": "3.0.0"
+  }
+]
