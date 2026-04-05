@@ -1,82 +1,92 @@
-[
-  {
-    "name": "Komari Agent",
-    "desc": "轻量级服务器监控代理，支持多节点管理与实时状态上报",
-    "icon": "https://github.com/komari-monitor/komari-agent/raw/main/assets/icon.png",
-    "url": "https://gh.llkk.cc/https://github.com/komari-monitor/komari-agent/releases/download/1.1.93/komari-agent-linux-{{arch}}",
-    "cmd": "./komari-agent-linux-{{arch}} {{params}}",
-    "author": "Komari",
-    "version": "1.1.93",
-    "auto_extract": false,
-    "make_exec": true,
-    "ask_params": true,
-    "params_hint": "-e https://xxx -t 你的token"
-  },
-  {
-    "name": "OpenList Lite",
-    "desc": "轻量级文件列表服务，支持多种存储后端，快速部署",
-    "icon": "https://github.com/OpenListTeam/OpenList/raw/main/assets/icon.png",
-    "url": "https://gh.llkk.cc/https://github.com/OpenListTeam/OpenList/releases/download/v4.1.10/openlist-linux-{{arch}}-lite.tar.gz",
-    "cmd": "./openlist",
-    "author": "OpenListTeam",
-    "version": "4.1.10",
-    "auto_extract": true,
-    "make_exec": true
-  },
-  {
-    "name": "Memos",
-    "desc": "轻量级，自托管的笔记和知识库服务，支持 Markdown 和双向链接",
-    "icon": "https://github.com/usememos/memos/raw/main/.github/logo.webp",
-    "url": "https://gh.llkk.cc/https://github.com/usememos/memos/releases/download/v0.26.2/memos_0.26.2_linux_{{arch}}.tar.gz",
-    "cmd": "./memos --port 5230 --data ./memos_data",
-    "author": "usememos",
-    "version": "0.26.2",
-    "auto_extract": true,
-    "make_exec": true
-  },
-  {
-    "name": "Baihu Panel",
-    "desc": "单文件部署的服务器管理面板，内置任务调度与环境管理支持",
-    "icon": "https://github.com/engigu/baihu-panel/raw/main/assets/icon.png",
-    "url": "https://gh.llkk.cc/https://github.com/engigu/baihu-panel/releases/download/v1.0.38/baihu-linux-{{arch}}.tar.gz",
-    "cmd": "./baihu-linux-{{arch}} server",
-    "setup_cmd": "curl https://mise.run | sh",
-    "author": "engigu",
-    "version": "1.0.38",
-    "auto_extract": true,
-    "make_exec": true
-  },
-  {
-    "name": "FileBrowser Quantum",
-    "desc": "轻量级 Web 文件管理器，支持在线浏览，上传、下载和分享",
-    "icon": "https://github.com/gtsteffaniak/filebrowser/raw/main/assets/icon.png",
-    "url": "https://gh.llkk.cc/https://github.com/gtsteffaniak/filebrowser/releases/download/v1.2.4-stable/linux-{{arch}}-filebrowser",
-    "cmd": "./filebrowser-linux-{{arch}}",
-    "author": "gtsteffaniak",
-    "version": "1.2.4-stable",
-    "auto_extract": false,
-    "make_exec": true
-  },
-  {
-    "name": "Cloudflare Tunnel",
-    "desc": "将本地服务安全暴露到公网。默认使用 Quick Tunnel 模式（无需 Token）。如需固定域名，请部署后在编辑页修改命令添加 --token。",
-    "icon": "https://developers.cloudflare.com/cloudflare-one/static/favicon.ico",
-    "url": "https://gh.llkk.cc/https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-{{arch}}",
-    "cmd": "./cloudflared-linux-{{arch}} tunnel --url http://localhost:8080",
-    "author": "Cloudflare",
-    "version": "latest",
-    "auto_extract": false,
-    "make_exec": true
-  },
-  {
-    "name": "SamWaf",
-    "desc": "简单易用的 Linux 系统 WAF 防火墙，支持 IP 黑白名单、CC 防护等",
-    "icon": "https://img.icons8.com/color/256/firewall.png",
-    "url": "https://gh.llkk.cc/https://github.com/samwafgo/SamWaf/releases/download/v1.3.19/SamWaf_Linux_arm64.v1.3.19.tar.gz",
-    "cmd": "./SamWafLinuxARM64 start",
-    "author": "samwafgo",
-    "version": "1.3.19",
-    "auto_extract": true,
-    "make_exec": true
-  }
-]
+{
+  "schema_version": 1,
+  "source_name": "LightPanel Official",
+  "maintainer": "LightPanel Team",
+  "apps": [
+    {
+      "name": "Komari Agent",
+      "desc": "轻量级服务器监控代理，支持多节点管理与实时状态上报",
+      "icon": "https://github.com/komari-monitor/komari-agent/raw/main/assets/icon.png",
+      "url": "https://gh.llkk.cc/https://github.com/komari-monitor/komari-agent/releases/download/1.1.93/komari-agent-linux-{{arch}}",
+      "cmd": "./komari-agent-linux-{{arch}} {{params}}",
+      "author": "Komari",
+      "version": "1.1.93",
+      "auto_extract": false,
+      "make_exec": true,
+      "ask_params": true,
+      "params_hint": "-e https://xxx -t 你的token"
+    },
+    {
+      "name": "OpenList Lite",
+      "desc": "轻量级文件列表服务，支持多种存储后端，快速部署",
+      "icon": "https://github.com/OpenListTeam/OpenList/raw/main/assets/icon.png",
+      "url": "https://gh.llkk.cc/https://github.com/OpenListTeam/OpenList/releases/download/v4.1.10/openlist-linux-{{arch}}-lite.tar.gz",
+      "cmd": "./openlist",
+      "author": "OpenListTeam",
+      "version": "4.1.10",
+      "auto_extract": true,
+      "make_exec": true,
+      "port": 5244
+    },
+    {
+      "name": "Memos",
+      "desc": "轻量级，自托管的笔记和知识库服务，支持 Markdown 和双向链接",
+      "icon": "https://github.com/usememos/memos/raw/main/.github/logo.webp",
+      "url": "https://gh.llkk.cc/https://github.com/usememos/memos/releases/download/v0.26.2/memos_0.26.2_linux_{{arch}}.tar.gz",
+      "cmd": "./memos --port 5230 --data ./memos_data",
+      "author": "usememos",
+      "version": "0.26.2",
+      "auto_extract": true,
+      "make_exec": true,
+      "port": 5230
+    },
+    {
+      "name": "Baihu Panel",
+      "desc": "单文件部署的服务器管理面板，内置任务调度与环境管理支持",
+      "icon": "https://github.com/engigu/baihu-panel/raw/main/assets/icon.png",
+      "url": "https://gh.llkk.cc/https://github.com/engigu/baihu-panel/releases/download/v1.0.38/baihu-linux-{{arch}}.tar.gz",
+      "cmd": "./baihu-linux-{{arch}} server",
+      "setup_cmd": "curl https://mise.run | sh",
+      "author": "engigu",
+      "version": "1.0.38",
+      "auto_extract": true,
+      "make_exec": true,
+      "port": 3000
+    },
+    {
+      "name": "FileBrowser Quantum",
+      "desc": "轻量级 Web 文件管理器，支持在线浏览，上传、下载和分享",
+      "icon": "https://github.com/gtsteffaniak/filebrowser/raw/main/assets/icon.png",
+      "url": "https://gh.llkk.cc/https://github.com/gtsteffaniak/filebrowser/releases/download/v1.2.4-stable/linux-{{arch}}-filebrowser",
+      "cmd": "./filebrowser-linux-{{arch}}",
+      "author": "gtsteffaniak",
+      "version": "1.2.4-stable",
+      "auto_extract": false,
+      "make_exec": true,
+      "port": 8080
+    },
+    {
+      "name": "Cloudflare Tunnel",
+      "desc": "将本地服务安全暴露到公网。默认使用 Quick Tunnel 模式（无需 Token）。如需固定域名，请部署后在编辑页修改命令添加 --token。",
+      "icon": "https://developers.cloudflare.com/cloudflare-one/static/favicon.ico",
+      "url": "https://gh.llkk.cc/https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-{{arch}}",
+      "cmd": "./cloudflared-linux-{{arch}} tunnel --url http://localhost:8080",
+      "author": "Cloudflare",
+      "version": "latest",
+      "auto_extract": false,
+      "make_exec": true
+    },
+    {
+      "name": "SamWaf",
+      "desc": "简单易用的 Linux 系统 WAF 防火墙，支持 IP 黑白名单、CC 防护等",
+      "icon": "https://img.icons8.com/color/256/firewall.png",
+      "url": "https://gh.llkk.cc/https://github.com/samwafgo/SamWaf/releases/download/v1.3.19/SamWaf_Linux_arm64.v1.3.19.tar.gz",
+      "cmd": "./SamWafLinuxARM64 start",
+      "author": "samwafgo",
+      "version": "1.3.19",
+      "auto_extract": true,
+      "make_exec": true,
+      "port": 22222
+    }
+  ]
+}
