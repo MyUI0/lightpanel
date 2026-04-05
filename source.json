@@ -6,7 +6,7 @@
     {
       "name": "Komari Agent",
       "desc": "轻量级服务器监控代理，支持多节点管理与实时状态上报",
-      "icon": "https://github.com/komari-monitor/komari-agent/raw/main/assets/icon.png",
+      "icon": "https://avatars.githubusercontent.com/u/208285284?s=48&v=4",
       "url": "https://gh.llkk.cc/https://github.com/komari-monitor/komari-agent/releases/download/1.1.93/komari-agent-linux-{{arch}}",
       "cmd": "./komari-agent-linux-{{arch}} {{params}}",
       "author": "Komari",
@@ -19,7 +19,7 @@
     {
       "name": "OpenList Lite",
       "desc": "轻量级文件列表服务，支持多种存储后端，快速部署",
-      "icon": "https://github.com/OpenListTeam/OpenList/raw/main/assets/icon.png",
+      "icon": "https://gh.llkk.cc/https://raw.githubusercontent.com/OpenListTeam/Logo/main/logo.svg",
       "url": "https://gh.llkk.cc/https://github.com/OpenListTeam/OpenList/releases/download/v4.1.10/openlist-linux-{{arch}}-lite.tar.gz",
       "cmd": "./openlist",
       "author": "OpenListTeam",
@@ -31,7 +31,7 @@
     {
       "name": "Memos",
       "desc": "轻量级，自托管的笔记和知识库服务，支持 Markdown 和双向链接",
-      "icon": "https://github.com/usememos/memos/raw/main/.github/logo.webp",
+      "icon": "https://usememos.com/logo.png",
       "url": "https://gh.llkk.cc/https://github.com/usememos/memos/releases/download/v0.26.2/memos_0.26.2_linux_{{arch}}.tar.gz",
       "cmd": "./memos --port 5230 --data ./memos_data",
       "author": "usememos",
@@ -43,7 +43,7 @@
     {
       "name": "Baihu Panel",
       "desc": "单文件部署的服务器管理面板，内置任务调度与环境管理支持",
-      "icon": "https://github.com/engigu/baihu-panel/raw/main/assets/icon.png",
+      "icon": "https://engigu.github.io/baihu-panel/logo.svg",
       "url": "https://gh.llkk.cc/https://github.com/engigu/baihu-panel/releases/download/v1.0.38/baihu-linux-{{arch}}.tar.gz",
       "cmd": "./baihu-linux-{{arch}} server",
       "setup_cmd": "curl https://mise.run | sh",
@@ -56,7 +56,7 @@
     {
       "name": "FileBrowser Quantum",
       "desc": "轻量级 Web 文件管理器，支持在线浏览，上传、下载和分享",
-      "icon": "https://github.com/gtsteffaniak/filebrowser/raw/main/assets/icon.png",
+      "icon": "https://filebrowser.org/static/logo.png",
       "url": "https://gh.llkk.cc/https://github.com/gtsteffaniak/filebrowser/releases/download/v1.2.4-stable/linux-{{arch}}-filebrowser",
       "cmd": "./filebrowser-linux-{{arch}}",
       "author": "gtsteffaniak",
@@ -68,7 +68,7 @@
     {
       "name": "Cloudflare Tunnel",
       "desc": "将本地服务安全暴露到公网。默认使用 Quick Tunnel 模式（无需 Token）。如需固定域名，请部署后在编辑页修改命令添加 --token。",
-      "icon": "https://developers.cloudflare.com/cloudflare-one/static/favicon.ico",
+      "icon": "https://developers.cloudflare.com/_astro/logo.DAG2yejx.svg",
       "url": "https://gh.llkk.cc/https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-{{arch}}",
       "cmd": "./cloudflared-linux-{{arch}} tunnel --url http://localhost:8080",
       "author": "Cloudflare",
