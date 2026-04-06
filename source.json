@@ -61,9 +61,10 @@
       "cmd": "./filebrowser-linux-{{arch}}",
       "author": "gtsteffaniak",
       "version": "1.2.4-stable",
+      "setup_cmd": "./filebrowser-linux-{{arch}} config init -p 8082 -a 0.0.0.0",
       "auto_extract": false,
       "make_exec": true,
-      "port": 8080
+      "port": 8082
     },
     {
       "name": "Cloudflare Tunnel",
