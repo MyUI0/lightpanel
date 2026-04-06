@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"net"
 	"os"
 	"path/filepath"
 
@@ -57,4 +58,49 @@ func getLogoURL() string {
 	var logo LogoConfig
 	_ = LoadJSON(config.ConfigDir+"/logo.json", &logo)
 	return logo.URL
+}
+
+func getBgURL() string {
+	type BgConfig struct {
+		URL string `json:"url"`
+	}
+	var bg BgConfig
+	_ = LoadJSON(config.ConfigBg, &bg)
+	return bg.URL
+}
+
+func getLocalIP() string {
+	addrs, _ := net.InterfaceAddrs()
+	var privateIPs []net.IP
+	for _, addr := range addrs {
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				ip := ipnet.IP
+				if isPrivateIPAddr(ip) {
+					privateIPs = append(privateIPs, ip)
+				}
+			}
+		}
+	}
+	if len(privateIPs) > 0 {
+		return privateIPs[0].String()
+	}
+	return "127.0.0.1"
+}
+
+func isPrivateIPAddr(ip net.IP) bool {
+	ip4 := ip.To4()
+	if ip4 == nil {
+		return false
+	}
+	if ip4[0] == 10 {
+		return true
+	}
+	if ip4[0] == 192 && ip4[1] == 168 {
+		return true
+	}
+	if ip4[0] == 172 && ip4[1] >= 16 && ip4[1] <= 31 {
+		return true
+	}
+	return false
 }

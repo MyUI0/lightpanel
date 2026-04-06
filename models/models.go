@@ -13,6 +13,7 @@ type Project struct {
 	WorkDir   string `json:"work_dir,omitempty"`
 	SourceURL string `json:"source_url,omitempty"`
 	URL       string `json:"url,omitempty"`
+	Port      int    `json:"port,omitempty"`
 	AutoStart bool   `json:"auto_start"`
 	Status    string `json:"status"`
 	PID       int    `json:"pid"`
@@ -31,8 +32,22 @@ type StoreApp struct {
 	Icon        string `json:"icon"`
 	URL         string `json:"url"`
 	Cmd         string `json:"cmd"`
+	SetupCmd    string `json:"setup_cmd,omitempty"`
+	WorkDir     string `json:"work_dir,omitempty"`
 	Author      string `json:"author"`
 	Version     string `json:"version,omitempty"`
+	AutoExtract bool   `json:"auto_extract,omitempty"`
+	MakeExec    bool   `json:"make_exec,omitempty"`
+	AskParams   bool   `json:"ask_params,omitempty"`
+	ParamsHint  string `json:"params_hint,omitempty"`
+	Port        int    `json:"port,omitempty"`
+}
+
+type StoreManifest struct {
+	SchemaVersion int            `json:"schema_version"`
+	SourceName    string         `json:"source_name"`
+	Maintainer    string         `json:"maintainer,omitempty"`
+	Apps          []StoreApp     `json:"apps"`
 }
 
 type UserConfig struct {
@@ -53,16 +68,22 @@ type ProcInfo struct {
 }
 
 type DownloadTask struct {
-	mu       sync.Mutex
-	ID       string    `json:"id"`
-	Name     string    `json:"name"`
-	URL      string    `json:"url"`
-	Size     int64     `json:"size"`
-	Downloaded int64   `json:"downloaded"`
-	Status   string    `json:"status"`
-	Progress int       `json:"progress"`
-	Cmd      string    `json:"cmd"`
-	Last     time.Time `json:"-"`
+	mu        sync.Mutex
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	URL       string    `json:"url"`
+	Size      int64     `json:"size"`
+	Downloaded int64    `json:"downloaded"`
+	Status    string    `json:"status"`
+	Progress  int       `json:"progress"`
+	Cmd       string    `json:"cmd"`
+	Version   string    `json:"version"`
+	SetupCmd  string    `json:"setup_cmd"`
+	WorkDir   string    `json:"work_dir"`
+	Last        time.Time `json:"-"`
+	AutoExtract bool      `json:"auto_extract"`
+	MakeExec    bool      `json:"make_exec"`
+	Port        int       `json:"port"`
 }
 
 func (t *DownloadTask) SetStatus(s string) {
@@ -132,4 +153,18 @@ func (t *DownloadTask) GetProgress() int {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	return t.Progress
+}
+
+type DownloadHistory struct {
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	URL       string    `json:"url"`
+	Cmd       string    `json:"cmd,omitempty"`
+	Version   string    `json:"version,omitempty"`
+	Status    string    `json:"status"`
+	Size      int64     `json:"size"`
+	Downloaded int64    `json:"downloaded"`
+	Progress  int       `json:"progress"`
+	Installed bool      `json:"installed"`
+	Timestamp time.Time `json:"timestamp"`
 }

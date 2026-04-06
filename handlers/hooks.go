@@ -20,16 +20,18 @@ func RunHook(name string, args ...string) {
 		return
 	}
 
-	hookMu.Lock()
-	defer hookMu.Unlock()
+	go func() {
+		hookMu.Lock()
+		defer hookMu.Unlock()
 
-	shellOnce.Do(func() { shellPath = findShell() })
-	cmd := exec.Command(shellPath, script)
-	cmd.Args = append(cmd.Args, args...)
-	cmd.Dir = config.DataDir
-	cmd.Stdout = nil
-	cmd.Stderr = nil
-	_ = cmd.Run()
+		shellOnce.Do(func() { shellPath = findShell() })
+		cmd := exec.Command(shellPath, script)
+		cmd.Args = append(cmd.Args, args...)
+		cmd.Dir = config.DataDir
+		cmd.Stdout = nil
+		cmd.Stderr = nil
+		_ = cmd.Run()
+	}()
 }
 
 func getCustomPages() []string {
@@ -58,7 +60,13 @@ func serveCustomPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	realPath, err := filepath.EvalSymlinks(filePath)
-	if err != nil || !strings.HasPrefix(realPath, filepath.Clean(pagesDir)) {
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	cleanPath := filepath.Clean(filePath)
+	cleanDir := filepath.Clean(pagesDir)
+	if !strings.HasPrefix(realPath, cleanDir) || !strings.HasPrefix(cleanPath, cleanDir) {
 		http.NotFound(w, r)
 		return
 	}

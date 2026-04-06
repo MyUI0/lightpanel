@@ -43,7 +43,10 @@ func startApp(w http.ResponseWriter, r *http.Request) {
 	appOpMu.Lock()
 	defer appOpMu.Unlock()
 	var apps map[string]models.Project
-	_ = LoadJSON(config.ConfigApps, &apps)
+	if err := LoadJSON(config.ConfigApps, &apps); err != nil || apps == nil {
+		http.Redirect(w, r, "/", 302)
+		return
+	}
 	app, ok := apps[name]
 	if !ok {
 		http.Redirect(w, r, "/", 302)
@@ -71,7 +74,10 @@ func restartApp(w http.ResponseWriter, r *http.Request) {
 	appOpMu.Lock()
 	defer appOpMu.Unlock()
 	var apps map[string]models.Project
-	_ = LoadJSON(config.ConfigApps, &apps)
+	if err := LoadJSON(config.ConfigApps, &apps); err != nil || apps == nil {
+		http.Redirect(w, r, "/", 302)
+		return
+	}
 	app, ok := apps[name]
 	if !ok {
 		http.Redirect(w, r, "/", 302)
@@ -92,7 +98,10 @@ func deleteApp(w http.ResponseWriter, r *http.Request) {
 	appOpMu.Lock()
 	defer appOpMu.Unlock()
 	var apps map[string]models.Project
-	_ = LoadJSON(config.ConfigApps, &apps)
+	if err := LoadJSON(config.ConfigApps, &apps); err != nil || apps == nil {
+		http.Redirect(w, r, "/", 302)
+		return
+	}
 	app, ok := apps[name]
 	if !ok {
 		http.Redirect(w, r, "/", 302)
@@ -106,18 +115,30 @@ func deleteApp(w http.ResponseWriter, r *http.Request) {
 
 	cleanPath := filepath.Clean(app.Path)
 	cleanAppsDir := filepath.Clean(config.AppsDir)
+
 	realPath, err := filepath.EvalSymlinks(cleanPath)
 	if err != nil {
-		realPath = cleanPath
+		http.Redirect(w, r, "/", 302)
+		return
 	}
 	realAppsDir, err := filepath.EvalSymlinks(cleanAppsDir)
 	if err != nil {
-		realAppsDir = cleanAppsDir
+		http.Redirect(w, r, "/", 302)
+		return
 	}
-	if strings.HasPrefix(realPath+string(os.PathSeparator), realAppsDir+string(os.PathSeparator)) || realPath == realAppsDir {
-		if realPath != realAppsDir {
-			_ = os.RemoveAll(cleanPath)
-		}
+
+	if !strings.HasPrefix(cleanPath+string(os.PathSeparator), cleanAppsDir+string(os.PathSeparator)) {
+		http.Redirect(w, r, "/", 302)
+		return
+	}
+
+	if !strings.HasPrefix(realPath+string(os.PathSeparator), realAppsDir+string(os.PathSeparator)) && realPath != realAppsDir {
+		http.Redirect(w, r, "/", 302)
+		return
+	}
+
+	if realPath != realAppsDir {
+		_ = os.RemoveAll(cleanPath)
 	}
 
 	http.Redirect(w, r, "/", 302)
@@ -128,7 +149,10 @@ func toggleAutoStart(w http.ResponseWriter, r *http.Request) {
 	appOpMu.Lock()
 	defer appOpMu.Unlock()
 	var apps map[string]models.Project
-	_ = LoadJSON(config.ConfigApps, &apps)
+	if err := LoadJSON(config.ConfigApps, &apps); err != nil || apps == nil {
+		http.Redirect(w, r, "/", 302)
+		return
+	}
 	app, ok := apps[name]
 	if !ok {
 		http.Redirect(w, r, "/", 302)

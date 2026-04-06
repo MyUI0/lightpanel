@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"html/template"
 	"io"
 	"net/http"
 	"os"
@@ -86,9 +87,15 @@ func analyzeScriptHandler(w http.ResponseWriter, r *http.Request) {
 		addIfNew(&info.Env, m[1])
 	}
 
+	tempScriptPath := filepath.Join(scriptDir, fname)
+	defer func() { _ = os.Remove(tempScriptPath) }()
+
 	json.NewEncoder(w).Encode(info)
 }
 
 func scriptAnalyzePage(w http.ResponseWriter, r *http.Request) {
-	_ = htmlRender.ExecuteTemplate(w, "script_analyze", nil)
+	_ = htmlRender.ExecuteTemplate(w, "analyze", map[string]any{
+		"Sidebar": template.HTML(sidebarHTML("/analyze")),
+		"Topbar":  template.HTML(topbarHTML("脚本分析")),
+	})
 }

@@ -72,6 +72,8 @@ func createApp(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")
 
+	_ = r.ParseForm()
+
 	name := strings.TrimSpace(r.FormValue("name"))
 	down := strings.TrimSpace(r.FormValue("url"))
 	cmd := strings.TrimSpace(r.FormValue("cmd"))
@@ -91,8 +93,8 @@ func createApp(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]any{"error": "首次运行命令包含非法字符"})
 		return
 	}
-	if strings.ContainsAny(name, `/\`) || strings.ContainsAny(name, `;&|'`) || strings.HasPrefix(name, ".") || strings.Contains(name, "..") {
-		json.NewEncoder(w).Encode(map[string]any{"error": "应用名称包含非法字符，仅允许字母数字"})
+	if strings.ContainsAny(name, "./\\") || strings.ContainsAny(name, ";&|'") || strings.HasPrefix(name, ".") || strings.Contains(name, "..") || strings.ContainsAny(name, "?*:#") {
+		json.NewEncoder(w).Encode(map[string]any{"error": "应用名称包含非法字符"})
 		return
 	}
 
@@ -119,7 +121,8 @@ func createApp(w http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		defer func() { recover() }()
-		sandbox := filepath.Join(config.AppsDir, name)
+		dirName := strings.ReplaceAll(name, " ", "-")
+		sandbox := filepath.Join(config.AppsDir, dirName)
 		if err := os.MkdirAll(sandbox, 0755); err != nil {
 			task.SetStatus("error", "创建目录失败")
 			return
@@ -217,7 +220,7 @@ func createApp(w http.ResponseWriter, r *http.Request) {
 					}
 					break
 				}
-				if totalWritten >= config.MaxDownBytes {
+				if totalWritten >= int64(config.MaxDownBytes) {
 					break
 				}
 			}
@@ -227,23 +230,25 @@ func createApp(w http.ResponseWriter, r *http.Request) {
 			dlTask.UpdateProgress(dlTask.GetDownloaded(), dlSize, 100)
 			task.SetProgress(50, "")
 
-			if autoExtract {
-				task.SetProgress(50, "正在解压...")
-				if extractArchive(fpath, sandbox) {
-					_ = os.Remove(fpath)
-					if cmd == "" {
-						if bin := findBinaryInDir(sandbox); bin != "" {
-							cmd = bin
-						}
+		// autoExtract 仅在有下载文件时生效（嵌套在 if down != "" 内部）
+		// 手动添加应用时即使设置了 auto_extract 也不会执行解压逻辑
+		if autoExtract {
+			task.SetProgress(50, "正在解压...")
+			if extractArchive(fpath, sandbox) {
+				_ = os.Remove(fpath)
+				if cmd == "" {
+					if bin := findBinaryInDir(sandbox); bin != "" {
+						cmd = bin
 					}
 				}
-			} else if makeExec {
+			} else if makeExec && strings.HasSuffix(fname, ".sh") {
 				task.SetProgress(50, "设置权限...")
 				_ = os.Chmod(fpath, 0755)
 				if cmd == "" {
 					cmd = "./" + fname
 				}
 			}
+		}
 		}
 
 		task.SetProgress(80, "保存配置...")
@@ -305,7 +310,23 @@ func createManualApp(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]any{"error": "启动命令包含非法字符"})
 		return
 	}
-	if strings.ContainsAny(name, `/\`) || strings.ContainsAny(name, `;&|'`) || strings.HasPrefix(name, ".") || strings.Contains(name, "..") {
+
+	cleanPath := filepath.Clean(path)
+	cleanAppsDir := filepath.Clean(config.AppsDir)
+	realPath, err := filepath.EvalSymlinks(cleanPath)
+	if err != nil {
+		realPath = cleanPath
+	}
+	realAppsDir, _ := filepath.EvalSymlinks(cleanAppsDir)
+	if realAppsDir == "" {
+		realAppsDir = cleanAppsDir
+	}
+	if !strings.HasPrefix(realPath+string(os.PathSeparator), realAppsDir+string(os.PathSeparator)) && realPath != realAppsDir {
+		json.NewEncoder(w).Encode(map[string]any{"error": "路径必须在应用目录内"})
+		return
+	}
+
+	if strings.ContainsAny(name, "./\\") || strings.ContainsAny(name, ";&|'") || strings.HasPrefix(name, ".") || strings.Contains(name, "..") || strings.ContainsAny(name, "?*:#") {
 		json.NewEncoder(w).Encode(map[string]any{"error": "应用名称包含非法字符"})
 		return
 	}

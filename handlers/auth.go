@@ -18,7 +18,11 @@ import (
 	"lightpanel/models"
 )
 
-const sessionDir = config.ConfigDir + "/sessions"
+var sessionDir string
+
+func init() {
+	sessionDir = config.ConfigDir + "/sessions"
+}
 
 func hash(s string) string {
 	h := sha256.Sum256([]byte(s))
@@ -27,8 +31,9 @@ func hash(s string) string {
 
 // 登录限流
 var (
-	loginAttempts   = make(map[string]*loginAttempt)
-	loginAttemptsMu sync.Mutex
+	loginAttempts     = make(map[string]*loginAttempt)
+	loginAttemptsMu   sync.Mutex
+	maxLoginAttempts  int
 )
 
 type loginAttempt struct {
@@ -55,13 +60,11 @@ func checkLoginLimit(ip string) bool {
 	if a.Locked && time.Now().After(a.LockUntil) {
 		a.Count = 0
 		a.Locked = false
-		return true
 	}
 
 	if time.Since(a.LastFail) > 15*time.Minute {
 		a.Count = 0
 		a.Locked = false
-		return true
 	}
 
 	return true
@@ -109,6 +112,7 @@ func getLoginRemainTime(ip string) int {
 
 // 清理过期登录记录
 func init() {
+	maxLoginAttempts = 1000
 	go func() {
 		ticker := time.NewTicker(5 * time.Minute)
 		defer ticker.Stop()
@@ -146,7 +150,7 @@ func isValidSession(token string) bool {
 			return false
 		}
 	}
-	sessionFile := filepath.Join(sessionDir, token+".json")
+	sessionFile := filepath.Join(sessionDir, filepath.Base(token)+".json")
 	b, err := os.ReadFile(sessionFile)
 	if err != nil {
 		return false
@@ -176,7 +180,7 @@ func getSessionData(token string) *sessionData {
 	if token == "" || len(token) != 64 {
 		return nil
 	}
-	sessionFile := filepath.Join(sessionDir, token+".json")
+	sessionFile := filepath.Join(sessionDir, filepath.Base(token)+".json")
 	b, err := os.ReadFile(sessionFile)
 	if err != nil {
 		return nil
@@ -210,7 +214,7 @@ func markPasswordChanged(w http.ResponseWriter, r *http.Request) {
 	if sessData == nil {
 		return
 	}
-	sessionFile := filepath.Join(sessionDir, cookie.Value+".json")
+	sessionFile := filepath.Join(sessionDir, filepath.Base(cookie.Value)+".json")
 	sessData.FirstLogin = false
 	data, _ := json.Marshal(sessData)
 	_ = os.WriteFile(sessionFile, data, 0600)
@@ -255,7 +259,7 @@ func createSession(w http.ResponseWriter, firstLogin bool) string {
 
 func destroySession(token string) {
 	if token != "" {
-		_ = os.Remove(filepath.Join(sessionDir, token+".json"))
+		_ = os.Remove(filepath.Join(sessionDir, filepath.Base(token)+".json"))
 	}
 }
 
@@ -291,6 +295,9 @@ func authWithCSRF(next http.HandlerFunc) http.HandlerFunc {
 			http.Redirect(w, r, "/login", 302)
 			return
 		}
+		
+		_ = r.ParseForm()
+		
 		csrfToken := r.FormValue("csrf_token")
 		if csrfToken == "" {
 			csrfCookie, _ := r.Cookie("lp_csrf")
@@ -351,8 +358,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if user == usr.Username && subtle.ConstantTimeCompare([]byte(hash(pass)), []byte(usr.Password)) == 1 {
 		recordLoginSuccess(ip)
-		firstLogin := subtle.ConstantTimeCompare([]byte(usr.Password), []byte(hash("admin"))) == 1
-		createSession(w, firstLogin)
+		isDefaultPassword := subtle.ConstantTimeCompare([]byte(usr.Password), []byte(hash("admin"))) == 1
+		createSession(w, isDefaultPassword)
 		http.Redirect(w, r, "/", 302)
 		return
 	}

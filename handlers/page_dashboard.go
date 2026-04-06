@@ -21,69 +21,41 @@ import (
 	"lightpanel/models"
 )
 
-var htmlRender *template.Template
-
 var (
 	cpuFirst     = true
 	cpuFirstLock sync.Mutex
+	cpuPercent   int32
 )
+
+func init() {
+	go func() {
+		val, _ := cpu.Percent(time.Second, false)
+		cpuFirstLock.Lock()
+		if len(val) > 0 {
+			cpuPercent = int32(val[0])
+		}
+		cpuFirst = false
+		cpuFirstLock.Unlock()
+	}()
+}
 
 func getCpuPercent() int {
 	cpuFirstLock.Lock()
 	if cpuFirst {
-		cpuFirst = false
-		val, _ := cpu.Percent(time.Second, false)
 		cpuFirstLock.Unlock()
+		val, _ := cpu.Percent(0, false)
 		if len(val) > 0 {
-			return int(val[0])
+			cpuPercent = int32(val[0])
 		}
-		return 0
+		return int(cpuPercent)
 	}
 	cpuFirstLock.Unlock()
-
+	
 	val, _ := cpu.Percent(0, false)
 	if len(val) > 0 {
-		return int(val[0])
+		cpuPercent = int32(val[0])
 	}
-	return 0
-}
-
-func InitTemplates() {
-	htmlRender = template.Must(template.New("web").Funcs(template.FuncMap{
-		"formatFloat": func(f float64) string { return fmt.Sprintf("%.1f", f) },
-		"formatSize": func(b int64) string {
-			if b <= 0 {
-				return "0 B"
-			}
-			u := []string{"B", "KB", "MB", "GB", "TB"}
-			i := 0
-			v := float64(b)
-			for v >= 1024 && i < len(u)-1 {
-				v /= 1024
-				i++
-			}
-			return fmt.Sprintf("%.1f %s", v, u[i])
-		},
-		"getBgUrl": func() string {
-			var bg models.BgConfig
-			_ = LoadJSON(config.ConfigBg, &bg)
-			return bg.URL
-		},
-		"getLogoUrl": func() string {
-			return getLogoURL()
-		},
-		"tolower": strings.ToLower,
-		"escape": func(s string) string { return template.HTMLEscapeString(s) },
-	}).Parse(`{{define "login"}}`+htmlLogin+`{{end}}`+
-		`{{define "index"}}`+htmlIndex+`{{end}}`+
-		`{{define "store"}}`+htmlStore+`{{end}}`+
-		`{{define "source"}}`+htmlSource+`{{end}}`+
-		`{{define "system"}}`+htmlSystem+`{{end}}`+
-		`{{define "log"}}`+htmlLog+`{{end}}`+
-		`{{define "setting"}}`+htmlSetting+`{{end}}`+
-		`{{define "edit"}}`+htmlEdit+`{{end}}`+
-		`{{define "downloads"}}`+htmlDownloads+`{{end}}`+
-		`{{define "script_analyze"}}`+htmlScriptAnalyze+`{{end}}`))
+	return int(cpuPercent)
 }
 
 func autoStartApps() {
@@ -141,7 +113,20 @@ func detectDeps(logContent string) []string {
 	return deps
 }
 
+var failInfoCache struct {
+	info    *FailInfo
+	ts     time.Time
+	mu     sync.Mutex
+}
+
 func getFailInfo(apps map[string]models.Project) *FailInfo {
+	failInfoCache.mu.Lock()
+	defer failInfoCache.mu.Unlock()
+
+	if time.Since(failInfoCache.ts) < 30*time.Second && failInfoCache.info != nil {
+		return failInfoCache.info
+	}
+
 	var firstFail *FailInfo
 	count := 0
 	for name, app := range apps {
@@ -179,6 +164,10 @@ func getFailInfo(apps map[string]models.Project) *FailInfo {
 	if firstFail != nil {
 		firstFail.Count = count
 	}
+
+	failInfoCache.info = firstFail
+	failInfoCache.ts = time.Now()
+
 	return firstFail
 }
 
@@ -227,8 +216,6 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
 		createErr = r.URL.Query().Get("msg")
 	}
 
-	updates := checkAppUpdates(list)
-
 	_ = htmlRender.ExecuteTemplate(w, "index", map[string]any{
 		"Apps":       list,
 		"Cpu":        cpuVal,
@@ -237,10 +224,11 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
 		"ProcNum":    len(procs),
 		"Uptime":     uptimeStr,
 		"BgUrl":      bgConfig.URL,
+		"Sidebar":    template.HTML(sidebarHTML("/")),
+		"Topbar":     template.HTML(topbarHTML("应用管理")),
 		"FailInfo":   getFailInfo(list),
 		"CreateErr":  createErr,
 		"FirstLogin": isFirstLogin(r),
-		"Updates":    updates,
 	})
 }
 
@@ -277,5 +265,7 @@ func systemPage(w http.ResponseWriter, r *http.Request) {
 		"Disk":    diskVal,
 		"ProcNum": len(list),
 		"Procs":   list,
+		"Sidebar": template.HTML(sidebarHTML("/system")),
+		"Topbar":  template.HTML(topbarHTML("系统监控")),
 	})
 }

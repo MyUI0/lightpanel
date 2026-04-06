@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"html/template"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -18,6 +19,15 @@ func editAppHandler(w http.ResponseWriter, r *http.Request) {
 	if name == "" {
 		http.Redirect(w, r, "/", 302)
 		return
+	}
+
+	var csrfToken string
+	cookie, _ := r.Cookie("lp_session")
+	if cookie != nil {
+		sessData := getSessionData(cookie.Value)
+		if sessData != nil {
+			csrfToken = sessData.CSRFToken
+		}
 	}
 
 	if r.Method == "GET" {
@@ -39,21 +49,29 @@ func editAppHandler(w http.ResponseWriter, r *http.Request) {
 			installNote = strings.TrimSpace(string(b))
 		}
 
-	_ = htmlRender.ExecuteTemplate(w, "edit", map[string]any{
-		"Name":        name,
-		"Path":        app.Path,
-		"Cmd":         app.Cmd,
-		"SetupCmd":    app.SetupCmd,
-		"WorkDir":     app.WorkDir,
-		"SourceURL":   app.SourceURL,
-		"URL":         app.URL,
-		"Auto":        app.AutoStart,
-		"Status":      app.Status,
-		"Created":     app.Created,
-		"Msg":         msg,
-		"Err":         errMsg,
-		"InstallNote": installNote,
-	})
+		_ = htmlRender.ExecuteTemplate(w, "edit", map[string]any{
+			"Name":        name,
+			"Path":        app.Path,
+			"Cmd":         app.Cmd,
+			"SetupCmd":    app.SetupCmd,
+			"WorkDir":     app.WorkDir,
+			"SourceURL":   app.SourceURL,
+			"URL":         app.URL,
+			"Auto":        app.AutoStart,
+			"Status":      app.Status,
+			"Created":     app.Created,
+			"Msg":         msg,
+			"Err":         errMsg,
+			"InstallNote": installNote,
+			"CSRFToken":   csrfToken,
+			"Sidebar":     template.HTML(sidebarHTML("/edit/")),
+			"Topbar":      template.HTML(topbarHTML("编辑应用")),
+		})
+		return
+	}
+
+	if r.Method != "POST" {
+		http.Redirect(w, r, "/", 302)
 		return
 	}
 
@@ -66,11 +84,11 @@ func editAppHandler(w http.ResponseWriter, r *http.Request) {
 	newPath := strings.TrimSpace(r.Form.Get("path"))
 	newCmd := strings.TrimSpace(r.Form.Get("cmd"))
 	newSetupCmd := strings.TrimSpace(r.Form.Get("setup_cmd"))
-	autoStr := strings.TrimSpace(r.Form.Get("auto"))
+	autoStr := r.Form.Get("auto")
 	newWorkDir := strings.TrimSpace(r.Form.Get("work_dir"))
 	newURL := strings.TrimSpace(r.Form.Get("url"))
 
-	if newName == "" || newCmd == "" || strings.ContainsAny(newName, `./\ `) || strings.HasPrefix(newName, ".") || strings.Contains(newName, "..") {
+	if newName == "" || newCmd == "" || strings.ContainsAny(newName, "./\\") || strings.HasPrefix(newName, ".") || strings.Contains(newName, "..") || strings.ContainsAny(newName, "?*:#") {
 		http.Redirect(w, r, "/edit/"+name+"?err=invalid", 302)
 		return
 	}
@@ -86,6 +104,24 @@ func editAppHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		http.Redirect(w, r, "/", 302)
 		return
+	}
+
+	if newPath != "" {
+		cleanPath := filepath.Clean(newPath)
+		cleanAppsDir := filepath.Clean(config.AppsDir)
+		realPath, err := filepath.EvalSymlinks(cleanPath)
+		if err != nil {
+			http.Redirect(w, r, "/edit/"+name+"?err=invalid", 302)
+			return
+		}
+		realAppsDir, err := filepath.EvalSymlinks(cleanAppsDir)
+		if err != nil || realAppsDir == "" {
+			realAppsDir = cleanAppsDir
+		}
+		if !strings.HasPrefix(realPath+string(os.PathSeparator), realAppsDir+string(os.PathSeparator)) && realPath != realAppsDir {
+			http.Redirect(w, r, "/edit/"+name+"?err=invalid", 302)
+			return
+		}
 	}
 
 	running := false
@@ -105,6 +141,15 @@ func editAppHandler(w http.ResponseWriter, r *http.Request) {
 
 	oldPath := app.Path
 	autoStart := autoStr == "on"
+
+	if newPath != "" {
+		app.Path = newPath
+	} else if newName != name {
+		dirName := strings.ReplaceAll(newName, " ", "-")
+		app.Path = filepath.Join(config.AppsDir, dirName)
+	}
+
+	oldName := name
 	isRename := newName != name
 
 	if isRename {
@@ -112,46 +157,38 @@ func editAppHandler(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/edit/"+name+"?err=exists", 302)
 			return
 		}
+		newDirPath := app.Path
+		if app.Path == oldPath {
+			dirName := strings.ReplaceAll(newName, " ", "-")
+			newDirPath = filepath.Join(config.AppsDir, dirName)
+		}
+		if err := os.Rename(oldPath, newDirPath); err != nil {
+			http.Redirect(w, r, "/edit/"+name+"?err=rename", 302)
+			return
+		}
+		app.Path = newDirPath
+		delete(apps, oldName)
 	}
+
+	apps[newName] = app
 
 	app.Cmd = newCmd
 	app.SetupCmd = newSetupCmd
 	app.AutoStart = autoStart
 	app.WorkDir = newWorkDir
 	app.URL = newURL
-
-	if newPath != "" {
-		app.Path = newPath
-	} else if isRename {
-		app.Path = filepath.Join(config.AppsDir, newName)
-	}
-
 	apps[newName] = app
-	if isRename {
-		delete(apps, name)
-	}
 
 	if err := WriteJSON(config.ConfigApps, apps); err != nil {
-		http.Redirect(w, r, "/edit/"+name+"?err=save", 302)
-		return
-	}
-
-	if isRename {
-		newDirPath := app.Path
-		if app.Path == oldPath {
-			newDirPath = filepath.Join(config.AppsDir, newName)
-		}
-		if err := os.Rename(oldPath, newDirPath); err != nil {
+		if isRename {
+			_ = os.Rename(app.Path, oldPath)
+			apps[oldName] = app
 			app.Path = oldPath
-			apps[name] = app
 			delete(apps, newName)
 			_ = WriteJSON(config.ConfigApps, apps)
-			http.Redirect(w, r, "/edit/"+name+"?err=rename", 302)
-			return
 		}
-		app.Path = newDirPath
-		apps[newName] = app
-		_ = WriteJSON(config.ConfigApps, apps)
+		http.Redirect(w, r, "/edit/"+oldName+"?err=save", 302)
+		return
 	}
 
 	http.Redirect(w, r, "/edit/"+newName+"?ok=1", 302)

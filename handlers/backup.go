@@ -13,6 +13,8 @@ import (
 	"lightpanel/config"
 )
 
+const maxRestoreFileSize = 100 * 1024 * 1024 // 100MB 单个文件限制
+
 func backupData(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		w.WriteHeader(405)
@@ -30,8 +32,12 @@ func backupData(w http.ResponseWriter, r *http.Request) {
 	defer tw.Close()
 
 	baseDir := config.DataDir
+	sessionPath := config.ConfigDir + "/sessions"
 	filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
+			return nil
+		}
+		if path == sessionPath || strings.HasPrefix(path, sessionPath+string(os.PathSeparator)) {
 			return nil
 		}
 		rel, _ := filepath.Rel(filepath.Dir(baseDir), path)
@@ -80,19 +86,23 @@ func restoreData(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	if !strings.HasSuffix(header.Filename, ".tar.gz") {
+	if !strings.HasSuffix(header.Filename, ".tar.gz") && !strings.HasSuffix(header.Filename, ".tar") {
 		http.Redirect(w, r, "/setting?err=backup_format", 302)
 		return
 	}
 
-	gzr, err := gzip.NewReader(file)
-	if err != nil {
-		http.Redirect(w, r, "/setting?err=backup_format", 302)
-		return
+	var tr *tar.Reader
+	if strings.HasSuffix(header.Filename, ".tar.gz") {
+		gzr, err := gzip.NewReader(io.LimitReader(file, maxRestoreFileSize+1024*1024))
+		if err != nil {
+			http.Redirect(w, r, "/setting?err=backup_format", 302)
+			return
+		}
+		defer gzr.Close()
+		tr = tar.NewReader(gzr)
+	} else {
+		tr = tar.NewReader(io.LimitReader(file, maxRestoreFileSize+1024*1024))
 	}
-	defer gzr.Close()
-
-	tr := tar.NewReader(gzr)
 	for {
 		hdr, err := tr.Next()
 		if err == io.EOF {
@@ -103,9 +113,24 @@ func restoreData(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		target := filepath.Join(config.DataDir, hdr.Name)
-		target = filepath.Clean(target)
-		if !strings.HasPrefix(target, filepath.Clean(config.DataDir)) {
+		target := filepath.Clean(filepath.Join(config.DataDir, hdr.Name))
+		cleanBase := filepath.Clean(config.DataDir) + string(os.PathSeparator)
+		if strings.Contains(hdr.Name, "..") || strings.HasPrefix(hdr.Name, "/") {
+			continue
+		}
+		if !strings.HasPrefix(target, cleanBase) {
+			continue
+		}
+
+		realPath, err := filepath.EvalSymlinks(target)
+		if err != nil {
+			continue
+		}
+		realBase, err := filepath.EvalSymlinks(config.DataDir)
+		if err != nil {
+			continue
+		}
+		if !strings.HasPrefix(realPath, realBase) {
 			continue
 		}
 
@@ -113,12 +138,15 @@ func restoreData(w http.ResponseWriter, r *http.Request) {
 		case tar.TypeDir:
 			os.MkdirAll(target, 0755)
 		case tar.TypeReg:
+			if hdr.Size > maxRestoreFileSize {
+				continue
+			}
 			os.MkdirAll(filepath.Dir(target), 0755)
 			f, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(hdr.Mode))
 			if err != nil {
 				continue
 			}
-			io.Copy(f, tr)
+			_, err = io.CopyN(f, tr, maxRestoreFileSize)
 			f.Close()
 		}
 	}

@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-var shellMetaChars = []string{"|", ";", "$", "`", "(", ")", "{", "}", "<", ">", "&", "\\", "\n", "\r"}
+var shellMetaChars = []string{"|", ";", "$", "`", "(", ")", "{", "}", "<", ">", "\\", "\n", "\r", "&"}
 
 func validateCommand(cmd string) bool {
 	if cmd == "" {

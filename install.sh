@@ -2,9 +2,11 @@
 set -e
 
 # LightPanel 一键安装脚本
-# 用法: curl -L https://raw.githubusercontent.com/你的用户名/lightpanel/main/install.sh | bash -s v3.0.1
+# 用法: curl -Ls https://raw.githubusercontent.com/MyUI0/lightpanel/main/install.sh | bash
+# 指定版本: curl -Ls https://raw.githubusercontent.com/MyUI0/lightpanel/main/install.sh | bash -s v1.0.5
 
 VERSION=${1:-latest}
+REPO="MyUI0/lightpanel"
 
 # 检测架构
 ARCH=$(uname -m)
@@ -27,9 +29,8 @@ esac
 echo "🖥️  检测到架构: $ARCH ($ARCH_NAME)"
 
 # 确定下载链接
-REPO="https://github.com/你的用户名/lightpanel"
 FILENAME="lightpanel-${VERSION}-linux-${ARCH_NAME}.tar.gz"
-URL="${REPO}/releases/download/${VERSION}/${FILENAME}"
+URL="https://github.com/${REPO}/releases/download/${VERSION}/${FILENAME}"
 
 echo "📦 正在下载 LightPanel ${VERSION}..."
 curl -L "$URL" -o "${FILENAME}"

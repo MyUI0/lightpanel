@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"crypto/subtle"
+	"html/template"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,20 +23,25 @@ func settingPage(w http.ResponseWriter, r *http.Request) {
 
 	barkCfg := loadBarkConfig()
 
+	customPages := getCustomPages()
+
 	msg := r.URL.Query().Get("ok")
 	errMsg := r.URL.Query().Get("err")
 
 	_ = htmlRender.ExecuteTemplate(w, "setting", map[string]any{
-		"User":        usr,
-		"Username":    usr.Username,
-		"BgUrl":       bgConfig.URL,
-		"BgType":      bgConfig.Type,
-		"LogoUrl":     getLogoURL(),
-		"BarkEnabled": barkCfg.Enabled,
-		"BarkDevice":  barkCfg.Device,
-		"BarkGroup":   barkCfg.Group,
-		"Msg":         msg,
-		"Err":         errMsg,
+		"User":         usr,
+		"Username":     usr.Username,
+		"BgUrl":        bgConfig.URL,
+		"BgType":       bgConfig.Type,
+		"LogoUrl":      getLogoURL(),
+		"BarkEnabled":  barkCfg.Enabled,
+		"BarkDevice":   barkCfg.Device,
+		"BarkGroup":    barkCfg.Group,
+		"CustomPages":  customPages,
+		"Msg":          msg,
+		"Err":          errMsg,
+		"Sidebar":      template.HTML(sidebarHTML("/setting")),
+		"Topbar":       template.HTML(topbarHTML("设置")),
 	})
 }
 
@@ -54,7 +62,7 @@ func saveAccount(w http.ResponseWriter, r *http.Request) {
 	var usr models.UserConfig
 	_ = LoadJSON(config.ConfigUsr, &usr)
 
-	if hash(oldPwd) != usr.Password {
+	if subtle.ConstantTimeCompare([]byte(hash(oldPwd)), []byte(usr.Password)) != 1 {
 		http.Redirect(w, r, "/setting?err=password", 302)
 		return
 	}
@@ -133,13 +141,101 @@ func saveBark(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/setting?ok=1", 302)
 }
 
+func uploadPage(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseMultipartForm(10 << 20)
+
+	file, _, err := r.FormFile("page_file")
+	if err != nil {
+		http.Redirect(w, r, "/setting?err=upload", 302)
+		return
+	}
+	defer file.Close()
+
+	filename := strings.TrimSpace(r.Form.Get("filename"))
+	if filename == "" {
+		http.Redirect(w, r, "/setting?err=filename", 302)
+		return
+	}
+	if !strings.HasSuffix(strings.ToLower(filename), ".html") {
+		filename += ".html"
+	}
+	if strings.ContainsAny(filename, `/\`) || strings.Contains(filename, "..") {
+		http.Redirect(w, r, "/setting?err=invalid", 302)
+		return
+	}
+
+	pagesDir := config.DataDir + "/pages"
+	_ = os.MkdirAll(pagesDir, 0755)
+	fpath := filepath.Join(pagesDir, filename)
+
+	out, err := os.Create(fpath)
+	if err != nil {
+		http.Redirect(w, r, "/setting?err=create", 302)
+		return
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, file)
+	if err != nil {
+		http.Redirect(w, r, "/setting?err=write", 302)
+		return
+	}
+
+	http.Redirect(w, r, "/setting?ok=1", 302)
+}
+
+func deletePage(w http.ResponseWriter, r *http.Request) {
+	name := strings.TrimPrefix(r.URL.Path, "/page/del/")
+	pagesDir := config.DataDir + "/pages"
+	fpath := filepath.Join(pagesDir, name)
+
+	cleanPath := filepath.Clean(fpath)
+	cleanDir := filepath.Clean(pagesDir)
+	if !strings.HasPrefix(cleanPath, cleanDir) {
+		http.Redirect(w, r, "/setting", 302)
+		return
+	}
+
+	realPath, err := filepath.EvalSymlinks(fpath)
+	if err != nil {
+		http.Redirect(w, r, "/setting", 302)
+		return
+	}
+	realDir, err := filepath.EvalSymlinks(pagesDir)
+	if err != nil {
+		http.Redirect(w, r, "/setting", 302)
+		return
+	}
+	if !strings.HasPrefix(realPath, realDir) {
+		http.Redirect(w, r, "/setting", 302)
+		return
+	}
+
+	_ = os.Remove(fpath)
+	http.Redirect(w, r, "/setting", 302)
+}
+
 func logPage(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimPrefix(r.URL.Path, "/log/")
 	var apps map[string]models.Project
 	_ = LoadJSON(config.ConfigApps, &apps)
+
+	if name == "" {
+		appList := make([]string, 0, len(apps))
+		for n := range apps {
+			appList = append(appList, n)
+		}
+		_ = htmlRender.ExecuteTemplate(w, "log_list", map[string]any{
+			"Apps":    appList,
+			"Sidebar": template.HTML(sidebarHTML("/log/")),
+			"Topbar":  template.HTML(topbarHTML("运行日志")),
+		})
+		return
+	}
+
 	app, ok := apps[name]
 	if !ok {
-		http.Redirect(w, r, "/", 302)
+		http.Redirect(w, r, "/log/", 302)
 		return
 	}
 	logFile := filepath.Join(app.Path, "run.log")
@@ -152,6 +248,9 @@ func logPage(w http.ResponseWriter, r *http.Request) {
 			readSize := size
 			if readSize > int64(config.MaxLogLen) {
 				readSize = int64(config.MaxLogLen)
+			}
+			if readSize < 1 {
+				readSize = 1
 			}
 			offset := size - readSize
 			if offset < 0 {
@@ -170,7 +269,7 @@ func logPage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	lineCount = strings.Count(content, "\n")
-	_ = htmlRender.ExecuteTemplate(w, "log", map[string]any{"Name": name, "Log": content, "LineCount": lineCount})
+	_ = htmlRender.ExecuteTemplate(w, "log", map[string]any{"Name": name, "Log": content, "LineCount": lineCount, "Sidebar": template.HTML(sidebarHTML("/log/")), "Topbar": template.HTML(topbarHTML("运行日志"))})
 }
 
 func clearLog(w http.ResponseWriter, r *http.Request) {
@@ -178,7 +277,7 @@ func clearLog(w http.ResponseWriter, r *http.Request) {
 	var apps map[string]models.Project
 	_ = LoadJSON(config.ConfigApps, &apps)
 	if app, ok := apps[name]; ok {
-		_ = os.WriteFile(filepath.Join(app.Path, "run.log"), nil, 0644)
+		_ = os.WriteFile(filepath.Join(app.Path, "run.log"), []byte{}, 0644)
 	}
 	http.Redirect(w, r, "/log/"+name, 302)
 }
@@ -186,6 +285,11 @@ func clearLog(w http.ResponseWriter, r *http.Request) {
 func killSystemProc(w http.ResponseWriter, r *http.Request) {
 	pid, _ := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/kill/"))
 	if pid <= 1 || pid >= 100000 {
+		http.Redirect(w, r, "/system", 302)
+		return
+	}
+
+	if protectedPids[pid] {
 		http.Redirect(w, r, "/system", 302)
 		return
 	}
@@ -212,4 +316,11 @@ func killSystemProc(w http.ResponseWriter, r *http.Request) {
 		_ = p.Kill()
 	}
 	http.Redirect(w, r, "/system", 302)
+}
+
+var protectedPids = map[int]bool{
+	1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 7: true, 8: true, 9: true,
+	10: true, 11: true, 12: true, 13: true, 14: true, 15: true, 16: true, 17: true, 18: true,
+	19: true, 20: true, 21: true, 22: true, 23: true, 24: true, 25: true, 26: true, 27: true, 28: true,
+	29: true, 30: true,
 }

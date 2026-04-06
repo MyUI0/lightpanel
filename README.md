@@ -2,7 +2,7 @@
   <h1 align="center">🚀 LightPanel</h1>
   <p align="center">一个极简的 Linux 服务器自部署二进制项目管理面板</p>
   <p align="center">
-    <img src="https://img.shields.io/badge/version-v3.0.1-blue.svg" alt="Version">
+    <img src="https://img.shields.io/badge/version-v1.0.5-blue.svg" alt="Version">
     <img src="https://img.shields.io/badge/Go-1.21+-00ADD8.svg?logo=go" alt="Go">
     <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
   </p>
@@ -27,10 +27,11 @@
 | 🔍 **启动失败检测** | 自动分析日志，提示缺失依赖 |
 | ✏️ **编辑应用** | 修改路径、命令、工作目录、网页地址、重命名 |
 | 📜 **脚本分析** | 分析安装脚本，提取依赖包、端口号、环境变量 |
-| 🎨 **主题切换** | 深色/浅色模式即时切换，侧栏折叠记忆 |
+| 🎨 **主题切换** | 深色/浅色模式即时切换，支持系统偏好，侧栏折叠记忆 |
 | 🖼️ **自定义 Logo** | 侧栏页头支持自定义图片 |
 | 🖼️ **自定义 背景** | 支持自定义背景图片 |
 | 🔒 **安全加固** | 登录限流、CSRF Token、命令白名单、SSRF 防护 |
+| 💾 **备份还原** | 完整数据备份/恢复，支持 exclude 目录 |
 
 ## 🎯 适用场景
 
@@ -43,33 +44,54 @@
 ### 一键安装 (Linux)
 
 ```bash
-curl -L https://raw.githubusercontent.com/MyUI0/lightpanel/main/install.sh | bash -s v3.0.1
+curl -Ls https://raw.githubusercontent.com/MyUI0/lightpanel/main/install.sh | bash
 ```
 
 自动检测并下载对应架构版本 (amd64 / arm64 / armv7)
 
-或手动安装(例子,版本号会更新):
+### 一键安装 (指定版本)
+
+```bash
+curl -Ls https://raw.githubusercontent.com/MyUI0/lightpanel/main/install.sh | bash -s v1.0.5
+```
+
+### 手动安装
 
 ```bash
 # amd64 - 主流VPS/服务器
-wget https://github.com/MyUI0/lightpanel/releases/download/v3.0.1/lightpanel-v3.0.1-linux-amd64.tar.gz
-tar -xzf lightpanel-v3.0.1-linux-amd64.tar.gz
+wget https://github.com/MyUI0/lightpanel/releases/download/v1.0.5/lightpanel-v1.0.5-linux-amd64.tar.gz
+tar -xzf lightpanel-v1.0.5-linux-amd64.tar.gz
+chmod +x lightpanel
+./lightpanel
+```
+
+```bash
+# arm64 - 树莓派4/5, 群晖, 威联通等
+wget https://github.com/MyUI0/lightpanel/releases/download/v1.0.5/lightpanel-v1.0.5-linux-arm64.tar.gz
+tar -xzf lightpanel-v1.0.5-linux-arm64.tar.gz
+chmod +x lightpanel
+./lightpanel
+```
+
+```bash
+# armv7 - 树莓派3/香橙派等
+wget https://github.com/MyUI0/lightpanel/releases/download/v1.0.5/lightpanel-v1.0.5-linux-armv7.tar.gz
+tar -xzf lightpanel-v1.0.5-linux-armv7.tar.gz
 chmod +x lightpanel
 ./lightpanel
 ```
 
 > 注意: 树莓派请使用 arm64/armv7 版本
 
-
 ### 编译安装
 
 ```bash
-# 1. 下载源码（或解压 tar.gz）
+# 1. 下载源码
 git clone https://github.com/MyUI0/LightPanel.git
 cd LightPanel
 
-# 2. 一键编译（自动检测 Go、设置代理、下载依赖、编译）
-bash build.sh
+# 2. 编译
+go build -o lightpanel .
 
 # 3. 运行
 chmod +x lightpanel
@@ -111,30 +133,67 @@ handlers/
   script_analyze.go  # 脚本分析
   detect.go          # 可执行文件检测
   extract.go         # 压缩包解压
+  backup.go          # 备份还原
+  notify.go          # Bark 推送
+  hooks.go           # 钩子脚本
 ```
 
 ## 🎨 修改 UI
 
-所有页面集中在 `handlers/templates.go`，改完 `go build` 即可，无需构建工具。
+所有页面集中在 `handlers/tpl_*.go`，改完 `go build` 即可，无需构建工具。
 
-## 🏪 制作商店源
+## 🏪 商店源规则
 
-欢迎制作自己的应用商店源！只需提供一个返回 JSON 数组的 HTTP 地址即可，格式如下：
+欢迎制作自己的应用商店源！只需提供一个返回 JSON 数组的 HTTP 地址即可。
+
+### JSON 字段说明
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| `name` | ✅ | 应用名称 |
+| `desc` | ✅ | 应用描述 |
+| `icon` | ❌ | 图标 URL |
+| `url` | ✅ | 下载地址，支持 `{{arch}}` 和 `{{os}}` 占位符 |
+| `cmd` | ❌ | 启动命令，支持 `{{arch}}` 和 `{{os}}` 占位符 |
+| `port` | ❌ | 默认端口号 |
+| `setup_cmd` | ❌ | 首次运行命令（仅执行一次） |
+| `auto_extract` | ❌ | 自动解压压缩包 (true/false) |
+| `make_exec` | ❌ | 自动设置可执行权限 (true/false) |
+| `params` | ❌ | 允许用户输入的参数 |
+| `author` | ❌ | 作者 |
+| `version` | ❌ | 版本号 |
+| `home_url` | ❌ | 官方主页 |
+
+### 占位符说明
+
+- `{{arch}}` - 自动替换为系统架构 (amd64, arm64, armv7)
+- `{{os}}` - 自动替换为系统类型 (linux, darwin)
+- `{{params}}` - 用户自定义参数（需商店启用参数功能）
+
+### 示例
 
 ```json
 [
   {
-    "name": "应用名称",
-    "desc": "应用描述",
-    "icon": "图标 URL",
-    "url": "下载地址",
-    "cmd": "启动命令",
-    "author": "作者"
+    "name": "baihu",
+    "desc": "白虎面板 - 轻量级面板",
+    "icon": "https://example.com/icon.png",
+    "url": "https://example.com/baihu-linux-{{arch}}.tar.gz",
+    "cmd": "./baihu-linux-{{arch}} server",
+    "port": 8080,
+    "auto_extract": true,
+    "author": "author"
   }
 ]
 ```
 
 然后在面板的"源管理"页面添加你的源地址即可。
+
+### 内置商店源
+
+面板默认包含以下源：
+
+- `https://raw.githubusercontent.com/MyUI0/lightpanel/main/store_example.json`
 
 ## ⚖️ 免责声明
 
