@@ -71,7 +71,7 @@
       "icon": "https://filebrowser.org/static/logo.png",
       "url": "https://edgeone.gh-proxy.org/https://github.com/filebrowser/filebrowser/releases/download/v2.63.1/linux-{{arch}}-filebrowser.tar.gz",
       "cmd": "./filebrowser",
-      "author": "gtsteffaniak",
+      "author": "filebrowser",
       "version": "v2.63.1",
       "setup_cmd": "filebrowser config set --port 8082",
       "auto_extract": false,
