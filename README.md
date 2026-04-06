@@ -190,9 +190,7 @@ handlers/
 
 然后在面板的"源管理"页面添加你的源地址即可。
 
-### 内置商店源
-
-面板源：
+### 商店源
 
 - [https://raw.githubusercontent.com/MyUI0/lightpanel/refs/heads/main/source.json]
 
