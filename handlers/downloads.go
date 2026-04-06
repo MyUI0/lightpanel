@@ -1076,6 +1076,9 @@ func resumeDownload(id string) {
 		result := combinedDetect(sandbox, scanTime)
 		appOpMu.Lock()
 		var updated map[string]models.Project
+		dlName := task.Name
+		dlCmd := task.Cmd
+		dlVersion := task.Version
 		if err := LoadJSON(config.ConfigApps, &updated); err == nil {
 			proj, exists := updated[task.Name]
 			if !exists {
@@ -1084,26 +1087,26 @@ func resumeDownload(id string) {
 				Created:   time.Now().Format("2006-01-02 15:04"),
 				}
 			}
-		if result.WorkDir != "" {
-			proj.WorkDir = result.WorkDir
-		}
-		if dlCmd != "" {
-			dlCmd = strings.ReplaceAll(dlCmd, "{{arch}}", getCachedSystemInfo().Arch)
-			dlCmd = strings.ReplaceAll(dlCmd, "{{os}}", getCachedSystemInfo().OS)
-			proj.Cmd = dlCmd
-		} else if result.Binary != "" {
-			proj.Cmd = result.Binary
-		}
-		proj.Version = dlVersion
-		if app.Port > 0 {
-			proj.Port = app.Port
-			if proj.URL == "" {
-				proj.URL = "http://" + getLocalIP() + ":" + strconv.Itoa(app.Port)
+			if result.WorkDir != "" {
+				proj.WorkDir = result.WorkDir
 			}
+			if dlCmd != "" {
+				dlCmd = strings.ReplaceAll(dlCmd, "{{arch}}", getCachedSystemInfo().Arch)
+				dlCmd = strings.ReplaceAll(dlCmd, "{{os}}", getCachedSystemInfo().OS)
+				proj.Cmd = dlCmd
+			} else if result.Binary != "" {
+				proj.Cmd = result.Binary
+			}
+			proj.Version = dlVersion
+			if task.Port > 0 {
+				proj.Port = task.Port
+				if proj.URL == "" {
+					proj.URL = "http://" + getLocalIP() + ":" + strconv.Itoa(task.Port)
+				}
+			}
+			updated[dlName] = proj
+			_ = WriteJSON(config.ConfigApps, updated)
 		}
-		updated[dlName] = proj
-		_ = WriteJSON(config.ConfigApps, updated)
-	}
 	appOpMu.Unlock()
 	_ = os.WriteFile(filepath.Join(sandbox, "install_note.txt"), []byte(result.Note), 0644)
 		task.SetStatus("completed")
