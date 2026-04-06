@@ -16,13 +16,32 @@ on:
         default: true
 
 permissions:
-  contents: write
+  contents: write  # 允许创建标签和发布
 
 env:
   VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
 
 jobs:
+  # 手动触发时自动创建 Git 标签（修复核心！）
+  create-tag:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create Git Tag
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ env.VERSION }}
+          git push origin ${{ env.VERSION }}
+
   build:
+    needs: create-tag  # 手动触发需先创建tag
+    if: always()
     strategy:
       matrix:
         target:
@@ -34,6 +53,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.VERSION }}  # 切换到对应版本
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -45,26 +66,17 @@ jobs:
           go env -w GOPROXY=https://goproxy.cn,direct
           go env -w GOSUMDB=off
 
-      - name: Download dependencies
-        run: |
-          go clean -modcache
-          go mod tidy
-
       - name: Build
         env:
           GOOS: ${{ matrix.target.os }}
           GOARCH: ${{ matrix.target.arch }}
           CGO_ENABLED: 0
         run: |
-          # 定义文件名
           BIN_NAME="lightpanel"
           PKG_NAME="${BIN_NAME}-${{ env.VERSION }}-${{ matrix.target.os }}-${{ matrix.target.arch }}"
-          # 编译二进制
           go build -ldflags="-s -w -X lightpanel/config.Version=${{ env.VERSION }}" -o "${BIN_NAME}" .
-          # 创建打包目录（避免和二进制同名冲突）
           mkdir -p "${PKG_NAME}"
           mv "${BIN_NAME}" "${PKG_NAME}/"
-          # 打包压缩
           tar -czf "${PKG_NAME}.tar.gz" "${PKG_NAME}"
 
       - name: Upload Artifact
@@ -89,43 +101,32 @@ jobs:
           cat > install.sh << 'INSTALL_SCRIPT'
           #!/bin/bash
           set -e
-          
-          # 检测系统架构
           ARCH=$(uname -m)
           case $ARCH in
             x86_64) ARCH_NAME="amd64" ;;
             aarch64|arm64) ARCH_NAME="arm64" ;;
             *) echo "❌ 不支持的架构: $ARCH"; exit 1 ;;
           esac
-          
-          # 版本设置
           VERSION=${1:-latest}
-          REPO=${GITHUB_REPOSITORY:-${{ github.repository }}}
-          
-          echo "📦 正在下载 LightPanel ${VERSION} (${ARCH_NAME})..."
-          curl -L "https://github.com/${REPO}/releases/download/${VERSION}/lightpanel-${VERSION}-linux-${ARCH_NAME}.tar.gz" -o lightpanel.tar.gz
-          
-          echo "📂 正在解压文件..."
+          REPO=${GITHUB_REPOSITORY}
+          echo "📦 下载 LightPanel $VERSION ($ARCH_NAME)..."
+          curl -L "https://github.com/$REPO/releases/download/$VERSION/lightpanel-$VERSION-linux-$ARCH_NAME.tar.gz" -o lightpanel.tar.gz
           tar -xzf lightpanel.tar.gz --strip-components=1
           chmod +x lightpanel
-          rm -rf lightpanel.tar.gz
-          
-          echo "✅ 安装完成！"
-          echo "▶️  运行命令: ./lightpanel"
-          echo "🌐 访问地址: http://127.0.0.1:31956"
-          echo "🔐 默认账号: admin / admin"
+          rm -f lightpanel.tar.gz
+          echo "✅ 安装完成！运行: ./lightpanel"
           INSTALL_SCRIPT
           chmod +x install.sh
 
-      - name: Release to GitHub
+      - name: Publish Release
         uses: softprops/action-gh-release@v2
         with:
+          tag: ${{ env.VERSION }}  # 强制指定标签（核心修复）
           files: |
             artifacts/*.tar.gz
             install.sh
           body: |
             ## LightPanel ${{ env.VERSION }}
-
-            ### 一键自动安装 (推荐)
+            ### 一键安装
             ```bash
             curl -L https://github.com/${{ github.repository }}/raw/main/install.sh | bash -s ${{ env.VERSION }}
