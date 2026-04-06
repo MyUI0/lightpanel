@@ -100,7 +100,7 @@
       "author": "Cloudflare",
       "version": "latest",
       "auto_extract": false,
-      "make_exec": true
+      "make_exec": true,
       "ask_params": true,
       "params_hint": "tunnel run --token 你的Cloudflare隧道Token"
     },
