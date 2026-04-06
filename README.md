@@ -44,17 +44,9 @@
 
 ### 一键安装 (Linux)
 
-```bash
-curl -Ls https://raw.githubusercontent.com/MyUI0/lightpanel/main/install.sh | bash
+```在releases界面有一键脚本
 ```
 
-自动检测并下载对应架构版本 (amd64 / arm64)
-
-### 一键安装 (指定版本)
-
-```bash
-curl -Ls https://raw.githubusercontent.com/MyUI0/lightpanel/main/install.sh | bash -s v1.0.5
-```
 
 ### 手动安装
 
