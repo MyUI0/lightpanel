@@ -66,8 +66,21 @@
       "port": 8052
     },
     {
-      "name": "FileBrowser Quantum",
+      "name": "FileBrowser",
       "desc": "轻量级 Web 文件管理器，支持在线浏览，上传、下载和分享",
+      "icon": "https://filebrowser.org/static/logo.png",
+      "url": "https://edgeone.gh-proxy.org/https://github.com/filebrowser/filebrowser/releases/download/v2.63.1/linux-{{arch}}-filebrowser.tar.gz",
+      "cmd": "./filebrowser",
+      "author": "gtsteffaniak",
+      "version": "v2.63.1",
+      "setup_cmd": "filebrowser config set --port 8082",
+      "auto_extract": false,
+      "make_exec": true,
+      "port": 8082
+    },
+    {
+      "name": "FileBrowser Quantum",
+      "desc": "增强版轻量级 Web 文件管理器，支持在线浏览，上传、下载和分享",
       "icon": "https://filebrowser.org/static/logo.png",
       "url": "https://edgeone.gh-proxy.org/https://github.com/gtsteffaniak/filebrowser/releases/download/v1.2.4-stable/linux-{{arch}}-filebrowser",
       "cmd": "./linux-{{arch}}-filebrowser",
