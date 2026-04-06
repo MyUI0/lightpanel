@@ -151,6 +151,17 @@ var ic=b.querySelector('i');if(ic){ic.className='fa-solid fa-sun';}
 localStorage.setItem('lp_theme','light');
 }else{
 document.documentElement.setAttribute('data-theme','dark');
+document.documentElement.style.removeProperty('--bg');
+document.documentElement.style.removeProperty('--bg2');
+document.documentElement.style.removeProperty('--card');
+document.documentElement.style.removeProperty('--card-h');
+document.documentElement.style.removeProperty('--text');
+document.documentElement.style.removeProperty('--text2');
+document.documentElement.style.removeProperty('--border');
+document.documentElement.style.removeProperty('--input-bg');
+document.documentElement.style.removeProperty('--input-b');
+document.documentElement.style.removeProperty('--input-t');
+document.documentElement.style.removeProperty('--input-ph');
 var ic=b.querySelector('i');if(ic){ic.className='fa-solid fa-moon';}
 localStorage.setItem('lp_theme','dark');
 }
