@@ -16,13 +16,14 @@ on:
         default: true
 
 permissions:
-  contents: write  # 允许创建标签和发布
+  contents: write
 
+# 修复 Node.js20 弃用警告（核心修复1）
 env:
   VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  # 手动触发时自动创建 Git 标签（修复核心！）
   create-tag:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'
@@ -40,7 +41,7 @@ jobs:
           git push origin ${{ env.VERSION }}
 
   build:
-    needs: create-tag  # 手动触发需先创建tag
+    needs: create-tag
     if: always()
     strategy:
       matrix:
@@ -54,22 +55,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.VERSION }}  # 切换到对应版本
+          ref: ${{ env.VERSION }}
 
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.22'
 
-      - name: Set Go proxy
+      - name: Configure Go Proxy
         run: |
           go env -w GOPROXY=https://goproxy.cn,direct
           go env -w GOSUMDB=off
 
-      - name: Build
+      # 修复 go.sum 缺失依赖（核心修复2）
+      - name: Prepare Dependencies
+        run: |
+          go clean -modcache
+          go get -d ./...
+          go mod tidy
+          go mod verify
+
+      - name: Build Binary
         env:
           GOOS: ${{ matrix.target.os }}
-          GOARCH: ${{ matrix.target.arch }}
+          GOARCH: ${{ matrix.target.os }}
           CGO_ENABLED: 0
         run: |
           BIN_NAME="lightpanel"
@@ -96,7 +105,7 @@ jobs:
           path: artifacts
           merge-multiple: true
 
-      - name: Create Installer Script
+      - name: Generate Install Script
         run: |
           cat > install.sh << 'INSTALL_SCRIPT'
           #!/bin/bash
@@ -109,19 +118,20 @@ jobs:
           esac
           VERSION=${1:-latest}
           REPO=${GITHUB_REPOSITORY}
-          echo "📦 下载 LightPanel $VERSION ($ARCH_NAME)..."
           curl -L "https://github.com/$REPO/releases/download/$VERSION/lightpanel-$VERSION-linux-$ARCH_NAME.tar.gz" -o lightpanel.tar.gz
           tar -xzf lightpanel.tar.gz --strip-components=1
           chmod +x lightpanel
           rm -f lightpanel.tar.gz
-          echo "✅ 安装完成！运行: ./lightpanel"
+          echo "✅ 安装成功！运行: ./lightpanel"
+          echo "🌐 面板地址: http://127.0.0.1:31956"
+          echo "🔐 默认账号: admin / admin"
           INSTALL_SCRIPT
           chmod +x install.sh
 
-      - name: Publish Release
+      - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag: ${{ env.VERSION }}  # 强制指定标签（核心修复）
+          tag: ${{ env.VERSION }}
           files: |
             artifacts/*.tar.gz
             install.sh
