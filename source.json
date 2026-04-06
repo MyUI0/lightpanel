@@ -70,10 +70,10 @@
       "desc": "轻量级 Web 文件管理器，支持在线浏览，上传、下载和分享",
       "icon": "https://filebrowser.org/static/logo.png",
       "url": "https://edgeone.gh-proxy.org/https://github.com/gtsteffaniak/filebrowser/releases/download/v1.2.4-stable/linux-{{arch}}-filebrowser",
-      "cmd": "./filebrowser-linux-{{arch}}",
+      "cmd": "./linux-{{arch}}-filebrowser",
       "author": "gtsteffaniak",
       "version": "1.2.4-stable",
-      "setup_cmd": "./filebrowser-linux-{{arch}} config init -p 8082 -a 0.0.0.0",
+      "setup_cmd": "./linux-{{arch}}-filebrowser config init -p 8082 -a 0.0.0.0",
       "auto_extract": false,
       "make_exec": true,
       "port": 8082
