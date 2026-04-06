@@ -48,7 +48,7 @@
 curl -Ls https://raw.githubusercontent.com/MyUI0/lightpanel/main/install.sh | bash
 ```
 
-自动检测并下载对应架构版本 (amd64 / arm64 / armv7)
+自动检测并下载对应架构版本 (amd64 / arm64)
 
 ### 一键安装 (指定版本)
 
@@ -74,15 +74,8 @@ chmod +x lightpanel
 ./lightpanel
 ```
 
-```bash
-# armv7 - 树莓派3/香橙派等
-wget https://github.com/MyUI0/lightpanel/releases/download/v1.0.5/lightpanel-v1.0.5-linux-armv7.tar.gz
-tar -xzf lightpanel-v1.0.5-linux-armv7.tar.gz
-chmod +x lightpanel
-./lightpanel
-```
 
-> 注意: 树莓派请使用 arm64/armv7 版本
+> 注意: 树莓派请使用 arm64 版本
 
 ### 编译安装
 
