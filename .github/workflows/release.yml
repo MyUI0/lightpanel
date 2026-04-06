@@ -93,35 +93,33 @@ jobs:
           merge-multiple: true
 
       - name: Generate universal install script
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const repo = context.repo.owner + '/' + context.repo.repo;
-            const installScript = `#!/bin/bash
+        run: |
+          # 注意：以下 install.sh 内容必须完全左对齐，不能有缩进！
+          cat > install.sh << 'EOF'
+#!/bin/bash
 set -e
 # ==================== 配置 ====================
 INSTALL_DIR="/opt/lightpanel"
 BIN_NAME="lightpanel"
-REPO="${repo}"
+REPO="${{ github.repository }}"
 # ==============================================
 
 # 基础校验
 if [ "$(id -u)" != "0" ]; then
-  echo "❌ 请使用 root 权限运行"
-  exit 1
+echo "❌ 请使用 root 权限运行"
+exit 1
 fi
 if [ "$(uname -s)" != "Linux" ]; then
-  echo "❌ 仅支持 Linux"
-  exit 1
+echo "❌ 仅支持 Linux"
+exit 1
 fi
 
 # 架构识别
 ARCH=$(uname -m)
 case $ARCH in
-  x86_64) ARCH_NAME="amd64" ;;
-  aarch64|arm64) ARCH_NAME="arm64" ;;
-  *) echo "❌ 不支持架构: $ARCH"; exit 1 ;;
+x86_64) ARCH_NAME="amd64" ;;
+aarch64|arm64) ARCH_NAME="arm64" ;;
+*) echo "❌ 不支持架构: $ARCH"; exit 1 ;;
 esac
 
 # 版本
@@ -130,9 +128,9 @@ VERSION="${1:-latest}"
 # 判断：初次安装 / 更新
 echo "============================================"
 if [ -f "${INSTALL_DIR}/${BIN_NAME}" ]; then
-  echo "🔄 已安装，执行覆盖更新"
+echo "🔄 已安装，执行覆盖更新"
 else
-  echo "🆕 未安装，执行初次部署"
+echo "🆕 未安装，执行初次部署"
 fi
 echo "============================================"
 
@@ -150,14 +148,14 @@ rm -f ${BIN_NAME}.tar.gz
 # 自动检测 systemd（无则跳过）
 HAS_SYSTEMD=false
 if pidof systemd >/dev/null 2>&1 && command -v systemctl >/dev/null 2>&1; then
-  HAS_SYSTEMD=true
+HAS_SYSTEMD=true
 fi
 
 # 仅有 systemd 时配置服务
 if [ "$HAS_SYSTEMD" = true ]; then
-  echo "⚙️ 检测到 systemd，配置后台服务"
-  if [ ! -f "/etc/systemd/system/${BIN_NAME}.service" ]; then
-    cat > /etc/systemd/system/${BIN_NAME}.service << 'EOF_SERVICE'
+echo "⚙️ 检测到 systemd，配置后台服务"
+if [ ! -f "/etc/systemd/system/${BIN_NAME}.service" ]; then
+cat > /etc/systemd/system/${BIN_NAME}.service << 'EOF_SERVICE'
 [Unit]
 Description=LightPanel
 After=network.target
@@ -169,12 +167,12 @@ RestartSec=3
 [Install]
 WantedBy=multi-user.target
 EOF_SERVICE
-    systemctl daemon-reload
-    systemctl enable $BIN_NAME
-  fi
-  systemctl restart $BIN_NAME
+systemctl daemon-reload
+systemctl enable $BIN_NAME
+fi
+systemctl restart $BIN_NAME
 else
-  echo "ℹ️ 无 systemd（容器/精简系统），跳过服务配置"
+echo "ℹ️ 无 systemd（容器/精简系统），跳过服务配置"
 fi
 
 # 完成提示
@@ -189,12 +187,12 @@ echo "============================================"
 
 # 容器环境自动前台运行
 if [ -f "/.dockerenv" ] || [ -f "/.containerenv" ]; then
-  echo "🌟 容器环境，前台启动程序"
-  exec "$INSTALL_DIR/$BIN_NAME"
+echo "🌟 容器环境，前台启动程序"
+exec "$INSTALL_DIR/$BIN_NAME"
 fi
-`;
-            fs.writeFileSync('install.sh', installScript);
-            fs.chmodSync('install.sh', '755');
+EOF
+          # 注意：上面的 EOF 必须顶格写，不能有缩进！
+          chmod +x install.sh
 
       - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v2
