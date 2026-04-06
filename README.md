@@ -194,7 +194,7 @@ handlers/
 
 面板默认包含以下源：
 
-- `[https://raw.githubusercontent.com/MyUI0/lightpanel/main/store_example.json](https://raw.githubusercontent.com/MyUI0/lightpanel/refs/heads/main/source.json)]`
+- `[https://raw.githubusercontent.com/MyUI0/lightpanel/refs/heads/main/source.json]
 
 ## ⚖️ 免责声明
 
