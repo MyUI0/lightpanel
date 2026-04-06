@@ -30,8 +30,6 @@ jobs:
             arch: amd64
           - os: linux
             arch: arm64
-          - os: linux
-            arch: armv7
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -87,7 +85,6 @@ jobs:
           case $ARCH in
             x86_64) ARCH_NAME="amd64" ;;
             aarch64) ARCH_NAME="arm64" ;;
-            armv7l) ARCH_NAME="armv7" ;;
             *) echo "不支持的架构: $ARCH"; exit 1 ;;
           esac
           
@@ -128,9 +125,6 @@ jobs:
             
             # arm64 (树莓派4/5、ARM服务器)
             tar -xzf lightpanel-${{ env.VERSION }}-linux-arm64.tar.gz
-            
-            # armv7 (树莓派3)
-            tar -xzf lightpanel-${{ env.VERSION }}-linux-armv7.tar.gz
             
             chmod +x lightpanel
             ./lightpanel
