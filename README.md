@@ -192,9 +192,9 @@ handlers/
 
 ### 内置商店源
 
-面板默认包含以下源：
+面板源：
 
-- `[https://raw.githubusercontent.com/MyUI0/lightpanel/refs/heads/main/source.json]
+- [https://raw.githubusercontent.com/MyUI0/lightpanel/refs/heads/main/source.json]
 
 ## ⚖️ 免责声明
 
