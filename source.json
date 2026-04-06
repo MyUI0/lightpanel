@@ -83,11 +83,13 @@
       "desc": "将本地服务安全暴露到公网。默认使用 Quick Tunnel 模式（无需 Token）。如需固定域名，请部署后在编辑页修改命令添加 --token。",
       "icon": "https://developers.cloudflare.com/_astro/logo.DAG2yejx.svg",
       "url": "https://edgeone.gh-proxy.org/https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-{{arch}}",
-      "cmd": "./cloudflared-linux-{{arch}} tunnel --url http://localhost:8080",
+      "cmd": "./cloudflared-linux-{{arch}} {{params}}",
       "author": "Cloudflare",
       "version": "latest",
       "auto_extract": false,
       "make_exec": true
+      "ask_params": true,
+      "params_hint": "tunnel run --token 你的Cloudflare隧道Token"
     },
     {
       "name": "SamWaf",
