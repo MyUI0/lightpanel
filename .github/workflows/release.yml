@@ -27,8 +27,10 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Create and push tag
         run: |
           git config user.name "github-actions[bot]"
@@ -43,21 +45,27 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - { os: linux, arch: amd64 }
-          - { os: linux, arch: arm64 }
+          - os: linux
+            arch: amd64
+          - os: linux
+            arch: arm64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with: { ref: ${{ env.VERSION }} }
-      - uses: actions/setup-go@v5
-        with: { go-version: "1.22" }
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.VERSION }}
+      - name: Setup Go environment
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
       - name: Install dependencies
         run: |
           go env -w GOPROXY=https://goproxy.cn,direct
           go clean -modcache
           go get -d ./...
           go mod tidy
-      - name: Build
+      - name: Build binary
         env:
           GOOS: ${{ matrix.target.os }}
           GOARCH: ${{ matrix.target.arch }}
@@ -69,7 +77,8 @@ jobs:
           mkdir -p $PKG
           mv $BIN $PKG/
           tar -czf $PKG.tar.gz $PKG
-      - uses: actions/upload-artifact@v4
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target.os }}-${{ matrix.target.arch }}
           path: "*.tar.gz"
@@ -79,70 +88,56 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.release == true)
     steps:
-      - uses: actions/download-artifact@v4
-        with: { path: artifacts, merge-multiple: true }
-
-      # ====================== 你要的安装脚本（核心修改）======================
-      - name: Create install.sh
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Create install script
         run: |
           cat > install.sh << 'EOF'
           #!/bin/bash
           set -e
-          
-          # 1. 定义安装目录
           INSTALL_DIR="/opt/lightpanel"
-          
-          # 2. 检测架构
           ARCH=$(uname -m)
           case $ARCH in
             x86_64) ARCH_NAME="amd64" ;;
             aarch64|arm64) ARCH_NAME="arm64" ;;
             *) echo "❌ 不支持的架构: $ARCH"; exit 1 ;;
           esac
-          
-          # 3. 版本参数
           VERSION=${1:-latest}
-          REPO="${{ github.repository }}"
-          
+          REPO=${{ github.repository }}
+
           echo "============================================"
-          echo "📦 安装 LightPanel 到目录: $INSTALL_DIR"
+          echo "📦 安装 LightPanel 到: $INSTALL_DIR"
           echo "============================================"
-          
-          # 4. 创建安装目录
+
           mkdir -p "$INSTALL_DIR"
           cd "$INSTALL_DIR"
-          
-          # 5. 下载程序包
-          echo "⬇️  正在下载..."
+
+          echo "⬇️  下载中..."
           curl -L "https://gh.llkk.cc/https://github.com/$REPO/releases/download/$VERSION/lightpanel-$VERSION-linux-$ARCH_NAME.tar.gz" -o lightpanel.tar.gz
-          
-          # 6. 解压
-          echo "📂 正在解压..."
+
+          echo "📂 解压中..."
           tar -xzf lightpanel.tar.gz --strip-components=1
-          
-          # 7. 赋予执行权限
-          echo "🔐 赋予权限..."
+
+          echo "🔐 赋予执行权限..."
           chmod +x lightpanel
-          
-          # 8. 清理安装包
+
           rm -rf lightpanel.tar.gz
-          
+
           echo "============================================"
           echo "✅ 安装完成！"
-          echo "📂 安装路径: $INSTALL_DIR"
-          echo "▶️  启动命令: cd $INSTALL_DIR && ./lightpanel"
-          echo "🌐 访问地址: http://127.0.0.1:31956"
-          echo "🔐 默认账号: admin / admin"
+          echo "📂 路径: $INSTALL_DIR"
+          echo "🌐 访问: http://127.0.0.1:31956"
+          echo "🔐 账号: admin / admin"
           echo "============================================"
-          
-          # 9. 自动启动（可选）
-          echo "🚀 正在启动 LightPanel..."
+
+          echo "🚀 启动程序..."
           cd "$INSTALL_DIR" && ./lightpanel
           EOF
           chmod +x install.sh
-
-      # 发布
-      - name: Publish Release
+      - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.VERSION }}
@@ -151,6 +146,6 @@ jobs:
             install.sh
           body: |
             ## LightPanel ${{ env.VERSION }}
-            ### 一键安装（安装到 /opt/lightpanel）
+            ### 一键安装（自动安装到 /opt/lightpanel）
             ```bash
             curl -L https://gh.llkk.cc/https://github.com/${{ github.repository }}/releases/download/${{ env.VERSION }}/install.sh | bash -s ${{ env.VERSION }}
