@@ -93,14 +93,17 @@ jobs:
           merge-multiple: true
 
       - name: Generate universal install script
-        run: |
-          cat > install.sh << 'EOF'
-#!/bin/bash
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const repo = context.repo.owner + '/' + context.repo.repo;
+            const installScript = `#!/bin/bash
 set -e
 # ==================== 配置 ====================
 INSTALL_DIR="/opt/lightpanel"
 BIN_NAME="lightpanel"
-REPO="${{ github.repository }}"
+REPO="${repo}"
 # ==============================================
 
 # 基础校验
@@ -154,7 +157,7 @@ fi
 if [ "$HAS_SYSTEMD" = true ]; then
   echo "⚙️ 检测到 systemd，配置后台服务"
   if [ ! -f "/etc/systemd/system/${BIN_NAME}.service" ]; then
-    cat > /etc/systemd/system/${BIN_NAME}.service << EOF_SERVICE
+    cat > /etc/systemd/system/${BIN_NAME}.service << 'EOF_SERVICE'
 [Unit]
 Description=LightPanel
 After=network.target
@@ -189,8 +192,9 @@ if [ -f "/.dockerenv" ] || [ -f "/.containerenv" ]; then
   echo "🌟 容器环境，前台启动程序"
   exec "$INSTALL_DIR/$BIN_NAME"
 fi
-EOF
-          chmod +x install.sh
+`;
+            fs.writeFileSync('install.sh', installScript);
+            fs.chmodSync('install.sh', '755');
 
       - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v2
