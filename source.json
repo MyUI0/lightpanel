@@ -38,7 +38,7 @@
       "version": "0.14.0",
       "auto_extract": true,
       "make_exec": true,
-      "port": "27960"
+      "port": 27960
     },
     {
       "name": "Memos",
