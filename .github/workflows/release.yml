@@ -18,117 +18,106 @@ on:
 permissions:
   contents: write
 
-# 修复 Node.js20 弃用警告（核心修复1）
 env:
   VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+  # 强制Node24，消除警告
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  # 手动触发时自动创建Tag
   create-tag:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -f ${{ env.VERSION }}
+          git push origin ${{ env.VERSION }} -f
 
-      - name: Create Git Tag
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git tag ${{ env.VERSION }}
-          git push origin ${{ env.VERSION }}
-
+  # 跨平台编译（核心修复！）
   build:
     needs: create-tag
     if: always()
+    # 关键：一个失败不取消另一个
     strategy:
+      fail-fast: false
       matrix:
         target:
-          - os: linux
-            arch: amd64
-          - os: linux
-            arch: arm64
+          - { os: linux, arch: amd64 }
+          - { os: linux, arch: arm64 }
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.VERSION }}
+      - uses: actions/checkout@v4
+        with: { ref: ${{ env.VERSION }} }
 
       - name: Setup Go
         uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
+        with: { go-version: "1.22" }
 
-      - name: Configure Go Proxy
+      # 修复依赖 + 生成go.sum（解决所有依赖报错）
+      - name: Install dependencies
         run: |
           go env -w GOPROXY=https://goproxy.cn,direct
-          go env -w GOSUMDB=off
-
-      # 修复 go.sum 缺失依赖（核心修复2）
-      - name: Prepare Dependencies
-        run: |
           go clean -modcache
           go get -d ./...
           go mod tidy
           go mod verify
 
-      - name: Build Binary
+      # 编译（修复了致命笔误！）
+      - name: Build
         env:
           GOOS: ${{ matrix.target.os }}
-          GOARCH: ${{ matrix.target.os }}
+          GOARCH: ${{ matrix.target.arch }}  # 这里修复了！！！
           CGO_ENABLED: 0
         run: |
-          BIN_NAME="lightpanel"
-          PKG_NAME="${BIN_NAME}-${{ env.VERSION }}-${{ matrix.target.os }}-${{ matrix.target.arch }}"
-          go build -ldflags="-s -w -X lightpanel/config.Version=${{ env.VERSION }}" -o "${BIN_NAME}" .
-          mkdir -p "${PKG_NAME}"
-          mv "${BIN_NAME}" "${PKG_NAME}/"
-          tar -czf "${PKG_NAME}.tar.gz" "${PKG_NAME}"
+          BIN="lightpanel"
+          PKG="${BIN}-${{ env.VERSION }}-${{ matrix.target.os }}-${{ matrix.target.arch }}"
+          go build -ldflags="-s -w -X lightpanel/config.Version=${{ env.VERSION }}" -o $BIN .
+          mkdir -p $PKG
+          mv $BIN $PKG/
+          tar -czf $PKG.tar.gz $PKG
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+      # 上传编译产物
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target.os }}-${{ matrix.target.arch }}
-          path: lightpanel-*.tar.gz
+          path: "*.tar.gz"
 
+  # 发布Release
   release:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.release == true)
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.release)
     steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts, merge-multiple: true }
 
-      - name: Generate Install Script
+      # 生成一键安装脚本
+      - name: Create install script
         run: |
-          cat > install.sh << 'INSTALL_SCRIPT'
+          cat > install.sh << 'EOF'
           #!/bin/bash
           set -e
           ARCH=$(uname -m)
           case $ARCH in
-            x86_64) ARCH_NAME="amd64" ;;
-            aarch64|arm64) ARCH_NAME="arm64" ;;
-            *) echo "❌ 不支持的架构: $ARCH"; exit 1 ;;
+            x86_64) ARCH=amd64 ;;
+            aarch64|arm64) ARCH=arm64 ;;
+            *) echo "不支持的架构"; exit 1 ;;
           esac
-          VERSION=${1:-latest}
-          REPO=${GITHUB_REPOSITORY}
-          curl -L "https://github.com/$REPO/releases/download/$VERSION/lightpanel-$VERSION-linux-$ARCH_NAME.tar.gz" -o lightpanel.tar.gz
-          tar -xzf lightpanel.tar.gz --strip-components=1
+          VERSION=\${1:-latest}
+          curl -L "https://github.com/${{ github.repository }}/releases/download/\$VERSION/lightpanel-\$VERSION-linux-\$ARCH.tar.gz" -o lp.tar.gz
+          tar -xzf lp.tar.gz --strip-components=1
           chmod +x lightpanel
-          rm -f lightpanel.tar.gz
-          echo "✅ 安装成功！运行: ./lightpanel"
-          echo "🌐 面板地址: http://127.0.0.1:31956"
-          echo "🔐 默认账号: admin / admin"
-          INSTALL_SCRIPT
+          rm -f lp.tar.gz
+          echo "安装完成！运行: ./lightpanel"
+          EOF
           chmod +x install.sh
 
-      - name: Publish GitHub Release
+      # 发布
+      - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           tag: ${{ env.VERSION }}
@@ -137,6 +126,5 @@ jobs:
             install.sh
           body: |
             ## LightPanel ${{ env.VERSION }}
-            ### 一键安装
             ```bash
             curl -L https://github.com/${{ github.repository }}/raw/main/install.sh | bash -s ${{ env.VERSION }}
