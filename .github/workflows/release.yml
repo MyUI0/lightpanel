@@ -20,44 +20,47 @@ permissions:
 
 env:
   VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
-  # 强制Node24，消除警告
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  # 手动触发时自动创建Tag
   create-tag:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - run: |
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Create and push tag
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -f ${{ env.VERSION }}
           git push origin ${{ env.VERSION }} -f
 
-  # 跨平台编译（核心修复！）
   build:
     needs: create-tag
     if: always()
-    # 关键：一个失败不取消另一个
     strategy:
       fail-fast: false
       matrix:
         target:
-          - { os: linux, arch: amd64 }
-          - { os: linux, arch: arm64 }
+          - os: linux
+            arch: amd64
+          - os: linux
+            arch: arm64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with: { ref: ${{ env.VERSION }} }
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.VERSION }}
 
-      - name: Setup Go
+      - name: Setup Go environment
         uses: actions/setup-go@v5
-        with: { go-version: "1.22" }
+        with:
+          go-version: "1.22"
 
-      # 修复依赖 + 生成go.sum（解决所有依赖报错）
       - name: Install dependencies
         run: |
           go env -w GOPROXY=https://goproxy.cn,direct
@@ -66,11 +69,10 @@ jobs:
           go mod tidy
           go mod verify
 
-      # 编译（修复了致命笔误！）
-      - name: Build
+      - name: Build binary
         env:
           GOOS: ${{ matrix.target.os }}
-          GOARCH: ${{ matrix.target.arch }}  # 这里修复了！！！
+          GOARCH: ${{ matrix.target.arch }}
           CGO_ENABLED: 0
         run: |
           BIN="lightpanel"
@@ -80,22 +82,23 @@ jobs:
           mv $BIN $PKG/
           tar -czf $PKG.tar.gz $PKG
 
-      # 上传编译产物
-      - uses: actions/upload-artifact@v4
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target.os }}-${{ matrix.target.arch }}
           path: "*.tar.gz"
 
-  # 发布Release
   release:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.release)
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.release == true)
     steps:
-      - uses: actions/download-artifact@v4
-        with: { path: artifacts, merge-multiple: true }
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
 
-      # 生成一键安装脚本
       - name: Create install script
         run: |
           cat > install.sh << 'EOF'
@@ -105,19 +108,21 @@ jobs:
           case $ARCH in
             x86_64) ARCH=amd64 ;;
             aarch64|arm64) ARCH=arm64 ;;
-            *) echo "不支持的架构"; exit 1 ;;
+            *) echo "不支持的架构" && exit 1 ;;
           esac
-          VERSION=\${1:-latest}
-          curl -L "https://github.com/${{ github.repository }}/releases/download/\$VERSION/lightpanel-\$VERSION-linux-\$ARCH.tar.gz" -o lp.tar.gz
+          VERSION=${1:-latest}
+          REPO=${{ github.repository }}
+          curl -L "https://github.com/${REPO}/releases/download/${VERSION}/lightpanel-${VERSION}-linux-${ARCH}.tar.gz" -o lp.tar.gz
           tar -xzf lp.tar.gz --strip-components=1
           chmod +x lightpanel
           rm -f lp.tar.gz
-          echo "安装完成！运行: ./lightpanel"
+          echo "安装完成！运行命令: ./lightpanel"
+          echo "面板地址: http://127.0.0.1:31956"
+          echo "默认账号: admin / admin"
           EOF
           chmod +x install.sh
 
-      # 发布
-      - name: Publish release
+      - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag: ${{ env.VERSION }}
@@ -126,5 +131,6 @@ jobs:
             install.sh
           body: |
             ## LightPanel ${{ env.VERSION }}
+            ### 一键自动安装
             ```bash
             curl -L https://github.com/${{ github.repository }}/raw/main/install.sh | bash -s ${{ env.VERSION }}
