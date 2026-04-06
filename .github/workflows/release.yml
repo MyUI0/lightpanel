@@ -62,8 +62,6 @@ jobs:
       - name: Install dependencies
         run: |
           go env -w GOPROXY=https://goproxy.cn,direct
-          go clean -modcache
-          go get -d ./...
           go mod tidy
       - name: Build binary
         env:
@@ -93,50 +91,107 @@ jobs:
         with:
           path: artifacts
           merge-multiple: true
-      - name: Create install script
+
+      - name: Generate universal install script
         run: |
           cat > install.sh << 'EOF'
-          #!/bin/bash
-          set -e
-          INSTALL_DIR="/opt/lightpanel"
-          ARCH=$(uname -m)
-          case $ARCH in
-            x86_64) ARCH_NAME="amd64" ;;
-            aarch64|arm64) ARCH_NAME="arm64" ;;
-            *) echo "❌ 不支持的架构: $ARCH"; exit 1 ;;
-          esac
-          VERSION=${1:-latest}
-          REPO=${{ github.repository }}
+#!/bin/bash
+set -e
+# ==================== 配置 ====================
+INSTALL_DIR="/opt/lightpanel"
+BIN_NAME="lightpanel"
+REPO="${{ github.repository }}"
+# ==============================================
 
-          echo "============================================"
-          echo "📦 安装 LightPanel 到: $INSTALL_DIR"
-          echo "============================================"
+# 基础校验
+if [ "$(id -u)" != "0" ]; then
+  echo "❌ 请使用 root 权限运行"
+  exit 1
+fi
+if [ "$(uname -s)" != "Linux" ]; then
+  echo "❌ 仅支持 Linux"
+  exit 1
+fi
 
-          mkdir -p "$INSTALL_DIR"
-          cd "$INSTALL_DIR"
+# 架构识别
+ARCH=$(uname -m)
+case $ARCH in
+  x86_64) ARCH_NAME="amd64" ;;
+  aarch64|arm64) ARCH_NAME="arm64" ;;
+  *) echo "❌ 不支持架构: $ARCH"; exit 1 ;;
+esac
 
-          echo "⬇️  下载中..."
-          curl -L "https://gh.llkk.cc/https://github.com/$REPO/releases/download/$VERSION/lightpanel-$VERSION-linux-$ARCH_NAME.tar.gz" -o lightpanel.tar.gz
+# 版本
+VERSION="${1:-latest}"
 
-          echo "📂 解压中..."
-          tar -xzf lightpanel.tar.gz --strip-components=1
+# 判断：初次安装 / 更新
+echo "============================================"
+if [ -f "${INSTALL_DIR}/${BIN_NAME}" ]; then
+  echo "🔄 已安装，执行覆盖更新"
+else
+  echo "🆕 未安装，执行初次部署"
+fi
+echo "============================================"
 
-          echo "🔐 赋予执行权限..."
-          chmod +x lightpanel
+# 部署目录
+mkdir -p "$INSTALL_DIR"
+cd "$INSTALL_DIR"
 
-          rm -rf lightpanel.tar.gz
+# 下载 + 覆盖（无备份）
+echo "⬇️ 下载程序..."
+curl -L "https://gh.llkk.cc/https://github.com/$REPO/releases/download/$VERSION/${BIN_NAME}-$VERSION-linux-$ARCH_NAME.tar.gz" -o ${BIN_NAME}.tar.gz
+tar -xzf ${BIN_NAME}.tar.gz --strip-components=1
+chmod +x $BIN_NAME
+rm -f ${BIN_NAME}.tar.gz
 
-          echo "============================================"
-          echo "✅ 安装完成！"
-          echo "📂 路径: $INSTALL_DIR"
-          echo "🌐 访问: http://127.0.0.1:31956"
-          echo "🔐 账号: admin / admin"
-          echo "============================================"
+# 自动检测 systemd（无则跳过）
+HAS_SYSTEMD=false
+if pidof systemd >/dev/null 2>&1 && command -v systemctl >/dev/null 2>&1; then
+  HAS_SYSTEMD=true
+fi
 
-          echo "🚀 启动程序..."
-          cd "$INSTALL_DIR" && ./lightpanel
-          EOF
+# 仅有 systemd 时配置服务
+if [ "$HAS_SYSTEMD" = true ]; then
+  echo "⚙️ 检测到 systemd，配置后台服务"
+  if [ ! -f "/etc/systemd/system/${BIN_NAME}.service" ]; then
+    cat > /etc/systemd/system/${BIN_NAME}.service << EOF_SERVICE
+[Unit]
+Description=LightPanel
+After=network.target
+[Service]
+WorkingDirectory=$INSTALL_DIR
+ExecStart=$INSTALL_DIR/$BIN_NAME
+Restart=always
+RestartSec=3
+[Install]
+WantedBy=multi-user.target
+EOF_SERVICE
+    systemctl daemon-reload
+    systemctl enable $BIN_NAME
+  fi
+  systemctl restart $BIN_NAME
+else
+  echo "ℹ️ 无 systemd（容器/精简系统），跳过服务配置"
+fi
+
+# 完成提示
+echo "============================================"
+echo "✅ 部署完成"
+echo "📂 路径：$INSTALL_DIR/$BIN_NAME"
+echo "🌐 访问：http://127.0.0.1:31956"
+echo "🔐 默认：admin / admin"
+[ "$HAS_SYSTEMD" = true ] && echo "🔧 服务：systemctl status|restart $BIN_NAME"
+[ "$HAS_SYSTEMD" = false ] && echo "🚀 启动：cd $INSTALL_DIR && ./$BIN_NAME"
+echo "============================================"
+
+# 容器环境自动前台运行
+if [ -f "/.dockerenv" ] || [ -f "/.containerenv" ]; then
+  echo "🌟 容器环境，前台启动程序"
+  exec "$INSTALL_DIR/$BIN_NAME"
+fi
+EOF
           chmod +x install.sh
+
       - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -146,6 +201,6 @@ jobs:
             install.sh
           body: |
             ## LightPanel ${{ env.VERSION }}
-            ### 一键安装（自动安装到 /opt/lightpanel）
+            ### 一键安装 / 更新（通用所有 Linux / 容器）
             ```bash
             curl -L https://gh.llkk.cc/https://github.com/${{ github.repository }}/releases/download/${{ env.VERSION }}/install.sh | bash -s ${{ env.VERSION }}
