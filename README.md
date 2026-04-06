@@ -29,6 +29,7 @@
 | 📜 **脚本分析** | 分析安装脚本，提取依赖包、端口号、环境变量 |
 | 🎨 **主题切换** | 深色/浅色模式即时切换，支持系统偏好，侧栏折叠记忆 |
 | 🖼️ **自定义 Logo** | 侧栏页头支持自定义图片 |
+| 🖼️ **自定义 page** | 个性化定制页面 |
 | 🖼️ **自定义 背景** | 支持自定义背景图片 |
 | 🔒 **安全加固** | 登录限流、CSRF Token、命令白名单、SSRF 防护 |
 | 💾 **备份还原** | 完整数据备份/恢复，支持 exclude 目录 |
@@ -100,7 +101,7 @@ chmod +x lightpanel
 
 > 💬 如遇编译问题，请查看 [FAQ.md](FAQ.md)
 
-默认访问 `http://127.0.0.1:31956`，账号密码 `admin / admin`。
+默认访问 `http://127.0.0.1:31956`，初始账号密码 `admin / admin`。
 
 > ⚠️ **首次登录后请立即修改密码！**
 
@@ -193,7 +194,7 @@ handlers/
 
 面板默认包含以下源：
 
-- `https://raw.githubusercontent.com/MyUI0/lightpanel/main/store_example.json`
+- `[https://raw.githubusercontent.com/MyUI0/lightpanel/main/store_example.json](https://raw.githubusercontent.com/MyUI0/lightpanel/refs/heads/main/source.json)]`
 
 ## ⚖️ 免责声明
 
