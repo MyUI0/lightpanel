@@ -2,6 +2,7 @@ package handlers
 
 const layoutCSS = `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 :root{--accent:#6366f1;--bg:#0f0f23;--bg2:rgba(15,15,35,0.35);--card:rgba(255,255,255,0.03);--card-h:rgba(255,255,255,0.06);--text:#e2e8f0;--text2:rgba(255,255,255,0.45);--border:rgba(255,255,255,0.06);--input-bg:rgba(255,255,255,0.04);--input-b:rgba(255,255,255,0.08);--input-t:#e2e8f0;--input-ph:rgba(255,255,255,0.3);--sidebar-w:200px;--sidebar-cw:70px}
+[data-theme="dark"]{--bg:#0f0f23;--bg2:rgba(15,15,35,0.35);--card:rgba(255,255,255,0.03);--card-h:rgba(255,255,255,0.06);--text:#e2e8f0;--text2:rgba(255,255,255,0.45);--border:rgba(255,255,255,0.06);--input-bg:rgba(255,255,255,0.04);--input-b:rgba(255,255,255,0.08);--input-t:#e2e8f0;--input-ph:rgba(255,255,255,0.3)}
 [data-theme="light"]{--bg:#e8eaed;--bg2:rgba(255,255,255,0.55);--card:rgba(255,255,255,0.6);--card-h:rgba(255,255,255,0.8);--text:#1a1a2e;--text2:rgba(0,0,0,0.55);--border:rgba(0,0,0,0.1);--input-bg:rgba(255,255,255,0.7);--input-b:rgba(0,0,0,0.12);--input-t:#1a1a2e;--input-ph:rgba(0,0,0,0.35)}
 @media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#e8eaed;--bg2:rgba(255,255,255,0.55);--card:rgba(255,255,255,0.6);--card-h:rgba(255,255,255,0.8);--text:#1a1a2e;--text2:rgba(0,0,0,0.55);--border:rgba(0,0,0,0.1);--input-bg:rgba(255,255,255,0.7);--input-b:rgba(0,0,0,0.12);--input-t:#1a1a2e;--input-ph:rgba(0,0,0,0.35)}}
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-serif}
@@ -42,8 +43,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);display:flex}
 .sidebar .side-footer .logout{color:#f87171}
 .main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column;transition:margin-left 0.25s ease;position:relative;z-index:1}
 .sidebar.collapsed~.main{margin-left:var(--sidebar-cw)}
-.topbar{display:flex;align-items:center;gap:0.8rem;padding:0.7rem 1.5rem;border-bottom:1px solid var(--border);background:rgba(15,15,35,0.4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:sticky;top:0;z-index:50}
-[data-theme="light"] .topbar{background:rgba(255,255,255,0.6)}
+.topbar{display:flex;align-items:center;gap:0.8rem;padding:0.7rem 1.5rem;border-bottom:1px solid var(--border);background:var(--bg2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:sticky;top:0;z-index:50}
 .topbar .toggle-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;flex-shrink:0;font-size:1.1rem;line-height:1}
 .topbar .toggle-btn:hover{background:var(--card-h);color:var(--text)}
 .topbar .page-title{font-size:0.95rem;font-weight:600;color:var(--text)}
@@ -150,18 +150,7 @@ document.documentElement.style.setProperty('--input-ph','rgba(0,0,0,0.35)');
 var ic=b.querySelector('i');if(ic){ic.className='fa-solid fa-sun';}
 localStorage.setItem('lp_theme','light');
 }else{
-document.documentElement.removeAttribute('data-theme');
-document.documentElement.style.removeProperty('--bg');
-document.documentElement.style.removeProperty('--bg2');
-document.documentElement.style.removeProperty('--card');
-document.documentElement.style.removeProperty('--card-h');
-document.documentElement.style.removeProperty('--text');
-document.documentElement.style.removeProperty('--text2');
-document.documentElement.style.removeProperty('--border');
-document.documentElement.style.removeProperty('--input-bg');
-document.documentElement.style.removeProperty('--input-b');
-document.documentElement.style.removeProperty('--input-t');
-document.documentElement.style.removeProperty('--input-ph');
+document.documentElement.setAttribute('data-theme','dark');
 var ic=b.querySelector('i');if(ic){ic.className='fa-solid fa-moon';}
 localStorage.setItem('lp_theme','dark');
 }

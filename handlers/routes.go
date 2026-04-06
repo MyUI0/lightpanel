@@ -40,6 +40,7 @@ func SetupRoutes() {
 	mux.HandleFunc("/source/add", authWithCSRF(addSource))
 	mux.HandleFunc("/source/del/", authWithCSRF(delSource))
 	mux.HandleFunc("/source/edit/", authWithCSRF(editSource))
+	mux.HandleFunc("/source/test/", authWithCSRF(testSource))
 	mux.HandleFunc("/downloads", auth(downloadPage))
 	mux.HandleFunc("/dl/api", auth(apiDownloads))
 	mux.HandleFunc("/dl/action/", authWithCSRF(apiDownloadAction))

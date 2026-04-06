@@ -182,8 +182,8 @@ var htmlSystem = `<!DOCTYPE html>
 <tr>
 <td>{{.Name}}</td>
 <td>{{.PID}}</td>
-<td>{{.Cpu}}%</td>
-<td>{{.Mem}}%</td>
+<td>{{printf "%.1f" .Cpu}}%</td>
+<td>{{printf "%.2f" .Mem}}%</td>
 <td><form action="/kill/{{.PID}}" method="post"><button class="btn" style="padding:0.3rem 0.8rem;font-size:0.7rem;background:#ef4444;color:#fff;border:none;border-radius:7px;cursor:pointer" onclick="return confirm('确定关闭进程 {{.Name}} (PID: {{.PID}}) 吗？')">关闭</button></form></td>
 </tr>
 {{end}}

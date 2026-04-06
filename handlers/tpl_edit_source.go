@@ -77,6 +77,9 @@ var htmlSource = `<!DOCTYPE html>
 <div class="main">
 {{.Topbar}}
 <div class="content">
+{{if eq .Message "test_ok"}}<div class="alert alert-success"><i class="fa-solid fa-check" style="margin-right:0.3rem"></i>源连接成功</div>{{end}}
+{{if eq .Error "test_failed"}}<div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.3rem"></i>源连接失败</div>{{end}}
+{{if eq .Error "test_empty"}}<div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.3rem"></i>源返回数据为空</div>{{end}}
 <div style="margin-bottom:0.8rem"><a href="/store" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> 返回商店</a></div>
 <div class="glass" style="padding:1rem;margin-bottom:0.8rem">
 <h3 style="font-size:0.9rem;font-weight:600;color:var(--text);margin-bottom:0.8rem"><i class="fa-solid fa-plus" style="color:#10b981;margin-right:0.3rem"></i>添加源</h3>
@@ -92,6 +95,7 @@ var htmlSource = `<!DOCTYPE html>
 <div style="display:flex;justify-content:space-between;align-items:center">
 <div><span style="font-size:0.85rem;font-weight:600;color:var(--text)">{{$s.Name}}</span><br><span style="font-size:0.68rem;color:var(--text2);word-break:break-all">{{$s.URL}}</span></div>
 <div style="display:flex;gap:0.3rem">
+<a href="/source/test/{{$i}}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-plug"></i> 测试</a>
 <button class="btn btn-ghost btn-sm" onclick="toggleEditForm({{$i}})"><i class="fa-solid fa-pen"></i> 编辑</button>
 <form action="/source/del/{{$i}}" method="post"><button class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i> 删除</button></form>
 </div>

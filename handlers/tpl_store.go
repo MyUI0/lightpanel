@@ -27,6 +27,7 @@ var htmlStore = `<!DOCTYPE html>
 {{if eq $i $.Active}}<span class="source-tab active">{{$s.Name}}</span>{{else}}<a href="/store?source={{$i}}" class="source-tab">{{$s.Name}}</a>{{end}}
 {{end}}
 {{if .Sources}}<a href="/source" class="source-tab" style="border-style:dashed"><i class="fa-solid fa-pen"></i> 编辑源</a>{{end}}
+<a href="/store?refresh=1" class="source-tab"><i class="fa-solid fa-rotate"></i> 刷新</a>
 {{if .StoreErr}}<a href="/source" class="source-tab" style="color:#f87171"><i class="fa-solid fa-triangle-exclamation"></i> 源配置</a>{{end}}
 </div>
 {{if .StoreErr}}<div class="alert alert-{{if eq .StoreErrType "network"}}error{{else if eq .StoreErrType "http"}}warning{{else}}error{{end}}" style="margin-bottom:1rem"><i class="fa-solid fa-circle-exclamation"></i> {{.StoreErr}}</div>{{end}}

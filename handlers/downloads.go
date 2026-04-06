@@ -507,6 +507,13 @@ func storePage(w http.ResponseWriter, r *http.Request) {
 		idx = 0
 	}
 
+	if r.URL.Query().Get("refresh") == "1" {
+		storeCacheLock.Lock()
+		storeCache.apps = nil
+		storeCache.lastInit = time.Time{}
+		storeCacheLock.Unlock()
+	}
+
 	deployErr := r.URL.Query().Get("err")
 
 	apps, storeErr, storeErrType := getStoreApps(srcs, idx)
