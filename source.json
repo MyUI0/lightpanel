@@ -74,7 +74,7 @@
       "author": "filebrowser",
       "version": "v2.63.1",
       "setup_cmd": "filebrowser config set --port 8082",
-      "auto_extract": false,
+      "auto_extract": true,
       "make_exec": true,
       "port": 8082
     },
