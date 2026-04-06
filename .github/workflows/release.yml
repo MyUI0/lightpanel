@@ -1,0 +1,130 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        target:
+          - os: linux
+            arch: amd64
+            ext: ''
+          - os: linux
+            arch: arm64
+            ext: ''
+          - os: linux
+            arch: armv7
+            ext: ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.target.os }}
+          GOARCH: ${{ matrix.target.arch }}
+          CGO_ENABLED: 0
+        run: |
+          go mod tidy
+          FILENAME="lightpanel-${{ github.ref_name }}-${{ matrix.target.os }}-${{ matrix.target.arch }}"
+          go build -ldflags="-s -w -X lightpanel/config.Version=${{ github.ref_name }}" -o "$FILENAME" .
+
+      - name: Package
+        run: |
+          FILENAME="lightpanel-${{ github.ref_name }}-${{ matrix.target.os }}-${{ matrix.target.arch }}"
+          mkdir -p "$FILENAME"
+          cp "$FILENAME" "$FILENAME/"
+          tar -czf "$FILENAME.tar.gz" -C "$FILENAME" .
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target.os }}-${{ matrix.target.arch }}
+          path: lightpanel-*.tar.gz
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create Installer Script
+        run: |
+          cat > install.sh << 'INSTALL_SCRIPT'
+          #!/bin/bash
+          set -e
+          
+          # 检测架构
+          ARCH=$(uname -m)
+          case $ARCH in
+            x86_64) ARCH_NAME="amd64" ;;
+            aarch64) ARCH_NAME="arm64" ;;
+            armv7l) ARCH_NAME="armv7" ;;
+            *) echo "不支持的架构: $ARCH"; exit 1 ;;
+          esac
+          
+          VERSION=${1:-latest}
+          
+          echo "📦 正在下载 LightPanel $VERSION ($ARCH_NAME)..."
+          curl -L "https://github.com/${{ github.repository }}/releases/download/${VERSION}/lightpanel-${VERSION}-linux-${ARCH_NAME}.tar.gz" -o lightpanel.tar.gz
+          
+          echo "📂 正在解压..."
+          tar -xzf lightpanel.tar.gz
+          chmod +x lightpanel
+          rm lightpanel.tar.gz
+          
+          echo "✅ 安装完成！"
+          echo "   运行: ./lightpanel"
+          echo "   访问: http://127.0.0.1:31956"
+          INSTALL_SCRIPT
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/lightpanel-*.tar.gz
+            install.sh
+          body: |
+            ## LightPanel ${{ github.ref_name }}
+
+            ### 自动安装 (推荐)
+            ```bash
+            curl -L https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash -s ${{ github.ref_name }}
+            ```
+            自动检测 amd64 / arm64 / armv7 架构
+
+            ### 手动安装
+            ```bash
+            # amd64 (主流VPS)
+            tar -xzf lightpanel-${{ github.ref_name }}-linux-amd64.tar.gz
+            
+            # arm64 (树莓派4/5、ARM服务器)
+            tar -xzf lightpanel-${{ github.ref_name }}-linux-arm64.tar.gz
+            
+            # armv7 (树莓派3)
+            tar -xzf lightpanel-${{ github.ref_name }}-linux-armv7.tar.gz
+            
+            chmod +x lightpanel
+            ./lightpanel
+            ```
+
+            访问 http://127.0.0.1:31956，默认账号 admin / admin
+          draft: false
+          prerelease: false
