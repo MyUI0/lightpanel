@@ -29,6 +29,18 @@
       "port": 5244
     },
     {
+      "name": "Kula",
+      "desc": "轻量级网络工具",
+      "icon": "https://cdn-icons-png.flaticon.com/512/2548/2548546.png",
+      "url": "https://github.com/c0m4r/kula/releases/download/0.14.0/kula-0.14.0-{{arch}}.tar.gz",
+      "cmd": "./kula",
+      "author": "c0m4r",
+      "version": "0.14.0",
+      "auto_extract": true,
+      "make_exec": true,
+      "port": "27960"
+    },
+    {
       "name": "Memos",
       "desc": "轻量级，自托管的笔记和知识库服务，支持 Markdown 和双向链接",
       "icon": "https://usememos.com/logo.png",
