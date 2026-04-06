@@ -44,7 +44,8 @@
 
 ### 一键安装 (Linux)
 
-```在releases界面有一键脚本
+```bash
+在releases界面有一键脚本
 ```
 
 
