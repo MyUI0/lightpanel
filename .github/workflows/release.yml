@@ -4,9 +4,22 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号 (如 v1.0.5)'
+        required: true
+        default: 'v1.0.5'
+      release:
+        description: '发布到 GitHub Release'
+        type: boolean
+        default: true
 
 permissions:
   contents: write
+
+env:
+  VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
 
 jobs:
   build:
@@ -15,13 +28,10 @@ jobs:
         target:
           - os: linux
             arch: amd64
-            ext: ''
           - os: linux
             arch: arm64
-            ext: ''
           - os: linux
             arch: armv7
-            ext: ''
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -39,12 +49,12 @@ jobs:
           CGO_ENABLED: 0
         run: |
           go mod tidy
-          FILENAME="lightpanel-${{ github.ref_name }}-${{ matrix.target.os }}-${{ matrix.target.arch }}"
-          go build -ldflags="-s -w -X lightpanel/config.Version=${{ github.ref_name }}" -o "$FILENAME" .
+          FILENAME="lightpanel-${{ env.VERSION }}-${{ matrix.target.os }}-${{ matrix.target.arch }}"
+          go build -ldflags="-s -w -X lightpanel/config.Version=${{ env.VERSION }}" -o "$FILENAME" .
 
       - name: Package
         run: |
-          FILENAME="lightpanel-${{ github.ref_name }}-${{ matrix.target.os }}-${{ matrix.target.arch }}"
+          FILENAME="lightpanel-${{ env.VERSION }}-${{ matrix.target.os }}-${{ matrix.target.arch }}"
           mkdir -p "$FILENAME"
           cp "$FILENAME" "$FILENAME/"
           tar -czf "$FILENAME.tar.gz" -C "$FILENAME" .
@@ -58,6 +68,7 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.release == true)
     steps:
       - name: Download Artifacts
         uses: actions/download-artifact@v4
@@ -102,24 +113,24 @@ jobs:
             artifacts/lightpanel-*.tar.gz
             install.sh
           body: |
-            ## LightPanel ${{ github.ref_name }}
+            ## LightPanel ${{ env.VERSION }}
 
             ### 自动安装 (推荐)
             ```bash
-            curl -L https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash -s ${{ github.ref_name }}
+            curl -L https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash -s ${{ env.VERSION }}
             ```
             自动检测 amd64 / arm64 / armv7 架构
 
             ### 手动安装
             ```bash
             # amd64 (主流VPS)
-            tar -xzf lightpanel-${{ github.ref_name }}-linux-amd64.tar.gz
+            tar -xzf lightpanel-${{ env.VERSION }}-linux-amd64.tar.gz
             
             # arm64 (树莓派4/5、ARM服务器)
-            tar -xzf lightpanel-${{ github.ref_name }}-linux-arm64.tar.gz
+            tar -xzf lightpanel-${{ env.VERSION }}-linux-arm64.tar.gz
             
             # armv7 (树莓派3)
-            tar -xzf lightpanel-${{ github.ref_name }}-linux-armv7.tar.gz
+            tar -xzf lightpanel-${{ env.VERSION }}-linux-armv7.tar.gz
             
             chmod +x lightpanel
             ./lightpanel
