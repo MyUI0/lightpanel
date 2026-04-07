@@ -50,7 +50,7 @@
 ### 一键安装 (Linux)
 
 ```bash
-在releases界面有一键脚本
+curl -L https://ghproxy.com/https://github.com/MyUI0/lightpanel/releases/latest/download/install.sh | bash
 ```
 
 
