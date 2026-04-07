@@ -1,0 +1,73 @@
+name: 更新商店源
+
+on:
+  schedule:
+    - cron: '0 12 * * *'  # 每天12点
+  workflow_dispatch:
+  push:
+    paths:
+      - 'source.json'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 安装 jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: 创建输出目录
+        run: mkdir -p yuan
+
+      - name: 检查 source.json
+        run: |
+          if [ ! -f "source.json" ]; then
+            echo "错误: 找不到 source.json"
+            exit 1
+          fi
+          echo "开始更新..."
+
+      - name: 更新商店源
+        run: |
+          source_file="source.json"
+          output_file="yuan/source.json"
+          
+          # 复制源文件到输出目录（保留原始文件不变）
+          cp "$source_file" "$output_file"
+          
+          app_count=$(jq '.apps | length' "$output_file")
+          
+          for i in $(seq 0 $((app_count - 1))); do
+            name=$(jq -r ".apps[$i].name" "$output_file")
+            url=$(jq -r ".apps[$i].url" "$output_file")
+            current_ver=$(jq -r ".apps[$i].version" "$output_file")
+            
+            if echo "$url" | grep -qE 'github.com/[^/]+/[^/]+/(releases|download)'; then
+              repo=$(echo "$url" | grep -oE 'github.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+' | head -1 | sed 's/github.com\///')
+              
+              new_ver=$(curl -s "https://api.github.com/repos/${repo}/releases/latest" | jq -r '.tag_name // empty' | sed 's/^v//')
+              
+              if [ -n "$new_ver" ] && [ "$new_ver" != "$current_ver" ]; then
+                echo "[$name] $current_ver → $new_ver"
+                jq ".apps[$i].version = \"$new_ver\"" "$output_file" > "${output_file}.tmp"
+                mv "${output_file}.tmp" "$output_file"
+              fi
+            fi
+          done
+
+      - name: 提交更改
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add yuan/
+          if git diff --staged --quiet; then
+            echo "没有更新，无需提交"
+          else
+            git commit -m "chore: 更新商店源 $(date '+%Y-%m-%d %H:%M')"
+            git push
+          fi
