@@ -10,7 +10,7 @@ var htmlIndex = `<!DOCTYPE html>
 ` + layoutCSS + `
 .app-item{display:flex;align-items:center;gap:0.8rem}
 .app-name{font-weight:600;color:var(--text);font-size:0.85rem}
-.app-cmd{font-size:0.7rem;color:var(--text2);margin-top:0.15rem}
+.app-cmd{font-size:0.7rem;color:var(--text2);margin-top:0.15rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 </head>
 <body>
