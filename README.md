@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">🚀 LightPanel</h1>
+  <h1 align="center">🚀 朱雀面板</h1>
   <p align="center">一个极简的 Linux 服务器自部署二进制项目管理面板</p>
   <p align="center">
     <img src="https://img.shields.io/badge/version-v1.0.5-blue.svg" alt="Version">
