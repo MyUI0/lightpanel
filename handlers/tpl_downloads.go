@@ -5,7 +5,7 @@ var htmlDownloads = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>下载管理 - LightPanel</title>
+<title>下载管理 - 朱雀面板</title>
 <meta name="csrf" content="{{.CSRFToken}}">
 <style>
 ` + layoutCSS + `

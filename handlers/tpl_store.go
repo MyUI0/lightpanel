@@ -5,14 +5,14 @@ var htmlStore = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>应用商店 - LightPanel</title>
+<title>应用商店 - 朱雀面板</title>
 <style>
 ` + layoutCSS + `
 .store-item{display:flex;flex-direction:column;align-items:center;text-align:center;padding:1rem;gap:0.5rem}
 .store-icon{width:44px;height:44px;border-radius:10px;object-fit:cover;border:1px solid var(--border)}
 .source-tabs{display:flex;gap:0.4rem;margin-bottom:1rem;flex-wrap:wrap}
 .source-tab{padding:0.4rem 0.8rem;border-radius:8px;font-size:0.75rem;text-decoration:none;transition:all 0.15s}
-.source-tab.active{background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff}
+.source-tab.active{background:linear-gradient(135deg,#e53e3e,#c53030);color:#fff}
 .source-tab:not(.active){background:var(--card);color:var(--text2);border:1px solid var(--border)}
 </style>
 </head>

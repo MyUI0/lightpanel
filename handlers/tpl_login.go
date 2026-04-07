@@ -5,7 +5,7 @@ var htmlLogin = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>登录 - LightPanel</title>
+<title>登录 - 朱雀面板</title>
 <script>
 (function(){
 var t=localStorage.getItem('lp_theme')||'dark';
@@ -16,19 +16,19 @@ if(t==='light'){document.documentElement.setAttribute('data-theme','light');}
 *{
 margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-serif}
 :root{
---bg:#0f0f23;--bg-grad:rgba(99,102,241,0.15),rgba(168,85,247,0.1);
+--bg:#0f0f23;--bg-grad:rgba(229,62,62,0.15),rgba(192,48,48,0.1);
 --card:rgba(255,255,255,0.04);--card-b:rgba(255,255,255,0.08);
 --text:#fff;--text2:rgba(255,255,255,0.4);--text3:rgba(255,255,255,0.5);
 --input-bg:rgba(255,255,255,0.05);--input-b:rgba(255,255,255,0.1);--input-t:#fff;
---btn-bg:linear-gradient(135deg,#6366f1,#7c3aed);--btn-h:0 6px 20px rgba(99,102,241,0.35);
+--btn-bg:linear-gradient(135deg,#e53e3e,#c53030);--btn-h:0 6px 20px rgba(229,62,62,0.35);
 --err-bg:rgba(239,68,68,0.1);--err-c:#f87171;--err-b:rgba(239,68,68,0.2);
 --ft:rgba(255,255,255,0.25)}
 [data-theme="light"]{
---bg:#e8eaed;--bg-grad:rgba(99,102,241,0.08),rgba(168,85,247,0.05);
+--bg:#e8eaed;--bg-grad:rgba(229,62,62,0.08),rgba(192,48,48,0.05);
 --card:rgba(255,255,255,0.7);--card-b:rgba(0,0,0,0.1);
 --text:#1a1a2e;--text2:rgba(0,0,0,0.55);--text3:rgba(0,0,0,0.6);
 --input-bg:rgba(255,255,255,0.7);--input-b:rgba(0,0,0,0.12);--input-t:#1a1a2e;
---btn-bg:linear-gradient(135deg,#6366f1,#7c3aed);--btn-h:0 6px 20px rgba(99,102,241,0.25);
+--btn-bg:linear-gradient(135deg,#e53e3e,#c53030);--btn-h:0 6px 20px rgba(229,62,62,0.25);
 --err-bg:rgba(239,68,68,0.08);--err-c:#dc2626;--err-b:rgba(239,68,68,0.15);
 --ft:rgba(0,0,0,0.25)}
 body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden}
@@ -53,8 +53,8 @@ h1{text-align:center;font-size:1.3rem;font-weight:700;color:var(--text);margin-b
 </head>
 <body>
 <div class="card">
-  <div class="logo"><i class="fa-solid fa-server"></i></div>
-  <h1>LightPanel</h1>
+  <div class="logo"><i class="fa-solid fa-fire-flame-curved"></i></div>
+  <h1>朱雀面板</h1>
   <p class="sub">服务器管理面板</p>
   {{if eq .Err "1"}}
   <div class="err"><i class="fa-solid fa-circle-exclamation" style="margin-right:0.3rem;"></i>用户名或密码错误</div>
@@ -67,7 +67,7 @@ h1{text-align:center;font-size:1.3rem;font-weight:700;color:var(--text);margin-b
     <div class="field"><label>密码</label><input name="password" type="password" placeholder="请输入密码" required autocomplete="current-password"></div>
     <button class="btn" type="submit" id="loginBtn"><i class="fa-solid fa-right-to-bracket" style="margin-right:0.4rem;"></i>登录</button>
   </form>
-  <div class="ft">LightPanel · 轻量高效</div>
+  <div class="ft">朱雀面板 · 轻量高效</div>
 </div>
 {{if eq .Err "locked"}}
 <script>

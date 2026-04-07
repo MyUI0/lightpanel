@@ -5,7 +5,7 @@ var htmlEdit = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>编辑应用 - LightPanel</title>
+<title>编辑应用 - 朱雀面板</title>
 <style>
 ` + layoutCSS + `
 </style>
@@ -64,7 +64,7 @@ var htmlSource = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>源管理 - LightPanel</title>
+<title>源管理 - 朱雀面板</title>
 <style>
 ` + layoutCSS + `
 .edit-form{display:none;grid-template-columns:1fr 2fr auto auto;gap:0.8rem;align-items:end;margin-top:0.8rem;padding:0.6rem;background:var(--glass);border-radius:10px}

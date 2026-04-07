@@ -5,7 +5,7 @@ var htmlSetting = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>设置 - LightPanel</title>
+<title>设置 - 朱雀面板</title>
 <style>
 ` + layoutCSS + `
 </style>
@@ -72,7 +72,7 @@ var htmlSetting = `<!DOCTYPE html>
 <form action="/setting/save-bark" method="post" style="display:grid;gap:0.5rem">
 <label class="check-label"><input type="checkbox" name="bark_enabled"{{if .BarkEnabled}} checked{{end}}><div class="check-box"><i class="fa-solid fa-check"></i></div><span style="color:var(--text2);font-size:0.78rem">启用 Bark 推送（应用崩溃/停止时通知）</span></label>
 <div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">设备 Key（或完整 URL）</label><input name="bark_device" value="{{.BarkDevice}}" placeholder="如 xxxxxxx 或 https://api.day.app/xxxxxxx" class="input"></div>
-<div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">分组（可选）</label><input name="bark_group" value="{{.BarkGroup}}" placeholder="LightPanel" class="input"></div>
+<div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">分组（可选）</label><input name="bark_group" value="{{.BarkGroup}}" placeholder="朱雀面板" class="input"></div>
 <button class="btn btn-primary" style="width:100%"><i class="fa-solid fa-save"></i>保存通知</button>
 </form>
 </div>
@@ -115,7 +115,7 @@ var htmlLogList = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>运行日志 - LightPanel</title>
+<title>运行日志 - 朱雀面板</title>
 <style>
 ` + layoutCSS + `
 </style>
@@ -152,7 +152,7 @@ var htmlSystem = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>系统监控 - LightPanel</title>
+<title>系统监控 - 朱雀面板</title>
 <style>
 ` + layoutCSS + `
 </style>
@@ -204,7 +204,7 @@ var htmlLog = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>运行日志 - LightPanel</title>
+<title>运行日志 - 朱雀面板</title>
 <style>
 ` + layoutCSS + `
 .log-box{background:rgba(15,15,35,0.6);border-radius:10px;padding:0.8rem;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:#e2e8f0;max-height:70vh;overflow-y:auto;white-space:pre-wrap;word-break:break-all;line-height:1.6;border:1px solid var(--border)}
@@ -234,7 +234,7 @@ var htmlScriptAnalyze = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>脚本分析 - LightPanel</title>
+<title>脚本分析 - 朱雀面板</title>
 <style>
 ` + layoutCSS + `
 .tag{display:inline-block;padding:0.2rem 0.5rem;border-radius:5px;font-size:0.7rem;font-family:monospace;margin:0.15rem}

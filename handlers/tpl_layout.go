@@ -1,7 +1,7 @@
 package handlers
 
 const layoutCSS = `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-:root{--accent:#6366f1;--bg:#0f0f23;--bg2:rgba(15,15,35,0.35);--card:rgba(255,255,255,0.03);--card-h:rgba(255,255,255,0.06);--text:#e2e8f0;--text2:rgba(255,255,255,0.45);--border:rgba(255,255,255,0.06);--input-bg:rgba(255,255,255,0.04);--input-b:rgba(255,255,255,0.08);--input-t:#e2e8f0;--input-ph:rgba(255,255,255,0.3);--sidebar-w:200px;--sidebar-cw:70px}
+:root{--accent:#e53e3e;--bg:#0f0f23;--bg2:rgba(15,15,35,0.35);--card:rgba(255,255,255,0.03);--card-h:rgba(255,255,255,0.06);--text:#e2e8f0;--text2:rgba(255,255,255,0.45);--border:rgba(255,255,255,0.06);--input-bg:rgba(255,255,255,0.04);--input-b:rgba(255,255,255,0.08);--input-t:#e2e8f0;--input-ph:rgba(255,255,255,0.3);--sidebar-w:200px;--sidebar-cw:70px}
 [data-theme="dark"]{--bg:#0f0f23;--bg2:rgba(15,15,35,0.35);--card:rgba(255,255,255,0.03);--card-h:rgba(255,255,255,0.06);--text:#e2e8f0;--text2:rgba(255,255,255,0.45);--border:rgba(255,255,255,0.06);--input-bg:rgba(255,255,255,0.04);--input-b:rgba(255,255,255,0.08);--input-t:#e2e8f0;--input-ph:rgba(255,255,255,0.3)}
 [data-theme="light"]{--bg:#e8eaed;--bg2:rgba(255,255,255,0.55);--card:rgba(255,255,255,0.6);--card-h:rgba(255,255,255,0.8);--text:#1a1a2e;--text2:rgba(0,0,0,0.55);--border:rgba(0,0,0,0.1);--input-bg:rgba(255,255,255,0.7);--input-b:rgba(0,0,0,0.12);--input-t:#1a1a2e;--input-ph:rgba(0,0,0,0.35)}
 @media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#e8eaed;--bg2:rgba(255,255,255,0.55);--card:rgba(255,255,255,0.6);--card-h:rgba(255,255,255,0.8);--text:#1a1a2e;--text2:rgba(0,0,0,0.55);--border:rgba(0,0,0,0.1);--input-bg:rgba(255,255,255,0.7);--input-b:rgba(0,0,0,0.12);--input-t:#1a1a2e;--input-ph:rgba(0,0,0,0.35)}}
@@ -53,7 +53,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);display:flex}
 .card:hover{background:var(--card-h)}
 .glass{background:var(--card);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid var(--border);border-radius:14px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.5rem 1rem;border-radius:9px;font-size:0.75rem;font-weight:500;transition:all 0.15s;cursor:pointer;border:none;text-decoration:none}
-.btn-primary{background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff}
+.btn-primary{background:linear-gradient(135deg,#e53e3e,#c53030);color:#fff}
 .btn-primary:hover{box-shadow:0 3px 12px rgba(99,102,241,0.3)}
 .btn-ghost{background:var(--card);color:var(--text2);border:1px solid var(--border)}
 .btn-ghost:hover{background:var(--card-h);color:var(--text)}
@@ -65,7 +65,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);display:flex}
 
 .btn-sm{padding:0.4rem 0.6rem;font-size:0.7rem;border-radius:6px;white-space:nowrap}
 .input{width:100%;padding:0.6rem 0.8rem;border-radius:9px;background:var(--input-bg);border:1px solid var(--input-b);color:var(--input-t);font-size:0.8rem;outline:none;transition:all 0.2s}
-.input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.15)}
+.input:focus{border-color:#e53e3e;box-shadow:0 0 0 3px rgba(229,62,62,0.15)}
 .input::placeholder{color:var(--input-ph)}
 .alert{padding:0.6rem 0.8rem;border-radius:9px;font-size:0.78rem;margin-bottom:0.8rem}
 .alert-error{background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
@@ -77,7 +77,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);display:flex}
 .stat-value{font-size:1.3rem;font-weight:700;color:var(--text)}
 .stat-label{font-size:0.7rem;color:var(--text2);margin-top:0.2rem}
 .progress-bar{width:100%;height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
-.progress-fill{height:100%;background:linear-gradient(90deg,#6366f1,#a855f7);border-radius:3px;transition:width 0.3s}
+.progress-fill{height:100%;background:linear-gradient(90deg,#e53e3e,#fc8181);border-radius:3px;transition:width 0.3s}
 .check-label{display:flex;align-items:center;gap:0.4rem;padding:0.6rem 0.8rem;border-radius:9px;background:var(--card);border:1px solid var(--border);cursor:pointer;transition:all 0.15s}
 .check-label:has(input:checked){background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.25)}
 .check-label input{display:none}

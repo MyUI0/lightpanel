@@ -5,7 +5,7 @@ var htmlIndex = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>LightPanel</title>
+<title>朱雀面板</title>
 <style>
 ` + layoutCSS + `
 .app-item{display:flex;align-items:center;gap:0.8rem}

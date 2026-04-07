@@ -38,7 +38,7 @@ func sidebarHTML(active string) string {
 	return `<div class="sidebar" id="sidebar">
 <div class="logo-row">
 <div class="logo-icon">` + logoHTML + `</div>
-<span class="logo-text">LightPanel</span>
+<span class="logo-text">朱雀面板</span>
 </div>
 <nav>` + nav + `</nav>
 <div class="side-footer">
