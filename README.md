@@ -183,7 +183,7 @@ handlers/
 
 ### 商店源
 
-- [https://raw.githubusercontent.com/MyUI0/lightpanel/refs/heads/main/source.json]
+- [https://gh.llkk.cc/https://raw.githubusercontent.com/MyUI0/lightpanel-store/refs/heads/main/yuan/source.json]
 
 ## ⚖️ 免责声明
 
