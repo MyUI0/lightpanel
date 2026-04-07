@@ -147,24 +147,44 @@ jobs:
           fi
           echo "============================================"
           
+          # 预检测 systemd (提前检测，为后面停止进程做准备)
+          HAS_SYSTEMD=false
+          if pidof systemd >/dev/null 2>&1 && command -v systemctl >/dev/null 2>&1; then
+              HAS_SYSTEMD=true
+          fi
+          
           # 部署程序
           mkdir -p "$INSTALL_DIR"
           cd "$INSTALL_DIR"
           
+          # ==========================================
+          # 更新前：先停止正在运行的程序
+          # ==========================================
+          echo "准备更新，先停止旧进程..."
+          if [ "$HAS_SYSTEMD" = true ] && [ -f "/etc/systemd/system/${BIN_NAME}.service" ]; then
+              systemctl stop $BIN_NAME 2>/dev/null || true
+          else
+              # 非 systemd 环境，尝试杀掉进程
+              pkill -f "$INSTALL_DIR/$BIN_NAME" 2>/dev/null || true
+              sleep 1 # 等待 1 秒确保进程退出
+              # 强制清理（如果还没退出）
+              pkill -9 -f "$INSTALL_DIR/$BIN_NAME" 2>/dev/null || true
+          fi
+          
+          # ==========================================
+          # 下载并覆盖文件
+          # ==========================================
           echo "下载程序..."
           curl -L "https://gh.llkk.cc/https://github.com/$REPO/releases/download/$VERSION/${BIN_NAME}-$VERSION-linux-$ARCH_NAME.tar.gz" -o ${BIN_NAME}.tar.gz
           tar -xzf ${BIN_NAME}.tar.gz --strip-components=1
           chmod +x $BIN_NAME
           rm -f ${BIN_NAME}.tar.gz
           
-          # 检测 systemd
-          HAS_SYSTEMD=false
-          if pidof systemd >/dev/null 2>&1 && command -v systemctl >/dev/null 2>&1; then
-              HAS_SYSTEMD=true
-          fi
-          
+          # ==========================================
+          # 启动程序（无论新装还是更新）
+          # ==========================================
           if [ "$HAS_SYSTEMD" = true ]; then
-              echo "检测到 systemd，配置后台服务"
+              echo "检测到 systemd，配置并启动服务"
               
               if [ ! -f "/etc/systemd/system/${BIN_NAME}.service" ]; then
                   cat > /etc/systemd/system/${BIN_NAME}.service << 'SYSTEMDEND'
@@ -185,9 +205,12 @@ jobs:
                   systemctl enable $BIN_NAME
               fi
               
+              echo "启动服务..."
               systemctl restart $BIN_NAME
           else
-              echo "无 systemd（容器/精简系统），跳过服务配置"
+              echo "无 systemd，后台启动程序"
+              # 简单的后台启动（注意：这种方式重启后不会自启，仅作为临时方案）
+              nohup "$INSTALL_DIR/$BIN_NAME" > /dev/null 2>&1 &
           fi
           
           echo "============================================"
