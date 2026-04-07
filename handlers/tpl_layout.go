@@ -124,9 +124,8 @@ localStorage.setItem('lp_sidebar',sb.classList.contains('collapsed')?'collapsed'
 var b=document.getElementById('themeBtn');
 if(b){
 var t=localStorage.getItem('lp_theme');
-var prefersDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
-var isLight=t==='light'||(t===null&&!prefersDark);
-if(isLight){applyTheme('light');}
+if(t==='dark'){applyTheme('dark');}
+else if(t==='light'){applyTheme('light');}
 b.addEventListener('click',function(){
 var c=document.documentElement.getAttribute('data-theme');
 if(c==='light'){applyTheme('dark');}
