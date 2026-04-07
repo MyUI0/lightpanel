@@ -57,21 +57,12 @@
 ### 手动安装
 
 ```bash
-# amd64 - 主流VPS/服务器
-wget https://github.com/MyUI0/lightpanel/releases/download/v1.0.5/lightpanel-v1.0.5-linux-amd64.tar.gz
-tar -xzf lightpanel-v1.0.5-linux-amd64.tar.gz
+# amd64/arm64   教程为amd64的
+wget https://github.com/MyUI0/lightpanel/releases/latest/download/lightpanel-linux-amd64.tar.gz
+tar -xzf lightpanel-linux-amd64.tar.gz
 chmod +x lightpanel
 ./lightpanel
 ```
-
-```bash
-# arm64 - 树莓派4/5, 群晖, 威联通等
-wget https://github.com/MyUI0/lightpanel/releases/download/v1.0.5/lightpanel-v1.0.5-linux-arm64.tar.gz
-tar -xzf lightpanel-v1.0.5-linux-arm64.tar.gz
-chmod +x lightpanel
-./lightpanel
-```
-
 
 > 注意: 树莓派请使用 arm64 版本
 
