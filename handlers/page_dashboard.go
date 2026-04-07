@@ -130,6 +130,9 @@ func getFailInfo(apps map[string]models.Project) *FailInfo {
 	var firstFail *FailInfo
 	count := 0
 	for name, app := range apps {
+		if !app.AutoStart {
+			continue
+		}
 		pidFile := filepath.Join(app.Path, "pid.pid")
 		if _, e := os.Stat(pidFile); os.IsNotExist(e) {
 			logFile := filepath.Join(app.Path, "run.log")

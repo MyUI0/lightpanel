@@ -263,6 +263,7 @@ else{items[i].style.display='none';}
 });
 }
 var selAll=document.getElementById('selectAllBtn');
+var cancelBtn=document.getElementById('cancelSelectBtn');
 if(selAll){
 selAll.addEventListener('click',function(){
 var cbs=document.querySelectorAll('.app-cb');
@@ -280,15 +281,14 @@ var sb=document.getElementById('batchStartBtn');
 var st=document.getElementById('batchStopBtn');
 var sd=document.getElementById('batchDeleteBtn');
 var sa=document.getElementById('selectAllBtn');
-var cs=document.getElementById('cancelSelectBtn');
 if(el){el.textContent='已选 '+cnt;el.style.display=cnt>0?'':'none';}
 if(sb)sb.style.display=cnt>0?'':'none';
 if(st)st.style.display=cnt>0?'':'none';
 if(sd)sd.style.display=cnt>0?'':'none';
 if(sa)sa.style.display=cnt>0?'none':'';
-if(cs)cs.style.display=cnt>0?'':'none';
+if(cancelBtn)cancelBtn.style.display=cnt>0?'':'none';
 }
-if(cs){cs.addEventListener('click',function(){
+if(cancelBtn){cancelBtn.addEventListener('click',function(){
 var cbs=document.querySelectorAll('.app-cb');
 for(var i=0;i<cbs.length;i++){cbs[i].checked=false;}
 updateSelCount();
