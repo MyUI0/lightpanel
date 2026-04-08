@@ -99,7 +99,7 @@ jobs:
           path: artifacts
           merge-multiple: true
 
-      - name: Create install script
+      - name: Create auto init install script
         run: |
           python3 << 'PYEOF'
           content = '''#!/bin/bash
@@ -110,31 +110,21 @@ jobs:
           BIN_NAME="lightpanel"
           REPO="${{ github.repository }}"
           
-          # 权限检查
           if [ "$(id -u)" != "0" ]; then
               echo "请使用 root 权限运行"
               exit 1
           fi
           
-          # 系统检查
           if [ "$(uname -s)" != "Linux" ]; then
               echo "仅支持 Linux"
               exit 1
           fi
           
-          # 架构检测
           ARCH=$(uname -m)
           case $ARCH in
-              x86_64)
-                  ARCH_NAME="amd64"
-                  ;;
-              aarch64|arm64)
-                  ARCH_NAME="arm64"
-                  ;;
-              *)
-                  echo "不支持架构: $ARCH"
-                  exit 1
-                  ;;
+              x86_64) ARCH_NAME="amd64" ;;
+              aarch64|arm64) ARCH_NAME="arm64" ;;
+              *) echo "不支持架构: $ARCH"; exit 1 ;;
           esac
           
           VERSION="${1:-latest}"
@@ -147,47 +137,38 @@ jobs:
           fi
           echo "============================================"
           
-          # 预检测 systemd (提前检测，为后面停止进程做准备)
-          HAS_SYSTEMD=false
-          if pidof systemd >/dev/null 2>&1 && command -v systemctl >/dev/null 2>&1; then
-              HAS_SYSTEMD=true
-          fi
-          
-          # 部署程序
           mkdir -p "$INSTALL_DIR"
           cd "$INSTALL_DIR"
           
-          # ==========================================
-          # 更新前：先停止正在运行的程序
-          # ==========================================
-          echo "准备更新，先停止旧进程..."
-          if [ "$HAS_SYSTEMD" = true ] && [ -f "/etc/systemd/system/${BIN_NAME}.service" ]; then
-              systemctl stop $BIN_NAME 2>/dev/null || true
-          else
-              # 非 systemd 环境，尝试杀掉进程
-              pkill -f "$INSTALL_DIR/$BIN_NAME" 2>/dev/null || true
-              sleep 1 # 等待 1 秒确保进程退出
-              # 强制清理（如果还没退出）
-              pkill -9 -f "$INSTALL_DIR/$BIN_NAME" 2>/dev/null || true
-          fi
-          
-          # ==========================================
-          # 下载并覆盖文件
-          # ==========================================
           echo "下载程序..."
           curl -L "https://gh.llkk.cc/https://github.com/$REPO/releases/download/$VERSION/${BIN_NAME}-$VERSION-linux-$ARCH_NAME.tar.gz" -o ${BIN_NAME}.tar.gz
           tar -xzf ${BIN_NAME}.tar.gz --strip-components=1
           chmod +x $BIN_NAME
           rm -f ${BIN_NAME}.tar.gz
           
-          # ==========================================
-          # 启动程序（无论新装还是更新）
-          # ==========================================
-          if [ "$HAS_SYSTEMD" = true ]; then
-              echo "检测到 systemd，配置并启动服务"
-              
-              if [ ! -f "/etc/systemd/system/${BIN_NAME}.service" ]; then
-                  cat > /etc/systemd/system/${BIN_NAME}.service << 'SYSTEMDEND'
+          detect_init() {
+              if pidof systemd >/dev/null 2>&1 && command -v systemctl >/dev/null 2>&1; then
+                  echo "systemd"
+              elif command -v openrc >/dev/null 2>&1 || [ -d /etc/init.d ] && command -v rc-service >/dev/null 2>&1; then
+                  echo "openrc"
+              elif [ -d /etc/init.d ] && command -v service >/dev/null 2>&1; then
+                  echo "sysvinit"
+              elif command -v runit >/dev/null 2>&1 || [ -d /etc/service ]; then
+                  echo "runit"
+              elif echo "$PREFIX" | grep -q termux >/dev/null 2>&1; then
+                  echo "termux"
+              else
+                  echo "none"
+              fi
+          }
+          
+          INIT_SYSTEM=$(detect_init)
+          echo "检测到系统init: $INIT_SYSTEM"
+          
+          case $INIT_SYSTEM in
+              systemd)
+                  echo "配置 systemd 服务..."
+                  cat > /etc/systemd/system/${BIN_NAME}.service << 'SYSTEMD'
           [Unit]
           Description=LightPanel
           After=network.target
@@ -200,35 +181,94 @@ jobs:
           
           [Install]
           WantedBy=multi-user.target
-          SYSTEMDEND
+          SYSTEMD
                   systemctl daemon-reload
-                  systemctl enable $BIN_NAME
-              fi
+                  systemctl enable --now $BIN_NAME
+                  ;;
               
-              echo "启动服务..."
-              systemctl restart $BIN_NAME
-          else
-              echo "无 systemd，后台启动程序"
-              # 简单的后台启动（注意：这种方式重启后不会自启，仅作为临时方案）
-              nohup "$INSTALL_DIR/$BIN_NAME" > /dev/null 2>&1 &
-          fi
+              openrc)
+                  echo "配置 OpenRC 服务(Alpine)..."
+                  cat > /etc/init.d/$BIN_NAME << 'OPENRC'
+          #!/sbin/openrc-run
+          
+          name="LightPanel"
+          command="/opt/lightpanel/lightpanel"
+          command_background="yes"
+          pidfile="/run/$BIN_NAME.pid"
+          command_user="root"
+          
+          depend() {
+              use net
+          }
+          OPENRC
+                  chmod +x /etc/init.d/$BIN_NAME
+                  rc-update add $BIN_NAME default
+                  rc-service $BIN_NAME restart
+                  ;;
+              
+              sysvinit)
+                  echo "配置 SysVinit 服务..."
+                  cat > /etc/init.d/$BIN_NAME << 'SYSV'
+          #!/bin/bash
+          ### BEGIN INIT INFO
+          # Provides:          lightpanel
+          # Required-Start:    $network
+          # Required-Stop:     $network
+          # Default-Start:     2 3 4 5
+          # Default-Stop:      0 1 6
+          # Short-Description: LightPanel Service
+          ### END INIT INFO
+          
+          cd /opt/lightpanel
+          case "$1" in
+              start) setsid ./lightpanel > /dev/null 2>&1 & echo $! > /var/run/lightpanel.pid ;;
+              stop) kill \$(cat /var/run/lightpanel.pid) 2>/dev/null ;;
+              restart) $0 stop; $0 start ;;
+          esac
+          SYSV
+                  chmod +x /etc/init.d/$BIN_NAME
+                  update-rc.d $BIN_NAME defaults 99
+                  service $BIN_NAME restart
+                  ;;
+              
+              runit)
+                  echo "配置 Runit 服务..."
+                  mkdir -p /etc/service/$BIN_NAME
+                  cat > /etc/service/$BIN_NAME/run << 'RUNIT'
+          #!/bin/bash
+          cd /opt/lightpanel
+          exec ./lightpanel 2>&1
+          RUNIT
+                  chmod +x /etc/service/$BIN_NAME/run
+                  ;;
+              
+              termux)
+                  echo "配置 Termux 服务..."
+                  mkdir -p $PREFIX/var/service/$BIN_NAME
+                  cat > $PREFIX/var/service/$BIN_NAME/run << 'TERMUX'
+          #!/data/data/com.termux/files/usr/bin/bash
+          cd /opt/lightpanel
+          exec ./lightpanel 2>&1
+          TERMUX
+                  chmod +x $PREFIX/var/service/$BIN_NAME/run
+                  ln -sf $PREFIX/var/service/$BIN_NAME $PREFIX/var/service/run/
+                  ;;
+              
+              none)
+                  echo "无init系统，使用 setsid 后台保活..."
+                  pkill -f $BIN_NAME 2>/dev/null || true
+                  setsid ./$BIN_NAME > /dev/null 2>&1 &
+                  echo "已使用 setsid 永久保活，关闭终端不退出"
+                  ;;
+          esac
           
           echo "============================================"
           echo "部署完成"
-          echo "路径：$INSTALL_DIR/$BIN_NAME"
-          echo "访问：http://127.0.0.1:31956"
-          echo "默认：admin / admin"
-          
-          if [ "$HAS_SYSTEMD" = true ]; then
-              echo "服务：systemctl status|restart $BIN_NAME"
-          fi
-          
-          if [ "$HAS_SYSTEMD" = false ]; then
-              echo "启动：cd $INSTALL_DIR && ./$BIN_NAME"
-          fi
+          echo "安装路径：$INSTALL_DIR"
+          echo "访问地址：http://127.0.0.1:31956"
+          echo "默认账号：admin / admin"
           echo "============================================"
           
-          # 容器环境前台运行
           if [ -f "/.dockerenv" ] || [ -f "/.containerenv" ]; then
               echo "容器环境，前台启动程序"
               exec "$INSTALL_DIR/$BIN_NAME"
@@ -252,6 +292,6 @@ jobs:
           body: |
             ## LightPanel ${{ env.VERSION }}
             
-            ### 一键安装
+            ### 一键安装（自动适配所有系统/架构/init）
             ```bash
             curl -L https://gh.llkk.cc/https://github.com/${{ github.repository }}/releases/download/${{ env.VERSION }}/install.sh | bash -s ${{ env.VERSION }}
