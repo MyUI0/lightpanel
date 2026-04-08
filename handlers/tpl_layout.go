@@ -20,7 +20,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);display:flex}
 .sidebar nav{flex:1;padding:0.5rem 0.4rem;display:flex;flex-direction:column;gap:2px}
 .sidebar nav a{display:flex;align-items:center;gap:0.7rem;padding:0.65rem 0.7rem;border-radius:10px;color:var(--text2);text-decoration:none;font-size:0.8rem;font-weight:500;transition:all 0.15s;white-space:nowrap;justify-content:flex-start}
 .sidebar nav a:hover{background:var(--card-h);color:var(--text)}
-.sidebar nav a.active{background:rgba(99,102,241,0.15);color:#818cf8}
+.sidebar nav a.active{background:rgba(229,62,62,0.15);color:#fc8181}
 .sidebar nav a i{width:18px;text-align:center;font-size:0.9rem;flex-shrink:0}
 .sidebar nav a .nav-long{transition:opacity 0.2s}
 .sidebar nav a .nav-short{display:none;transition:opacity 0.2s}

@@ -36,8 +36,8 @@ var htmlIndex = `<!DOCTYPE html>
 {{if .CreateErr}}
 <div class="fail-card"><h4><i class="fa-solid fa-circle-xmark" style="margin-right:0.4rem;"></i>创建失败: {{.CreateErr}}</h4></div>
 {{end}}
-<div id="activeTaskBanner" style="display:none;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:10px;padding:0.7rem 0.8rem;margin-bottom:0.8rem">
-<div style="font-size:0.8rem;color:#a5b4fc;margin-bottom:0.4rem"><i class="fa-solid fa-spinner fa-spin" style="margin-right:0.3rem"></i><span id="activeTaskMsg">正在创建...</span></div>
+<div id="activeTaskBanner" style="display:none;background:rgba(229,62,62,0.08);border:1px solid rgba(229,62,62,0.2);border-radius:10px;padding:0.7rem 0.8rem;margin-bottom:0.8rem">
+<div style="font-size:0.8rem;color:#fc8181;margin-bottom:0.4rem"><i class="fa-solid fa-spinner fa-spin" style="margin-right:0.3rem"></i><span id="activeTaskMsg">正在创建...</span></div>
 <div class="progress-bar"><div class="progress-fill" id="activeTaskFill" style="width:0%"></div></div>
 </div>
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.6rem;margin-bottom:1rem">
@@ -98,13 +98,13 @@ var htmlIndex = `<!DOCTYPE html>
 {{range $name, $app := .Apps}}
 <div class="card app-item" style="margin-bottom:0.5rem" data-name="{{tolower $name}}" data-cmd="{{tolower $app.Cmd}}">
 <label style="display:flex;align-items:center;gap:0.5rem;flex:1;min-width:0;cursor:pointer">
-<input type="checkbox" class="app-cb" data-name="{{$name}}" style="accent-color:#6366f1;flex-shrink:0">
+<input type="checkbox" class="app-cb" data-name="{{$name}}" style="accent-color:#e53e3e;flex-shrink:0">
 <div style="flex:1;min-width:0">
 <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
 <span class="app-name">{{$name}}</span>
 {{if eq $app.Status "运行中"}}<span class="badge badge-running"><span style="width:5px;height:5px;background:#34d399;border-radius:50%"></span>运行中</span>{{else}}<span class="badge badge-stopped"><span style="width:5px;height:5px;background:#f87171;border-radius:50%"></span>已停止</span>{{end}}
 {{if $app.AutoStart}}<span class="badge" style="background:rgba(59,130,246,0.1);color:#60a5fa;border:1px solid rgba(59,130,246,0.2)"><i class="fa-solid fa-rotate" style="margin-right:0.2rem"></i>自启</span>{{end}}
-{{if $app.Version}}<span class="badge" style="background:rgba(99,102,241,0.1);color:#a5b4fc;border:1px solid rgba(99,102,241,0.2)">v{{$app.Version}}</span>{{end}}
+{{if $app.Version}}<span class="badge" style="background:rgba(229,62,62,0.1);color:#fc8181;border:1px solid rgba(229,62,62,0.2)">v{{$app.Version}}</span>{{end}}
 </div>
 <div class="app-cmd"><i class="fa-solid fa-terminal" style="margin-right:0.2rem"></i>{{escape $app.Cmd}}</div>
 </div>

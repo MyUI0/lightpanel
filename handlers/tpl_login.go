@@ -34,7 +34,7 @@ margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-seri
 body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden}
 body::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,var(--bg-grad));opacity:0.9}
 .card{position:relative;z-index:1;background:var(--card);backdrop-filter:blur(30px);border:1px solid var(--card-b);border-radius:20px;padding:2.5rem;width:360px}
-.logo{width:48px;height:48px;background:linear-gradient(135deg,#6366f1,#a855f7);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.2rem;box-shadow:0 0 15px rgba(99,102,241,0.4);border:2px solid rgba(255,255,255,0.2)}
+.logo{width:48px;height:48px;background:linear-gradient(135deg,#e53e3e,#fc8181);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.2rem;box-shadow:0 0 15px rgba(229,62,62,0.4);border:2px solid rgba(255,255,255,0.2)}
 [data-theme="light"] .logo{border:2px solid rgba(255,255,255,0.5)}
 .logo i{color:#fff;font-size:1.3rem}
 h1{text-align:center;font-size:1.3rem;font-weight:700;color:var(--text);margin-bottom:0.3rem}
@@ -42,7 +42,7 @@ h1{text-align:center;font-size:1.3rem;font-weight:700;color:var(--text);margin-b
 .field{margin-bottom:0.8rem}
 .field label{display:block;font-size:0.75rem;font-weight:600;color:var(--text3);margin-bottom:0.3rem}
 .field input{width:100%;padding:0.65rem 0.85rem;border-radius:10px;border:1px solid var(--input-b);background:var(--input-bg);color:var(--input-t);font-size:0.85rem;outline:none;transition:all 0.2s}
-.field input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.15)}
+.field input:focus{border-color:#e53e3e;box-shadow:0 0 0 3px rgba(229,62,62,0.15)}
 .btn{width:100%;padding:0.75rem;border-radius:10px;border:none;background:var(--btn-bg);color:#fff;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.2s;margin-top:0.5rem}
 .btn:hover{box-shadow:var(--btn-h)}
 .btn:disabled{opacity:0.5;cursor:not-allowed}

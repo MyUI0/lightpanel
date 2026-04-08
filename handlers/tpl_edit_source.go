@@ -21,7 +21,7 @@ var htmlEdit = `<!DOCTYPE html>
 {{if eq .Err "rename"}}<div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.3rem"></i>重命名失败</div>{{end}}
 {{if eq .Err "save"}}<div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.3rem"></i>保存失败</div>{{end}}
 {{if eq .Msg "1"}}<div class="alert alert-success"><i class="fa-solid fa-check" style="margin-right:0.3rem"></i>已保存</div>{{end}}
-{{if .InstallNote}}<div class="alert" style="background:rgba(99,102,241,0.08);color:#a5b4fc;border:1px solid rgba(99,102,241,0.2)"><i class="fa-solid fa-circle-info" style="margin-right:0.3rem"></i>安装检测: {{.InstallNote}} <a href="/detect/{{.Name}}" style="color:#818cf8;margin-left:0.3rem">[重新检测]</a></div>{{end}}
+{{if .InstallNote}}<div class="alert" style="background:rgba(229,62,62,0.08);color:#fc8181;border:1px solid rgba(229,62,62,0.2)"><i class="fa-solid fa-circle-info" style="margin-right:0.3rem"></i>安装检测: {{.InstallNote}} <a href="/detect/{{.Name}}" style="color:#fc8181;margin-left:0.3rem">[重新检测]</a></div>{{end}}
 <div class="glass" style="padding:1rem">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
 <h3 style="font-size:0.95rem;font-weight:600;color:var(--text)">{{.Name}}</h3>

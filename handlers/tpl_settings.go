@@ -240,7 +240,7 @@ var htmlScriptAnalyze = `<!DOCTYPE html>
 .tag{display:inline-block;padding:0.2rem 0.5rem;border-radius:5px;font-size:0.7rem;font-family:monospace;margin:0.15rem}
 .tag-dep{background:rgba(245,158,11,0.1);color:#fbbf24;border:1px solid rgba(245,158,11,0.2)}
 .tag-port{background:rgba(16,185,129,0.1);color:#34d399;border:1px solid rgba(16,185,129,0.2)}
-.tag-env{background:rgba(99,102,241,0.1);color:#a5b4fc;border:1px solid rgba(99,102,241,0.2)}
+.tag-env{background:rgba(229,62,62,0.1);color:#fc8181;border:1px solid rgba(229,62,62,0.2)}
 </style>
 </head>
 <body>
