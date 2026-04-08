@@ -22,7 +22,7 @@ func main() {
 		log.Fatalf("守护进程化失败: %v", err)
 	}
 	if d != nil {
-		log.Println("服务已在后台启动，PID:", d.Pid())
+		log.Printf("服务已在后台启动，PID: %d", d.Pid)
 		return
 	}
 	defer cntxt.Release()
