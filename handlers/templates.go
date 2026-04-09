@@ -28,6 +28,7 @@ func InitTemplates() {
 		tmpl = template.Must(tmpl.Parse(
 			`{{define "login"}}`+htmlLogin+`{{end}}`+
 				`{{define "index"}}`+htmlIndex+`{{end}}`+
+				`{{define "apps"}}`+htmlApps+`{{end}}`+
 				`{{define "store"}}`+htmlStore+`{{end}}`+
 				`{{define "store_params"}}`+htmlStoreParams+`{{end}}`+
 				`{{define "source"}}`+htmlSource+`{{end}}`+

@@ -34,6 +34,7 @@ func SetupRoutes() {
 	mux.HandleFunc("/login/auth", requirePOST(loginHandler))
 	mux.HandleFunc("/logout", logoutHandler)
 	mux.HandleFunc("/", auth(indexPage))
+	mux.HandleFunc("/apps", auth(appsPage))
 	mux.HandleFunc("/system", auth(systemPage))
 	mux.HandleFunc("/store", auth(storePage))
 	mux.HandleFunc("/source", auth(sourcePage))

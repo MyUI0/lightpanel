@@ -85,6 +85,10 @@ func createApp(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]any{"error": "应用名称不能为空"})
 		return
 	}
+	if down == "" {
+		json.NewEncoder(w).Encode(map[string]any{"error": "下载地址不能为空"})
+		return
+	}
 	if !validateCommand(cmd) {
 		json.NewEncoder(w).Encode(map[string]any{"error": "启动命令包含非法字符"})
 		return

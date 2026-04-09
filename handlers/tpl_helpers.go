@@ -4,7 +4,8 @@ import "strings"
 
 func sidebarHTML(active string) string {
 	items := []struct{ path, icon, long, short string }{
-		{"/", "fa-server", "应用管理", "应用"},
+		{"/", "fa-gauge", "面板首页", "首页"},
+		{"/apps", "fa-layer-group", "管理应用", "应用"},
 		{"/store", "fa-store", "应用商店", "商店"},
 		{"/downloads", "fa-download", "下载管理", "下载"},
 		{"/analyze", "fa-code", "脚本分析", "分析"},
