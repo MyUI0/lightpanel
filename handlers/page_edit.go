@@ -57,6 +57,7 @@ func editAppHandler(w http.ResponseWriter, r *http.Request) {
 			"WorkDir":     app.WorkDir,
 			"SourceURL":   app.SourceURL,
 			"URL":         app.URL,
+			"Icon":        app.Icon,
 			"Auto":        app.AutoStart,
 			"Status":      app.Status,
 			"Created":     app.Created,
@@ -87,6 +88,7 @@ func editAppHandler(w http.ResponseWriter, r *http.Request) {
 	autoStr := r.Form.Get("auto")
 	newWorkDir := strings.TrimSpace(r.Form.Get("work_dir"))
 	newURL := strings.TrimSpace(r.Form.Get("url"))
+	newIcon := strings.TrimSpace(r.Form.Get("icon"))
 
 	if newName == "" || newCmd == "" || strings.ContainsAny(newName, "./\\") || strings.HasPrefix(newName, ".") || strings.Contains(newName, "..") || strings.ContainsAny(newName, "?*:#") {
 		http.Redirect(w, r, "/edit/"+name+"?err=invalid", 302)
@@ -177,6 +179,7 @@ func editAppHandler(w http.ResponseWriter, r *http.Request) {
 	app.AutoStart = autoStart
 	app.WorkDir = newWorkDir
 	app.URL = newURL
+	app.Icon = newIcon
 	apps[newName] = app
 
 	if err := WriteJSON(config.ConfigApps, apps); err != nil {

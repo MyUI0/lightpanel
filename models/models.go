@@ -19,6 +19,7 @@ type Project struct {
 	PID       int    `json:"pid"`
 	Created   string `json:"created"`
 	Version   string `json:"version,omitempty"`
+	Icon      string `json:"icon,omitempty"`
 }
 
 type StoreSource struct {
@@ -80,6 +81,7 @@ type DownloadTask struct {
 	Version   string    `json:"version"`
 	SetupCmd  string    `json:"setup_cmd"`
 	WorkDir   string    `json:"work_dir"`
+	Icon      string    `json:"icon"`
 	Last        time.Time `json:"-"`
 	AutoExtract bool      `json:"auto_extract"`
 	MakeExec    bool      `json:"make_exec"`

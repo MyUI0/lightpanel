@@ -15,6 +15,8 @@ var htmlApps = `<!DOCTYPE html>
 .app-cb{margin-right:0.3rem}
 .batch-bar{display:none;gap:0.3rem;align-items:center}
 .batch-bar.active{display:flex}
+.app-icon{width:40px;height:40px;border-radius:10px;object-fit:cover;flex-shrink:0}
+.app-icon-default{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(229,62,62,0.2),rgba(192,48,48,0.1));display:flex;align-items:center;justify-content:center;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -40,6 +42,11 @@ var htmlApps = `<!DOCTYPE html>
 <div class="app-grid">
 {{range $name, $app := .Apps}}
 <div class="card app-item" data-name="{{tolower $name}}" data-cmd="{{tolower $app.Cmd}}">
+<div style="display:flex;gap:0.8rem;align-items:flex-start">
+{{if $app.Icon}}
+<img src="{{$app.Icon}}" class="app-icon" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+{{end}}
+<div class="app-icon-default"{{if $app.Icon}} style="display:none"{{end}}><i class="fa-solid fa-cube" style="color:#e53e3e"></i></div>
 <div style="flex:1;min-width:0">
 <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem">
 <span class="app-name app-cb" style="display:none"><input type="checkbox" class="app-cb" data-name="{{$name}}"></span>
@@ -48,7 +55,7 @@ var htmlApps = `<!DOCTYPE html>
 {{if $app.AutoStart}}<span class="badge" style="background:rgba(59,130,246,0.1);color:#60a5fa;border:1px solid rgba(59,130,246,0.2)">自启</span>{{end}}
 {{if $app.Version}}<span class="badge" style="background:rgba(229,62,62,0.1);color:#fc8181;border:1px solid rgba(229,62,62,0.2)">v{{$app.Version}}</span>{{end}}
 </div>
-<div style="font-size:0.7rem;color:var(--text2);margin-bottom:0.5rem;word-break:break-all"><i class="fa-solid fa-terminal" style="margin-right:0.3rem"></i>{{escape $app.Cmd}}</div>
+<div style="font-size:0.7rem;color:var(--text2);margin-bottom:0.5rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><i class="fa-solid fa-terminal" style="margin-right:0.3rem"></i>{{escape $app.Cmd}}</div>
 <div style="display:flex;gap:0.3rem;flex-wrap:wrap">
 {{if eq $app.Status "运行中"}}
 <button class="btn btn-warning btn-sm" onclick="postAction('/stop/{{$name}}')"><i class="fa-solid fa-stop"></i> 停止</button>
@@ -64,7 +71,6 @@ var htmlApps = `<!DOCTYPE html>
 </div>
 </div>
 {{end}}
-</div>
 </div>
 </div>
 </div>

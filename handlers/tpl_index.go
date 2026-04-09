@@ -81,12 +81,14 @@ var htmlIndex = `<!DOCTYPE html>
 </div>
 ` + layoutJS + `
 <script>
+var currentTab='download';
 var tabDl=document.getElementById('tabDownload');
 var tabMl=document.getElementById('tabManual');
 var dl=document.getElementById('downloadPanel');
 var ml=document.getElementById('manualPanel');
 var createBtn=document.getElementById('createBtn');
 function switchTab(tab){
+currentTab=tab;
 if(tab==='download'){
 dl.style.display='block';ml.style.display='none';
 if(tabDl){tabDl.className='btn btn-primary btn-sm';}
@@ -103,7 +105,7 @@ var form=document.getElementById('createForm');
 if(form){
 form.addEventListener('submit',function(e){
 e.preventDefault();
-var isManual=document.getElementById('manualPanel').style.display==='block';
+var isManual=currentTab==='manual';
 var nameEl=isManual?document.getElementById('manualName'):document.getElementById('appName');
 var prog=document.getElementById('createProgress');
 var fill=document.getElementById('progressFill');

@@ -360,6 +360,7 @@ func startStoreInstall(w http.ResponseWriter, r *http.Request) {
 	dlSetupCmd := app.SetupCmd
 	dlAutoExtract := app.AutoExtract
 	dlMakeExec := app.MakeExec
+	dlIcon := app.Icon
 	id := "dl_" + strconv.FormatInt(time.Now().UnixNano(), 36)
 	log.Printf("[install] Creating task: id=%s, name=%s, url=%s", id, dlName, dlURL)
 	task := &models.DownloadTask{
@@ -372,6 +373,7 @@ func startStoreInstall(w http.ResponseWriter, r *http.Request) {
 		Last:     time.Now(),
 		Version:  dlVersion,
 		SetupCmd: dlSetupCmd,
+		Icon:     dlIcon,
 	}
 	downloadTasks.Store(id, task)
 
@@ -720,6 +722,7 @@ func confirmInstallWithParams(w http.ResponseWriter, r *http.Request) {
 	dlVersion := app.Version
 	dlSetupCmd := app.SetupCmd
 	dlWorkDir := app.WorkDir
+	dlIcon := app.Icon
 	id := "dl_" + strconv.FormatInt(time.Now().UnixNano(), 36)
 	task := &models.DownloadTask{
 		ID:       id,
@@ -732,6 +735,7 @@ func confirmInstallWithParams(w http.ResponseWriter, r *http.Request) {
 		Version:  dlVersion,
 		SetupCmd: dlSetupCmd,
 		WorkDir:  dlWorkDir,
+		Icon:     dlIcon,
 	}
 	downloadTasks.Store(id, task)
 
@@ -819,6 +823,7 @@ func confirmInstallWithParams(w http.ResponseWriter, r *http.Request) {
 				proj = models.Project{
 					Path:      sandbox,
 					Created:   time.Now().Format("2006-01-02 15:04"),
+					Icon:      task.Icon,
 				}
 			}
 		if result.WorkDir != "" {
@@ -1149,6 +1154,7 @@ func installDownloadedApp(id string) {
 		Cmd:       task.Cmd,
 		SetupCmd:  task.SetupCmd,
 		WorkDir:   result.WorkDir,
+		Icon:      task.Icon,
 		Created:   time.Now().Format("2006-01-02 15:04"),
 	}
 	_ = WriteJSON(config.ConfigApps, apps)
