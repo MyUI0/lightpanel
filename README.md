@@ -50,7 +50,7 @@
 ### 一键安装 (Linux)
 
 ```bash
-curl -L https://ghproxy.com/https://github.com/MyUI0/lightpanel/releases/latest/download/install.sh | bash
+curl -L https://gh.llkk.cc/https://github.com/MyUI0/lightpanel/releases/latest/download/install.sh | bash
 ```
 
 
