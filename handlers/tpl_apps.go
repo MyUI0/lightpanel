@@ -64,7 +64,6 @@ var htmlApps = `<!DOCTYPE html>
 </div>
 {{end}}
 </div>
-{{end}}
 </div>
 </div>
 </div>
