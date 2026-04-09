@@ -8,11 +8,11 @@ const layoutCSS = `@import url('https://fonts.googleapis.com/css2?family=Inter:w
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-serif}
 body{background:var(--bg);min-height:100vh;color:var(--text);display:flex}
 .bg-layer{position:fixed;inset:0;z-index:0;background-size:cover;background-position:center;background-repeat:no-repeat}
-.bg-layer::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(99,102,241,0.12) 0%,transparent 60%),var(--bg);opacity:0.9}
+.bg-layer::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(229,62,62,0.12) 0%,transparent 60%),var(--bg);opacity:0.9}
 .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--bg2);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;transition:width 0.25s ease;overflow:hidden}
 .sidebar.collapsed{width:var(--sidebar-cw)}
 .sidebar .logo-row{display:flex;align-items:center;gap:0.6rem;padding:1.2rem 1rem;border-bottom:1px solid var(--border);justify-content:center}
-.sidebar .logo-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;border:2px solid rgba(99,102,241,0.4);box-shadow:0 0 15px rgba(99,102,241,0.3)}
+.sidebar .logo-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;border:2px solid rgba(229,62,62,0.4);box-shadow:0 0 15px rgba(229,62,62,0.3)}
 .sidebar .logo-icon img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .sidebar .logo-icon i{color:#fff;font-size:1rem}
 .sidebar .logo-text{font-size:0.9rem;font-weight:700;color:var(--text);white-space:nowrap;transition:opacity 0.2s}

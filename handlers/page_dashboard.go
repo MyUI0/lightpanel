@@ -219,6 +219,15 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
 		createErr = r.URL.Query().Get("msg")
 	}
 
+	cookie, _ := r.Cookie("lp_session")
+	var csrfToken string
+	if cookie != nil {
+		sessData := getSessionData(cookie.Value)
+		if sessData != nil {
+			csrfToken = sessData.CSRFToken
+		}
+	}
+
 	_ = htmlRender.ExecuteTemplate(w, "index", map[string]any{
 		"Apps":       list,
 		"Cpu":        cpuVal,
@@ -227,6 +236,7 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
 		"ProcNum":    len(procs),
 		"Uptime":     uptimeStr,
 		"BgUrl":      bgConfig.URL,
+		"CSRFToken":  csrfToken,
 		"Sidebar":    template.HTML(sidebarHTML("/")),
 		"Topbar":     template.HTML(topbarHTML("面板首页")),
 		"FailInfo":   getFailInfo(list),
