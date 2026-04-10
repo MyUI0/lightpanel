@@ -372,6 +372,8 @@ func startStoreInstall(w http.ResponseWriter, r *http.Request) {
 		Last:     time.Now(),
 		Version:  dlVersion,
 		SetupCmd: dlSetupCmd,
+		Icon:    app.Icon,
+		Port:    app.Port,
 	}
 	downloadTasks.Store(id, task)
 
@@ -472,10 +474,11 @@ func startStoreInstall(w http.ResponseWriter, r *http.Request) {
 			proj.Cmd = result.Binary
 		}
 		proj.Version = dlVersion
-		if app.Port > 0 {
-			proj.Port = app.Port
+		proj.Icon = task.Icon
+		if task.Port > 0 {
+			proj.Port = task.Port
 			if proj.URL == "" {
-				proj.URL = "http://" + getLocalIP() + ":" + strconv.Itoa(app.Port)
+				proj.URL = "http://" + getLocalIP() + ":" + strconv.Itoa(task.Port)
 			}
 		}
 		updated[dlName] = proj
@@ -828,25 +831,25 @@ func confirmInstallWithParams(w http.ResponseWriter, r *http.Request) {
 			dlCmd = strings.ReplaceAll(dlCmd, "{{arch}}", getCachedSystemInfo().Arch)
 			dlCmd = strings.ReplaceAll(dlCmd, "{{os}}", getCachedSystemInfo().OS)
 			proj.Cmd = dlCmd
-		} else if result.Binary != "" {
-			proj.Cmd = result.Binary
+} else if result.Binary != "" {
+proj.Cmd = result.Binary
 		}
 		proj.Version = dlVersion
-		proj.Icon = app.Icon
-		if app.Port > 0 {
-			proj.Port = app.Port
+		proj.Icon = task.Icon
+		if task.Port > 0 {
+			proj.Port = task.Port
 			if proj.URL == "" {
-				proj.URL = "http://" + getLocalIP() + ":" + strconv.Itoa(app.Port)
+				proj.URL = "http://" + getLocalIP() + ":" + strconv.Itoa(task.Port)
 			}
 		}
 		updated[dlName] = proj
-		_ = WriteJSON(config.ConfigApps, updated)
+			_ = WriteJSON(config.ConfigApps, updated)
 	}
 	appOpMu.Unlock()
 	_ = os.WriteFile(filepath.Join(sandbox, "install_note.txt"), []byte(result.Note), 0644)
 	task.SetStatus("completed")
 }
-	}()
+}()
 
 	http.Redirect(w, r, "/downloads", 302)
 }
@@ -1084,15 +1087,17 @@ func resumeDownload(id string) {
 		result := combinedDetect(sandbox, scanTime)
 		appOpMu.Lock()
 		var updated map[string]models.Project
-		dlName := task.Name
+dlName := task.Name
 		dlCmd := task.Cmd
 		dlVersion := task.Version
+		dlIcon := task.Icon
+		dlPort := task.Port
 		if err := LoadJSON(config.ConfigApps, &updated); err == nil {
 			proj, exists := updated[task.Name]
 			if !exists {
 				proj = models.Project{
 					Path:      sandbox,
-				Created:   time.Now().Format("2006-01-02 15:04"),
+					Created:   time.Now().Format("2006-01-02 15:04"),
 				}
 			}
 			if result.WorkDir != "" {
@@ -1106,11 +1111,11 @@ func resumeDownload(id string) {
 proj.Cmd = result.Binary
 		}
 		proj.Version = dlVersion
-		proj.Icon = app.Icon
-		if app.Port > 0 {
-			proj.Port = app.Port
+		proj.Icon = dlIcon
+		if dlPort > 0 {
+			proj.Port = dlPort
 			if proj.URL == "" {
-				proj.URL = "http://" + getLocalIP() + ":" + strconv.Itoa(app.Port)
+				proj.URL = "http://" + getLocalIP() + ":" + strconv.Itoa(dlPort)
 			}
 		}
 		updated[dlName] = proj
