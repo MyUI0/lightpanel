@@ -6,10 +6,9 @@ const layoutCSS = `@import url('https://fonts.googleapis.com/css2?family=Inter:w
 [data-theme="light"]{--bg:#e8eaed;--bg2:rgba(255,255,255,0.55);--card:rgba(255,255,255,0.6);--card-h:rgba(255,255,255,0.8);--text:#1a1a2e;--text2:rgba(0,0,0,0.55);--border:rgba(0,0,0,0.1);--input-bg:rgba(255,255,255,0.7);--input-b:rgba(0,0,0,0.12);--input-t:#1a1a2e;--input-ph:rgba(0,0,0,0.35)}
 @media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#e8eaed;--bg2:rgba(255,255,255,0.55);--card:rgba(255,255,255,0.6);--card-h:rgba(255,255,255,0.8);--text:#1a1a2e;--text2:rgba(0,0,0,0.55);--border:rgba(0,0,0,0.1);--input-bg:rgba(255,255,255,0.7);--input-b:rgba(0,0,0,0.12);--input-t:#1a1a2e;--input-ph:rgba(0,0,0,0.35)}}
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-serif}
-body{background:var(--bg);min-height:100vh;color:var(--text);display:flex}
-.bg-layer{position:fixed;inset:0;z-index:0;background-size:cover;background-position:center;background-repeat:no-repeat}
-.bg-layer::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(99,102,241,0.12) 0%,transparent 60%),var(--bg);opacity:0.9}
-.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--bg2);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;transition:width 0.25s ease;overflow:hidden}
+body{background:var(--bg);min-height:100vh;color:var(--text);display:flex;overflow-x:hidden}
+.bg-layer{position:fixed;inset:0;z-index:0;background-size:cover;background-position:center;background-repeat:no-repeat;will-change:transform}
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;transition:width 0.25s ease;overflow:hidden}
 .sidebar.collapsed{width:var(--sidebar-cw)}
 .sidebar .logo-row{display:flex;align-items:center;gap:0.6rem;padding:1.2rem 1rem;border-bottom:1px solid var(--border);justify-content:center}
 .sidebar .logo-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;border:2px solid rgba(99,102,241,0.4);box-shadow:0 0 15px rgba(99,102,241,0.3)}
@@ -49,9 +48,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);display:flex}
 .topbar .page-title{font-size:0.95rem;font-weight:600;color:var(--text)}
 .topbar .spacer{flex:1}
 .content{flex:1;padding:1.2rem 1.5rem}
-.card{background:var(--card);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid var(--border);border-radius:14px;padding:1rem;transition:all 0.2s}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem}
 .card:hover{background:var(--card-h)}
-.glass{background:var(--card);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid var(--border);border-radius:14px}
+.glass{background:var(--card);border:1px solid var(--border);border-radius:14px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.5rem 1rem;border-radius:9px;font-size:0.75rem;font-weight:500;transition:all 0.15s;cursor:pointer;border:none;text-decoration:none}
 .btn-primary{background:linear-gradient(135deg,#e53e3e,#c53030);color:#fff}
 .btn-primary:hover{box-shadow:0 3px 12px rgba(229,62,62,0.3)}
