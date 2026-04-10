@@ -1,18 +1,33 @@
 <p align="center">
-  <h1 align="center">🚀 朱雀面板</h1>
-  <p align="center">一个极简的 Linux 服务器自部署二进制项目管理面板</p>
+  <h1 align="center">🚀 朱雀面板 LightPanel</h1>
+  <p align="center">一个极简的 Linux 服务器自部署二进制项目管理面板 | 单二进制 · 零依赖 · 无Docker</p>
   <p align="center">
-    <img src="https://img.shields.io/badge/version-v1.0.5-blue.svg" alt="Version">
+    <img src="https://img.shields.io/badge/version-v1.2.2-blue.svg" alt="Version">
     <img src="https://img.shields.io/badge/Go-1.21+-00ADD8.svg?logo=go" alt="Go">
     <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
+    <img src="https://img.shields.io/badge/Platform-Linux%2FARM%2FOpenWrt-00ADD8.svg?logo=linux" alt="Platform">
   </p>
 </p>
 
 ---
 
-> 💡 **为什么做这个面板？**
->
-> 很多路由器、小服务器、软路由等轻量设备跑不了 Docker，无法使用传统的一体式容器管理方案。LightPanel 让你**在任何机器上都能使用**，无需 Docker，无需 systemd，一个二进制文件即可运行整个面板。
+## ✨ 项目简介
+朱雀面板（LightPanel）是一款**专为轻量Linux设备设计**的极致轻量服务器管理面板，核心定位是「单二进制、零依赖、无Docker」，让软路由、旧手机、ARM开发板、小服务器等无法运行Docker的设备，也能拥有现代化的自托管项目管理体验。
+
+无需Docker、无需systemd、无需数据库，**一个二进制文件即可运行整个面板**，真正做到开箱即用，资源占用仅10MB级。
+
+---
+
+## 💡 为什么做这个面板？
+很多路由器、软路由（OpenWrt）、旧手机、ARM开发板等轻量设备，受限于硬件/系统，无法运行Docker，传统的容器化管理方案（1Panel、宝塔等）完全无法使用。
+
+LightPanel 朱雀面板彻底解决这个痛点：
+- 纯Go语言编译，单二进制文件，全架构支持（x86_64/arm64/armv7等）
+- 无需任何依赖，无需Docker、无需systemd、无需数据库
+- 内置现代化应用商店，支持二进制项目一键下载、部署、管理
+- 完美适配OpenWrt、旧手机（Termux）、ARM设备等所有Linux环境
+
+---
 
 ## ✨ 特性
 
