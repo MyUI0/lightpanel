@@ -295,6 +295,7 @@ func createManualApp(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimSpace(r.Form.Get("path"))
 	cmd := strings.TrimSpace(r.Form.Get("cmd"))
 	workDir := strings.TrimSpace(r.Form.Get("work_dir"))
+	icon := strings.TrimSpace(r.Form.Get("icon"))
 	url := strings.TrimSpace(r.Form.Get("url"))
 	auto := r.Form.Get("auto") == "on"
 
@@ -348,6 +349,7 @@ func createManualApp(w http.ResponseWriter, r *http.Request) {
 		Path:      path,
 		Cmd:       cmd,
 		WorkDir:   workDir,
+		Icon:     icon,
 		URL:       url,
 		AutoStart: auto,
 		Created:   time.Now().Format("2006-01-02 15:04"),

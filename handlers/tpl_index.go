@@ -10,14 +10,15 @@ var htmlIndex = `<!DOCTYPE html>
 ` + layoutCSS + `
 .app-grid{clear:both}
 .app-grid:after{content:"";display:block;clear:both}
-.app-item{float:left;width:calc(50% - 0.25rem);margin-bottom:0.5rem;box-sizing:border-box}
+.app-item{float:left;width:calc(50% - 0.4rem);margin-bottom:0.8rem;margin-right:0.8rem;box-sizing:border-box}
+.app-item:nth-child(2n){margin-right:0}
 .app-item .app-top{display:flex;gap:0.5rem}
 .app-item .app-icon{width:36px;height:36px;border-radius:8px;background:rgba(229,62,62,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .app-item .app-icon img{width:100%;height:100%;object-fit:cover;border-radius:8px}
 .app-item .app-icon i{font-size:1rem;color:#e53e3e}
 .app-item .app-info{flex:1;min-width:0}
-.app-item .app-name{font-weight:600;font-size:0.85rem}
-.app-item .app-cmd{font-size:0.7rem;color:var(--text2);margin-top:0.15rem;max-width:15ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app-item .app-name{font-weight:600;font-size:0.85rem;display:block}
+.app-item .app-cmd{font-size:0.7rem;color:var(--text2);margin-top:0.15rem;max-width:30ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .app-item .app-btns{display:flex;gap:0.2rem;flex-wrap:wrap;margin-top:0.4rem}
 </style>
 </head>
@@ -68,6 +69,7 @@ var htmlIndex = `<!DOCTYPE html>
 </div>
 <input name="url" placeholder="下载地址（必填）" required class="input" id="appUrl" style="margin-top:0.3rem">
 <input name="setup_cmd" placeholder="首次运行命令（可选）" class="input" id="appSetup" style="margin-top:0.3rem">
+<input name="icon" placeholder="图标URL（可选）" class="input" id="appIcon" style="margin-top:0.3rem">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-top:0.3rem">
 <label class="check-label" style="justify-content:center"><input type="checkbox" name="auto_extract" id="autoExtract"><div class="check-box"><i class="fa-solid fa-check"></i></div><span style="color:var(--text2);font-size:0.72rem">自动解压</span></label>
 <label class="check-label" style="justify-content:center"><input type="checkbox" name="make_exec" id="makeExec"><div class="check-box"><i class="fa-solid fa-check"></i></div><span style="color:var(--text2);font-size:0.72rem">赋予权限</span></label>
@@ -81,7 +83,8 @@ var htmlIndex = `<!DOCTYPE html>
 </div>
 <input name="manual_cmd" placeholder="启动命令" class="input" id="manualCmd" style="margin-top:0.3rem">
 <input name="manual_workdir" placeholder="工作目录（可选）" class="input" id="manualWorkDir" style="margin-top:0.3rem">
-<input name="manual_url" placeholder="网页地址（可选）" class="input" id="manualUrl">
+<input name="manual_icon" placeholder="图标URL（可选）" class="input" id="manualIcon" style="margin-top:0.3rem">
+<input name="manual_url" placeholder="网页地址（可选）" class="input" id="manualUrl" style="margin-top:0.3rem">
 <label class="check-label" style="justify-content:center"><input type="checkbox" name="manual_auto" id="manualAuto"><div class="check-box"><i class="fa-solid fa-check"></i></div><span style="color:var(--text2);font-size:0.72rem">开机自启</span></label>
 </div>
 <button class="btn btn-primary" style="width:100%" type="submit" id="createBtn"><i class="fa-solid fa-plus"></i>创建应用</button>
@@ -106,7 +109,8 @@ var htmlIndex = `<!DOCTYPE html>
 </div>
 <div class="app-grid">
 {{range $name, $app := .Apps}}
-<div class="card app-item">
+<div class="card app-item" data-name="{{tolower $name}}" data-cmd="{{tolower $app.Cmd}}">
+<input type="checkbox" class="app-cb" data-name="{{$name}}">
 <div class="app-top">
 {{if $app.Icon}}
 <div class="app-icon"><img src="{{$app.Icon}}" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-box\\'></i>'"></div>
@@ -114,8 +118,8 @@ var htmlIndex = `<!DOCTYPE html>
 <div class="app-icon"><i class="fa-solid fa-box"></i></div>
 {{end}}
 <div class="app-info">
-<div class="app-name-row">
 <span class="app-name">{{$name}}</span>
+<div style="margin-top:0.2rem">
 {{if eq $app.Status "运行中"}}<span class="badge badge-running"><span style="width:5px;height:5px;background:#34d399;border-radius:50%"></span>运行中</span>{{else}}<span class="badge badge-stopped"><span style="width:5px;height:5px;background:#f87171;border-radius:50%"></span>已停止</span>{{end}}
 {{if $app.AutoStart}}<span class="badge" style="background:rgba(59,130,246,0.1);color:#60a5fa;border:1px solid rgba(59,130,246,0.2)"><i class="fa-solid fa-power-off" style="margin-right:0.2rem"></i>自启</span>{{end}}
 {{if $app.Version}}<span class="badge" style="background:rgba(229,62,62,0.1);color:#fc8181;border:1px solid rgba(229,62,62,0.2)">v{{$app.Version}}</span>{{end}}
@@ -243,12 +247,14 @@ var mName=document.getElementById('manualName').value.trim();
 var mPath=document.getElementById('manualPath').value.trim();
 var mCmd=document.getElementById('manualCmd').value.trim();
 var mWorkDir=document.getElementById('manualWorkDir').value.trim();
+var mIcon=document.getElementById('manualIcon').value.trim();
 var mUrl=document.getElementById('manualUrl').value.trim();
 var mAuto=document.getElementById('manualAuto').checked;
 if(!mPath||!mCmd){text.textContent='路径和命令必填';text.style.color='#f87171';btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-plus"></i>创建应用';return}
 var fd=new FormData();
 fd.append('name',mName);fd.append('path',mPath);fd.append('cmd',mCmd);
 if(mWorkDir)fd.append('work_dir',mWorkDir);
+if(mIcon)fd.append('icon',mIcon);
 if(mUrl)fd.append('url',mUrl);
 if(mAuto)fd.append('auto','on');
 fetch('/create/manual',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(data){
