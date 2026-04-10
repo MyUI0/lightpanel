@@ -62,7 +62,6 @@ body{background:var(--bg);min-height:100vh;color:var(--text);display:flex}
 .btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}
 .file-input-btn{display:inline-flex;cursor:pointer}
 .file-input-btn .file-name{cursor:pointer}
-
 .btn-sm{padding:0.4rem 0.6rem;font-size:0.7rem;border-radius:6px;white-space:nowrap}
 .input{width:100%;padding:0.6rem 0.8rem;border-radius:9px;background:var(--input-bg);border:1px solid var(--input-b);color:var(--input-t);font-size:0.8rem;outline:none;transition:all 0.2s}
 .input:focus{border-color:#e53e3e;box-shadow:0 0 0 3px rgba(229,62,62,0.15)}
@@ -164,4 +163,4 @@ var ic=b.querySelector('i');if(ic){ic.className='fa-solid fa-moon';}
 localStorage.setItem('lp_theme','dark');
 }
 }
-})();
+})();`
