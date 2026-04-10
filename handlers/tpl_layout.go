@@ -48,9 +48,9 @@ body{background:var(--bg);min-height:100vh;color:var(--text);display:flex;overfl
 .topbar .page-title{font-size:0.95rem;font-weight:600;color:var(--text)}
 .topbar .spacer{flex:1}
 .content{flex:1;padding:1.2rem 1.5rem}
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem}
+.card{background:var(--card);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:14px;padding:1rem}
 .card:hover{background:var(--card-h)}
-.glass{background:var(--card);border:1px solid var(--border);border-radius:14px}
+.glass{background:var(--card);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:14px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.5rem 1rem;border-radius:9px;font-size:0.75rem;font-weight:500;transition:all 0.15s;cursor:pointer;border:none;text-decoration:none}
 .btn-primary{background:linear-gradient(135deg,#e53e3e,#c53030);color:#fff}
 .btn-primary:hover{box-shadow:0 3px 12px rgba(229,62,62,0.3)}

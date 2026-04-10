@@ -18,11 +18,12 @@ var htmlIndex = `<!DOCTYPE html>
 .app-item .app-icon i{font-size:1rem;color:#e53e3e}
 .app-item .app-info{flex:1;min-width:0}
 .app-item .app-name{font-weight:600;font-size:0.85rem;display:block}
-.app-item .app-badges{display:flex;gap:0.25rem;flex-wrap:wrap;margin-top:0.15rem;justify-content:center}
+.app-item .app-badges{display:flex;gap:0.25rem;flex-wrap:wrap;margin-top:0.15rem}
 .app-item .app-cmd{font-size:0.7rem;color:var(--text2);margin-top:0.15rem;max-width:30ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .app-item .app-btns{display:flex;gap:0.2rem;flex-wrap:wrap;margin-top:0.4rem}
 .app-item .app-cb{position:absolute;left:0.4rem;top:0.4rem;width:16px;height:16px;opacity:0;accent-color:#e53e3e}
 .app-item.selected .app-cb,.app-item:has(.app-cb:checked) .app-cb{opacity:1}
+.app-item.hidden{display:none}
 </style>
 </head>
 <body>
@@ -284,8 +285,8 @@ var items=document.querySelectorAll('.app-item');
 for(var i=0;i<items.length;i++){
 var n=items[i].getAttribute('data-name')||'';
 var c=items[i].getAttribute('data-cmd')||'';
-if(n.indexOf(q)>=0||c.indexOf(q)>=0){items[i].style.display='block';}
-else{items[i].style.display='none';}
+if(n.indexOf(q)>=0||c.indexOf(q)>=0){items[i].classList.remove('hidden');}
+else{items[i].classList.add('hidden');}
 }
 });
 }
