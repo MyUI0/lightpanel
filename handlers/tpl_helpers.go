@@ -43,7 +43,7 @@ func sidebarHTML(active string) string {
 </div>
 <nav>` + nav + `</nav>
 <div class="side-footer">
-<a href="#" id="themeBtn" onclick="return false"><i class="fa-solid fa-moon"></i><span class="nav-long">切换主题</span><span class="nav-short">主题</span></a>
+<a href="#" id="themeBtn"><i class="fa-solid fa-moon"></i><span class="nav-long">切换主题</span><span class="nav-short">主题</span></a>
 <a href="/logout" class="logout"><i class="fa-solid fa-right-from-bracket"></i><span class="nav-long">退出登录</span><span class="nav-short">退出</span></a>
 </div>
 </div>`

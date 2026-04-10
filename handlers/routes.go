@@ -67,6 +67,7 @@ func SetupRoutes() {
 	mux.HandleFunc("/log/", auth(logPage))
 	mux.HandleFunc("/log/clear/", authWithCSRF(clearLog))
 	mux.HandleFunc("/delete/", authWithCSRF(deleteApp))
+	mux.HandleFunc("/create/batch", authWithCSRF(batchAction))
 	mux.HandleFunc("/install/", authWithCSRF(startStoreInstall))
 	mux.HandleFunc("/install/params/", auth(storeParamsPage))
 	mux.HandleFunc("/install/confirm/", authWithCSRF(confirmInstallWithParams))

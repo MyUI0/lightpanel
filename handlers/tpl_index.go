@@ -140,7 +140,7 @@ if (form) {
 				if (data.error) { fill.style.width = '0%'; prog.style.display = 'none'; alert(data.error); return; }
 				fill.style.width = '30%';
 				text.textContent = '正在下载...';
-				var taskId = data.id;
+				var taskId = data.task;
 				var pollInt = setInterval(function() {
 					fetch('/create/progress/' + taskId).then(function(r) { return r.json(); }).then(function(t) {
 						if (t && t.status) {

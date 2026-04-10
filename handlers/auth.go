@@ -111,7 +111,7 @@ func getLoginRemainTime(ip string) int {
 }
 
 // 清理过期登录记录
-func init() {
+func initLoginCleanup() {
 	maxLoginAttempts = 1000
 	go func() {
 		ticker := time.NewTicker(5 * time.Minute)
