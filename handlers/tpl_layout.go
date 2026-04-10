@@ -96,7 +96,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);display:flex}
 
 const layoutJS = `<script>
 function toggleEditForm(i){
-var f=document.getElementById('edit-'+i);
+var f=document.getElementById('edit-'+String(i));
 if(f){f.style.display=f.style.display==='none'?'grid':'none';}
 }
 (function(){
