@@ -147,7 +147,14 @@ jobs:
           rm -f ${BIN_NAME}.tar.gz
           
           detect_init() {
-              PID1=$(basename $(readlink /proc/1/exe 2>/dev/null || cat /proc/1/comm 2>/dev/null))
+              # 修复 basename 空参数报错
+              local PID1_PATH
+              PID1_PATH=$(readlink /proc/1/exe 2>/dev/null || true)
+              if [ -n "$PID1_PATH" ]; then
+                  PID1=$(basename "$PID1_PATH")
+              else
+                  PID1=$(cat /proc/1/comm 2>/dev/null || echo "unknown")
+              fi
           
               case "$PID1" in
                   systemd)
