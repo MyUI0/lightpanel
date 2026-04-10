@@ -10,7 +10,7 @@ var htmlIndex = `<!DOCTYPE html>
 ` + layoutCSS + `
 .app-grid{clear:both}
 .app-grid:after{content:"";display:block;clear:both}
-.app-item{float:left;width:calc(50% - 0.4rem);margin-bottom:0.8rem;margin-right:0.8rem;box-sizing:border-box}
+.app-item{float:left;width:calc(50% - 0.4rem);margin-bottom:0.8rem;margin-right:0.8rem;box-sizing:border-box;position:relative}
 .app-item:nth-child(2n){margin-right:0}
 .app-item .app-top{display:flex;gap:0.5rem}
 .app-item .app-icon{width:36px;height:36px;border-radius:8px;background:rgba(229,62,62,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -18,8 +18,11 @@ var htmlIndex = `<!DOCTYPE html>
 .app-item .app-icon i{font-size:1rem;color:#e53e3e}
 .app-item .app-info{flex:1;min-width:0}
 .app-item .app-name{font-weight:600;font-size:0.85rem;display:block}
+.app-item .app-badges{display:flex;gap:0.25rem;flex-wrap:wrap;margin-top:0.15rem;justify-content:center}
 .app-item .app-cmd{font-size:0.7rem;color:var(--text2);margin-top:0.15rem;max-width:30ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .app-item .app-btns{display:flex;gap:0.2rem;flex-wrap:wrap;margin-top:0.4rem}
+.app-item .app-cb{position:absolute;left:0.4rem;top:0.4rem;width:16px;height:16px;opacity:0;accent-color:#e53e3e}
+.app-item.selected .app-cb,.app-item:has(.app-cb:checked) .app-cb{opacity:1}
 </style>
 </head>
 <body>
@@ -119,7 +122,7 @@ var htmlIndex = `<!DOCTYPE html>
 {{end}}
 <div class="app-info">
 <span class="app-name">{{$name}}</span>
-<div style="margin-top:0.2rem">
+<div class="app-badges">
 {{if eq $app.Status "运行中"}}<span class="badge badge-running"><span style="width:5px;height:5px;background:#34d399;border-radius:50%"></span>运行中</span>{{else}}<span class="badge badge-stopped"><span style="width:5px;height:5px;background:#f87171;border-radius:50%"></span>已停止</span>{{end}}
 {{if $app.AutoStart}}<span class="badge" style="background:rgba(59,130,246,0.1);color:#60a5fa;border:1px solid rgba(59,130,246,0.2)"><i class="fa-solid fa-power-off" style="margin-right:0.2rem"></i>自启</span>{{end}}
 {{if $app.Version}}<span class="badge" style="background:rgba(229,62,62,0.1);color:#fc8181;border:1px solid rgba(229,62,62,0.2)">v{{$app.Version}}</span>{{end}}
