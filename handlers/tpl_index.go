@@ -281,11 +281,10 @@ if(searchInput){
 searchInput.addEventListener('input',function(){
 var q=this.value.toLowerCase();
 var items=document.querySelectorAll('.app-item');
-var vis=0;
 for(var i=0;i<items.length;i++){
 var n=items[i].getAttribute('data-name')||'';
 var c=items[i].getAttribute('data-cmd')||'';
-if(n.indexOf(q)>=0||c.indexOf(q)>=0){items[i].style.display='';vis++;}
+if(n.indexOf(q)>=0||c.indexOf(q)>=0){items[i].style.display='block';}
 else{items[i].style.display='none';}
 }
 });
