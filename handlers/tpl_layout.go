@@ -41,8 +41,8 @@ body{background:var(--bg);min-height:100vh;color:var(--text);display:flex}
 .sidebar.collapsed .side-footer a .nav-long{display:none}
 .sidebar.collapsed .side-footer a .nav-short{display:block;font-size:0.82rem;font-weight:600;text-align:center;line-height:1}
 .sidebar .side-footer .logout{color:#f87171}
-.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column;transition:margin-left 0.25s ease;position:relative;z-index:1}
-.sidebar.collapsed~.main{margin-left:var(--sidebar-cw)}
+.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column;transition:margin-left 0.25s ease;position:relative;z-index:1;width:calc(100% - var(--sidebar-w))}
+.sidebar.collapsed~.main{margin-left:var(--sidebar-cw);width:calc(100% - var(--sidebar-cw))}
 .topbar{display:flex;align-items:center;gap:0.8rem;padding:0.7rem 1.5rem;border-bottom:1px solid var(--border);background:var(--bg2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:sticky;top:0;z-index:50}
 .topbar .toggle-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;flex-shrink:0;font-size:1.1rem;line-height:1}
 .topbar .toggle-btn:hover{background:var(--card-h);color:var(--text)}
@@ -93,8 +93,7 @@ body{background:var(--bg);min-height:100vh;color:var(--text);display:flex}
 .proc-table th{color:var(--text2);font-weight:500}
 .proc-table td{color:var(--text)}`
 
-const layoutJS = `<script>
-function toggleEditForm(i){
+const layoutJS = `function toggleEditForm(i){
 var f=document.getElementById('edit-'+i);
 if(f){f.style.display=f.style.display==='none'?'grid':'none';}
 }
@@ -166,4 +165,3 @@ localStorage.setItem('lp_theme','dark');
 }
 }
 })();
-</script>`

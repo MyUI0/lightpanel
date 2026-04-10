@@ -265,7 +265,6 @@ var htmlScriptAnalyze = `<!DOCTYPE html>
 </div>
 </div>
 ` + layoutJS + `
-<script>
 function analyze(){
 var url=document.getElementById('scriptUrl').value.trim();
 if(!url)return;

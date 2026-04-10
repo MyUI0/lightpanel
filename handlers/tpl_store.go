@@ -61,7 +61,6 @@ var htmlStore = `<!DOCTYPE html>
 </div>
 </div>
 ` + layoutJS + `
-<script>
 function filterStore(){
 var kw=document.getElementById('storeSearch').value.toLowerCase();
 document.querySelectorAll('.store-item').forEach(function(el){var name=el.getAttribute('data-name')||'';var desc=el.getAttribute('data-desc')||'';el.style.display=(kw&&!name.includes(kw)&&!desc.includes(kw))?'none':''})}

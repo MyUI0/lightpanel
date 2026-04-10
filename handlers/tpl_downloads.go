@@ -58,7 +58,6 @@ var htmlDownloads = `<!DOCTYPE html>
 {{if .Installed}}<span class="badge badge-running">已部署</span>{{else}}<span class="badge badge-stopped">未部署</span>{{end}}
 </div>
 <div style="font-size:0.65rem;color:var(--text2);margin-top:0.2rem">{{formatTime .Timestamp}}</div></div>
-</div>
 {{end}}
 {{if eq (len .History) 0}}
 <div class="glass" style="padding:1.5rem;text-align:center"><i class="fa-solid fa-clock-rotate-left" style="font-size:1.5rem;color:rgba(255,255,255,0.1);margin-bottom:0.5rem"></i><p style="color:var(--text2);font-size:0.8rem">暂无下载记录</p></div>
@@ -69,10 +68,9 @@ var htmlDownloads = `<!DOCTYPE html>
 </div>
 </div>
 ` + layoutJS + `
-<script>
 function formatSize(b){if(b<=0)return '0 B';var u=['B','KB','MB','GB','TB'];var i=0;while(b>=1024&&i<u.length-1){b/=1024;i++}return b.toFixed(1)+' '+u[i]}
 function dlAction(id,act){var csrf=document.querySelector('meta[name="csrf"]');fetch('/dl/action/'+id+'/'+act,{method:'POST',headers:csrf?{'X-CSRF-Token':csrf.content}:{}}).then(function(){location.reload()})}
-setInterval(function(){fetch('/dl/api').then(function(r){return r.json()}).then(function(tasks){tasks.forEach(function(t){var card=document.getElementById('task-'+t.id);if(!card)return;var fill=card.querySelector('.progress-fill');if(fill)fill.style.width=t.progress+'%';var pct=card.querySelector('.progress-pct');if(pct)pct.textContent=t.progress+'%';var sz=card.querySelector('.progress-size');if(sz&&t.size>0)sz.textContent=formatSize(t.downloaded)+' / '+formatSize(t.size)})})},1000);
+setInterval(function(){fetch('/dl/api').then(function(r){return r.json()}).then(function(tasks){if(tasks&&tasks.forEach){tasks.forEach(function(t){var card=document.getElementById('task-'+t.id);if(!card)return;var fill=card.querySelector('.progress-fill');if(fill)fill.style.width=t.progress+'%';var pct=card.querySelector('.progress-pct');if(pct)pct.textContent=t.progress+'%';var sz=card.querySelector('.progress-size');if(sz&&t.size>0)sz.textContent=formatSize(t.downloaded)+' / '+formatSize(t.size)})}})},1000);
 </script>
 </body>
 </html>`
