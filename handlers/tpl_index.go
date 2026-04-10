@@ -10,17 +10,20 @@ var htmlIndex = `<!DOCTYPE html>
 ` + layoutCSS + `
 .app-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0.6rem}
 @media(max-width:800px){.app-grid{grid-template-columns:1fr}}
-.app-item{display:flex;gap:0.6rem;padding:0.7rem}
-.app-item .app-icon{width:40px;height:40px;border-radius:10px;background:rgba(229,62,62,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
-.app-item .app-icon img{width:100%;height:100%;object-fit:cover;border-radius:10px}
-.app-item .app-icon i{font-size:1.1rem;color:#e53e3e}
-.app-item .app-info{flex:1;min-width:0}
+.app-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0.6rem}
+@media(max-width:800px){.app-grid{grid-template-columns:1fr}}
+.app-item{display:flex;gap:0.6rem;padding:0.8rem;min-height:90px;position:relative}
+.app-item .app-icon{width:44px;height:44px;border-radius:12px;background:rgba(229,62,62,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.app-item .app-icon img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+.app-item .app-icon i{font-size:1.2rem;color:#e53e3e}
+.app-item .app-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
 .app-item .app-name-row{display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap}
-.app-item .app-name{font-weight:600;color:var(--text);font-size:0.85rem}
-.app-item .app-cmd{font-size:0.7rem;color:var(--text2);margin-top:0.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.app-item .app-actions{display:flex;gap:0.25rem;flex-wrap:wrap;margin-top:0.5rem;border-top:1px solid var(--border);padding-top:0.5rem}
-.app-item .app-actions .btn{padding:0.3rem 0.5rem;font-size:0.65rem}
-.app-item .app-actions .btn-running{background:rgba(16,185,129,0.15);color:#34d399;border:none}
+.app-item .app-name{font-weight:600;color:var(--text);font-size:0.88rem}
+.app-item .app-cmd{font-size:0.7rem;color:var(--text2);margin-top:0.2rem;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app-item .app-actions{display:flex;gap:0.2rem;flex-wrap:wrap;padding:0.5rem 0 0;margin:0.4rem 0 0}
+.app-item .app-actions .btn{padding:0.28rem 0.5rem;font-size:0.64rem;border-radius:6px}
+.app-item .app-cb{width:16px;height:16px;accent-color:#e53e3e;position:absolute;left:0.6rem;top:0.5rem;opacity:0;transition:opacity 0.15s}
+.app-item.selected .app-cb,.app-item:has(.app-cb:checked) .app-cb{opacity:1}
 </style>
 </head>
 <body>
@@ -109,8 +112,8 @@ var htmlIndex = `<!DOCTYPE html>
 <div class="app-grid">
 {{range $name, $app := .Apps}}
 <div class="card app-item" data-name="{{tolower $name}}" data-cmd="{{tolower $app.Cmd}}">
-<label style="display:flex;gap:0.6rem;cursor:pointer">
-<input type="checkbox" class="app-cb" data-name="{{$name}}" style="accent-color:#e53e3e;position:absolute">
+<input type="checkbox" class="app-cb" data-name="{{$name}}" id="cb-{{$name}}">
+<label style="display:flex;gap:0.6rem;cursor:pointer;flex:1" for="cb-{{$name}}">
 {{if $app.Icon}}
 <div class="app-icon"><img src="{{$app.Icon}}" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-box\\'></i>'"></div>
 {{else}}
@@ -293,6 +296,8 @@ var cbs=document.querySelectorAll('.app-cb');
 var allChecked=true;
 for(var i=0;i<cbs.length;i++){if(!cbs[i].checked){allChecked=false;break;}}
 for(var i=0;i<cbs.length;i++){cbs[i].checked=!allChecked;}
+var items=document.querySelectorAll('.app-item');
+for(var i=0;i<items.length;i++){if(!allChecked){items[i].classList.add('selected');}else{items[i].classList.remove('selected');}}
 updateSelCount();
 });
 }
@@ -304,6 +309,12 @@ var sb=document.getElementById('batchStartBtn');
 var st=document.getElementById('batchStopBtn');
 var sd=document.getElementById('batchDeleteBtn');
 var sa=document.getElementById('selectAllBtn');
+var items=document.querySelectorAll('.app-item');
+if(cnt>0){
+for(var i=0;i<items.length;i++){items[i].classList.add('selected');}
+}else{
+for(var i=0;i<items.length;i++){items[i].classList.remove('selected');}
+}
 if(el){el.textContent='已选 '+cnt;el.style.display=cnt>0?'':'none';}
 if(sb)sb.style.display=cnt>0?'':'none';
 if(st)st.style.display=cnt>0?'':'none';
@@ -316,7 +327,15 @@ var cbs=document.querySelectorAll('.app-cb');
 for(var i=0;i<cbs.length;i++){cbs[i].checked=false;}
 updateSelCount();
 });}
-document.addEventListener('change',function(e){if(e.target&&e.target.classList.contains('app-cb'))updateSelCount();});
+document.addEventListener('change',function(e){
+if(e.target&&e.target.classList.contains('app-cb')){
+var items=document.querySelectorAll('.app-item');
+for(var i=0;i<items.length;i++){
+var cb=items[i].querySelector('.app-cb');
+if(cb&&cb.checked){items[i].classList.add('selected');}else{items[i].classList.remove('selected');}
+}
+updateSelCount();}
+});
 function batchAction(action,confirmMsg){
 var cbs=document.querySelectorAll('.app-cb:checked');
 if(cbs.length===0)return;
