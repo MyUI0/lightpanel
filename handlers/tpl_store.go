@@ -63,9 +63,9 @@ var htmlStore = `<!DOCTYPE html>
 ` + layoutJS + `
 <script>
 function filterStore(){
-var kw=document.getElementById('storeSearch').value.toLowerCase();
-document.querySelectorAll('.store-item').forEach(function(el){var name=el.getAttribute('data-name')||'';var desc=el.getAttribute('data-desc')||'';el.style.display=(kw&&!name.includes(kw)&&!desc.includes(kw))?'none':''})}
-document.querySelectorAll('.install-form').forEach(function(f){f.addEventListener('submit',function(e){var b=f.querySelector('button');if(b&&b.disabled){e.preventDefault();return}})});
+var kw=document.getElementById("storeSearch").value.toLowerCase();
+document.querySelectorAll(".store-item").forEach(function(el){var name=el.getAttribute("data-name")||"";var desc=el.getAttribute("data-desc")||"";el.style.display=(kw&&!name.includes(kw)&&!desc.includes(kw))?"none":""})}
+document.querySelectorAll(".install-form").forEach(function(f){f.addEventListener("submit",function(e){var b=f.querySelector("button");if(b&&b.disabled){e.preventDefault();return}})});
 </script>
 </body>
 </html>`

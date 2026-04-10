@@ -80,81 +80,81 @@ var htmlIndex = `<!DOCTYPE html>
 </div>
 </div>
 ` + layoutJS + `
-var currentTab = 'download';
+var currentTab = "download";
 function switchTab(tab) {
 	currentTab = tab;
-	var dl = document.getElementById('downloadPanel');
-	var ml = document.getElementById('manualPanel');
-	var td = document.getElementById('tabDownload');
-	var tm = document.getElementById('tabManual');
-	var cb = document.getElementById('createBtn');
-	if (tab === 'download') {
-		if (dl) dl.style.display = 'block';
-		if (ml) ml.style.display = 'none';
-		if (td) td.className = 'btn btn-primary btn-sm';
-		if (tm) tm.className = 'btn btn-ghost btn-sm';
-		if (cb) cb.innerHTML = '<i class="fa-solid fa-plus"></i>创建应用';
+	var dl = document.getElementById("downloadPanel");
+	var ml = document.getElementById("manualPanel");
+	var td = document.getElementById("tabDownload");
+	var tm = document.getElementById("tabManual");
+	var cb = document.getElementById("createBtn");
+	if (tab === "download") {
+		if (dl) dl.style.display = "block";
+		if (ml) ml.style.display = "none";
+		if (td) td.className = "btn btn-primary btn-sm";
+		if (tm) tm.className = "btn btn-ghost btn-sm";
+		if (cb) cb.innerHTML = "<i class=\"fa-solid fa-plus\"></i>创建应用";
 	} else {
-		if (dl) dl.style.display = 'none';
-		if (ml) ml.style.display = 'block';
-		if (td) td.className = 'btn btn-ghost btn-sm';
-		if (tm) tm.className = 'btn btn-primary btn-sm';
-		if (cb) cb.innerHTML = '<i class="fa-solid fa-plus"></i>添加应用';
+		if (dl) dl.style.display = "none";
+		if (ml) ml.style.display = "block";
+		if (td) td.className = "btn btn-ghost btn-sm";
+		if (tm) tm.className = "btn btn-primary btn-sm";
+		if (cb) cb.innerHTML = "<i class=\"fa-solid fa-plus\"></i>添加应用";
 	}
 }
-var form = document.getElementById('createForm');
+var form = document.getElementById("createForm");
 if (form) {
-	form.addEventListener('submit', function(e) {
+	form.addEventListener("submit", function(e) {
 		e.preventDefault();
-		var isManual = currentTab === 'manual';
-		var nameEl = isManual ? document.getElementById('manualName') : document.getElementById('appName');
-		var prog = document.getElementById('createProgress');
-		var fill = document.getElementById('progressFill');
-		var text = document.getElementById('progressText');
-		if (!nameEl.value.trim()) { alert('请输入应用名称'); return; }
-		prog.style.display = 'block';
-		fill.style.width = '10%';
-		text.textContent = isManual ? '添加应用...' : '准备创建...';
+		var isManual = currentTab === "manual";
+		var nameEl = isManual ? document.getElementById("manualName") : document.getElementById("appName");
+		var prog = document.getElementById("createProgress");
+		var fill = document.getElementById("progressFill");
+		var text = document.getElementById("progressText");
+		if (!nameEl.value.trim()) { alert("请输入应用名称"); return; }
+		prog.style.display = "block";
+		fill.style.width = "10%";
+		text.textContent = isManual ? "添加应用..." : "准备创建...";
 		var fd = new FormData();
 		if (isManual) {
-			fd.append('name', document.getElementById('manualName').value.trim());
-			fd.append('path', document.getElementById('manualPath').value.trim());
-			fd.append('cmd', document.getElementById('manualCmd').value.trim());
-			fd.append('workdir', document.getElementById('manualWorkDir').value.trim());
-			fd.append('url', document.getElementById('manualUrl').value.trim());
-			fd.append('auto', document.getElementById('manualAuto').checked ? '1' : '0');
-			fetch('/create/manual', {method: 'POST', body: fd}).then(function(r) { return r.json(); }).then(function(data) {
-				fill.style.width = '100%';
-				text.textContent = data.error || '完成';
+			fd.append("name", document.getElementById("manualName").value.trim());
+			fd.append("path", document.getElementById("manualPath").value.trim());
+			fd.append("cmd", document.getElementById("manualCmd").value.trim());
+			fd.append("workdir", document.getElementById("manualWorkDir").value.trim());
+			fd.append("url", document.getElementById("manualUrl").value.trim());
+			fd.append("auto", document.getElementById("manualAuto").checked ? "1" : "0");
+			fetch("/create/manual", {method: "POST", body: fd}).then(function(r) { return r.json(); }).then(function(data) {
+				fill.style.width = "100%";
+				text.textContent = data.error || "完成";
 				if (!data.error) { setTimeout(function() { location.reload(); }, 500); }
-				else { prog.style.display = 'none'; alert(data.error); }
-			}).catch(function(e) { prog.style.display = 'none'; alert('请求失败: ' + e); });
+				else { prog.style.display = "none"; alert(data.error); }
+			}).catch(function(e) { prog.style.display = "none"; alert("请求失败: " + e); });
 		} else {
-			fd.append('name', document.getElementById('appName').value.trim());
-			fd.append('cmd', document.getElementById('appCmd').value.trim());
-			fd.append('url', document.getElementById('appUrl').value.trim());
-			fd.append('setup_cmd', document.getElementById('appSetup').value.trim());
-			fd.append('auto_extract', document.getElementById('autoExtract').checked ? 'on' : '');
-			fd.append('make_exec', document.getElementById('makeExec').checked ? 'on' : '');
-			fetch('/create', {method: 'POST', body: fd}).then(function(r) { return r.json(); }).then(function(data) {
-				if (data.error) { fill.style.width = '0%'; prog.style.display = 'none'; alert(data.error); return; }
-				fill.style.width = '30%';
-				text.textContent = '正在下载...';
+			fd.append("name", document.getElementById("appName").value.trim());
+			fd.append("cmd", document.getElementById("appCmd").value.trim());
+			fd.append("url", document.getElementById("appUrl").value.trim());
+			fd.append("setup_cmd", document.getElementById("appSetup").value.trim());
+			fd.append("auto_extract", document.getElementById("autoExtract").checked ? "on" : "");
+			fd.append("make_exec", document.getElementById("makeExec").checked ? "on" : "");
+			fetch("/create", {method: "POST", body: fd}).then(function(r) { return r.json(); }).then(function(data) {
+				if (data.error) { fill.style.width = "0%"; prog.style.display = "none"; alert(data.error); return; }
+				fill.style.width = "30%";
+				text.textContent = "正在下载...";
 				var taskId = data.task;
 				var pollInt = setInterval(function() {
-					fetch('/create/progress/' + taskId).then(function(r) { return r.json(); }).then(function(t) {
+					fetch("/create/progress/" + taskId).then(function(r) { return r.json(); }).then(function(t) {
 						if (t && t.status) {
-							fill.style.width = (t.progress || 0) + '%';
+							fill.style.width = (t.progress || 0) + "%";
 							text.textContent = t.message || t.status;
-							if (t.status === 'completed' || t.status === 'error') {
+							if (t.status === "completed" || t.status === "error") {
 								clearInterval(pollInt);
-								if (t.status === 'completed') { location.reload(); }
-								else { prog.style.display = 'none'; alert(t.message); }
+								if (t.status === "completed") { location.reload(); }
+								else { prog.style.display = "none"; alert(t.message); }
 							}
 						}
 					}).catch(function() { clearInterval(pollInt); });
 				}, 500);
-			}).catch(function(e) { prog.style.display = 'none'; alert('请求失败'); });
+			}).catch(function(e) { prog.style.display = "none"; alert("请求失败"); });
 		}
 	});
 }

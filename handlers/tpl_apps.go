@@ -74,62 +74,62 @@ var htmlApps = `<!DOCTYPE html>
 </div>
 ` + layoutJS + `
 var selectMode = false;
-var appSearch = document.getElementById('appSearch');
+var appSearch = document.getElementById("appSearch");
 if (appSearch) {
-	appSearch.addEventListener('input', function() {
+	appSearch.addEventListener("input", function() {
 		var q = this.value.toLowerCase();
-		var items = document.querySelectorAll('.app-item');
+		var items = document.querySelectorAll(".app-item");
 		for (var i = 0; i < items.length; i++) {
-			var n = items[i].getAttribute('data-name') || '';
-			var c = items[i].getAttribute('data-cmd') || '';
-			if (q && n.indexOf(q) < 0 && c.indexOf(q) < 0) { items[i].style.display = 'none'; }
-			else { items[i].style.display = ''; }
+			var n = items[i].getAttribute("data-name") || "";
+			var c = items[i].getAttribute("data-cmd") || "";
+			if (q && n.indexOf(q) < 0 && c.indexOf(q) < 0) { items[i].style.display = "none"; }
+			else { items[i].style.display = ""; }
 		}
 	});
 }
 function toggleSelectMode() {
 	selectMode = !selectMode;
-	var cbs = document.querySelectorAll('.app-cb');
-	var batchBar = document.getElementById('batchBar');
-	var selectBtn = document.getElementById('selectAllBtn');
+	var cbs = document.querySelectorAll(".app-cb");
+	var batchBar = document.getElementById("batchBar");
+	var selectBtn = document.getElementById("selectAllBtn");
 	if (selectMode) {
-		for (var i = 0; i < cbs.length; i++) { cbs[i].checked = false; cbs[i].style.display = ''; }
-		batchBar.classList.add('active');
-		selectBtn.innerHTML = '<i class="fa-solid fa-check-double"></i> 全选';
+		for (var i = 0; i < cbs.length; i++) { cbs[i].checked = false; cbs[i].style.display = ""; }
+		batchBar.classList.add("active");
+		selectBtn.innerHTML = "<i class=\"fa-solid fa-check-double\"></i> 全选";
 	} else {
-		for (var i = 0; i < cbs.length; i++) { cbs[i].style.display = 'none'; }
-		batchBar.classList.remove('active');
+		for (var i = 0; i < cbs.length; i++) { cbs[i].style.display = "none"; }
+		batchBar.classList.remove("active");
 		updateSelCount();
 	}
 }
 function updateSelCount() {
-	var cbs = document.querySelectorAll('.app-cb:checked');
+	var cbs = document.querySelectorAll(".app-cb:checked");
 	var cnt = cbs.length;
-	var el = document.getElementById('selCount');
-	if (el) el.textContent = '已选 ' + cnt;
+	var el = document.getElementById("selCount");
+	if (el) el.textContent = "已选 " + cnt;
 }
-document.addEventListener('change', function(e) { if (e.target && e.target.classList.contains('app-cb')) updateSelCount(); });
+document.addEventListener("change", function(e) { if (e.target && e.target.classList.contains("app-cb")) updateSelCount(); });
 function postAction(url) {
 	var csrfEl = document.querySelector('input[name="csrf_token"]');
-	var csrf = csrfEl ? csrfEl.value : '';
-	fetch(url, {method: 'POST', headers: csrf ? {'X-CSRF-Token': csrf, 'Content-Type': 'application/x-www-form-urlencoded'} : {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'csrf_token=' + csrf}).then(function() { location.reload(); }).catch(function() { alert('请求失败'); });
+	var csrf = csrfEl ? csrfEl.value : "";
+	fetch(url, {method: "POST", redirect: "follow", headers: csrf ? {"X-CSRF-Token": csrf, "Content-Type": "application/x-www-form-urlencoded"} : {"Content-Type": "application/x-www-form-urlencoded"}, body: "csrf_token=" + csrf}).then(function(r) { if(r.ok)location.reload(); else alert("请求失败"); }).catch(function() { alert("请求失败"); });
 }
 function batchAction(action) {
-	var cbs = document.querySelectorAll('.app-cb:checked');
+	var cbs = document.querySelectorAll(".app-cb:checked");
 	if (cbs.length === 0) return;
 	var names = [];
-	for (var i = 0; i < cbs.length; i++) { names.push(cbs[i].getAttribute('data-name')); }
-	var msg = '确定';
-	if (action === 'start') msg = '确定启动: ';
-	else if (action === 'stop') msg = '确定停止: ';
-	else if (action === 'delete') msg = '确定删除: ';
-	if (!confirm(msg + names.join(', '))) return;
+	for (var i = 0; i < cbs.length; i++) { names.push(cbs[i].getAttribute("data-name")); }
+	var msg = "确定";
+	if (action === "start") msg = "确定启动: ";
+	else if (action === "stop") msg = "确定停止: ";
+	else if (action === "delete") msg = "确定删除: ";
+	if (!confirm(msg + names.join(", "))) return;
 	var csrfEl = document.querySelector('input[name="csrf_token"]');
-	var csrf = csrfEl ? csrfEl.value : '';
-	fetch('/create/batch', {method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'action=' + action + '&names=' + encodeURIComponent(names.join(',')) + '&csrf_token=' + csrf}).then(function(r) { return r.json(); }).then(function(data) {
+	var csrf = csrfEl ? csrfEl.value : "";
+	fetch("/create/batch", {method: "POST", headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: "action=" + action + "&names=" + encodeURIComponent(names.join(",")) + "&csrf_token=" + csrf}).then(function(r) { return r.json(); }).then(function(data) {
 		if (data.error) { alert(data.error); }
 		else { location.reload(); }
-	}).catch(function() { alert('请求失败'); });
+	}).catch(function() { alert("请求失败"); });
 }
 </script>
 </body>
