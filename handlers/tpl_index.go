@@ -8,19 +8,17 @@ var htmlIndex = `<!DOCTYPE html>
 <title>朱雀面板</title>
 <style>
 ` + layoutCSS + `
-.app-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0.5rem}
-@media(max-width:800px){.app-grid{grid-template-columns:1fr}}
-.app-item{display:flex;flex-direction:column;gap:0.35rem;padding:0.65rem;min-height:85px}
-.app-item .app-icon{width:38px;height:38px;border-radius:8px;background:rgba(229,62,62,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.app-grid{clear:both}
+.app-grid:after{content:"";display:block;clear:both}
+.app-item{float:left;width:calc(50% - 0.25rem);margin-bottom:0.5rem;box-sizing:border-box}
+.app-item .app-top{display:flex;gap:0.5rem}
+.app-item .app-icon{width:36px;height:36px;border-radius:8px;background:rgba(229,62,62,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .app-item .app-icon img{width:100%;height:100%;object-fit:cover;border-radius:8px}
 .app-item .app-icon i{font-size:1rem;color:#e53e3e}
-.app-item .app-info{min-width:0}
-.app-item .app-name-row{display:flex;align-items:center;gap:0.25rem;flex-wrap:wrap}
-.app-item .app-name{font-weight:600;color:var(--text);font-size:0.82rem}
-.app-item .app-cmd{font-size:0.65rem;color:var(--text2);margin-top:0.1rem;max-width:15ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
-.app-item .app-actions{display:flex;gap:0.12rem;flex-wrap:wrap;margin-top:0.25rem}
-.app-item .app-actions .btn{padding:0.22rem 0.35rem;font-size:0.6rem;border-radius:4px}
-.app-item .app-actions .btn-ghost{background:var(--card);border:1px solid var(--border)}
+.app-item .app-info{flex:1;min-width:0}
+.app-item .app-name{font-weight:600;font-size:0.85rem}
+.app-item .app-cmd{font-size:0.7rem;color:var(--text2);margin-top:0.15rem;max-width:15ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app-item .app-btns{display:flex;gap:0.2rem;flex-wrap:wrap;margin-top:0.4rem}
 </style>
 </head>
 <body>
@@ -109,7 +107,7 @@ var htmlIndex = `<!DOCTYPE html>
 <div class="app-grid">
 {{range $name, $app := .Apps}}
 <div class="card app-item">
-<div style="display:flex;gap:0.5rem">
+<div class="app-top">
 {{if $app.Icon}}
 <div class="app-icon"><img src="{{$app.Icon}}" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-box\\'></i>'"></div>
 {{else}}
@@ -125,23 +123,22 @@ var htmlIndex = `<!DOCTYPE html>
 <div class="app-cmd"><i class="fa-solid fa-terminal" style="margin-right:0.2rem"></i>{{escape $app.Cmd}}</div>
 </div>
 </div>
-<div class="app-actions">
+<div class="app-btns">
 {{if eq $app.Status "运行中"}}
-<form action="/stop/{{$name}}" method="post"><button class="btn btn-warning"><i class="fa-solid fa-stop"></i>停止</button></form>
-<form action="/restart/{{$name}}" method="post"><button class="btn btn-primary"><i class="fa-solid fa-rotate"></i>重启</button></form>
+<form action="/stop/{{$name}}" method="post"><button class="btn btn-warning btn-sm"><i class="fa-solid fa-stop"></i>停止</button></form>
+<form action="/restart/{{$name}}" method="post"><button class="btn btn-primary btn-sm"><i class="fa-solid fa-rotate"></i>重启</button></form>
 {{else}}
-<form action="/start/{{$name}}" method="post"><button class="btn btn-success"><i class="fa-solid fa-play"></i>启动</button></form>
+<form action="/start/{{$name}}" method="post"><button class="btn btn-success btn-sm"><i class="fa-solid fa-play"></i>启动</button></form>
 {{end}}
 {{if not $app.AutoStart}}
-<form action="/toggle-auto/{{$name}}" method="post"><button class="btn btn-ghost"><i class="fa-solid fa-power-off"></i>自启</button></form>
+<form action="/toggle-auto/{{$name}}" method="post"><button class="btn btn-ghost btn-sm"><i class="fa-solid fa-power-off"></i>自启</button></form>
 {{else}}
-<form action="/toggle-auto/{{$name}}" method="post"><button class="btn" style="background:rgba(59,130,246,0.15);color:#60a5fa;border:none"><i class="fa-solid fa-power-off"></i>自启</button></form>
+<form action="/toggle-auto/{{$name}}" method="post"><button class="btn btn-ghost btn-sm" style="background:rgba(59,130,246,0.15);color:#60a5fa;border:none"><i class="fa-solid fa-power-off"></i>自启</button></form>
 {{end}}
-<a href="/edit/{{$name}}" class="btn btn-ghost"><i class="fa-solid fa-pen"></i>编辑</a>
-<a href="/log/{{$name}}" class="btn btn-ghost"><i class="fa-solid fa-file-lines"></i>日志</a>
-{{if $app.URL}}<a href="{{$app.URL}}" target="_blank" class="btn btn-ghost"><i class="fa-solid fa-globe"></i>网页</a>{{end}}
-<form action="/delete/{{$name}}" method="post" onsubmit="return confirm('确定删除 {{$name}}？')"><button class="btn btn-danger"><i class="fa-solid fa-trash"></i>删除</button></form>
-</div>
+<a href="/edit/{{$name}}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-pen"></i>编辑</a>
+<a href="/log/{{$name}}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-file-lines"></i>日志</a>
+{{if $app.URL}}<a href="{{$app.URL}}" target="_blank" class="btn btn-ghost btn-sm"><i class="fa-solid fa-globe"></i>网页</a>{{end}}
+<form action="/delete/{{$name}}" method="post" onsubmit="return confirm('确定删除 {{$name}}？')"><button class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i>删除</button></form>
 </div>
 </div>
 {{end}}
