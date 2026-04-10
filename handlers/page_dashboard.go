@@ -219,15 +219,6 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
 		createErr = r.URL.Query().Get("msg")
 	}
 
-	cookie, _ := r.Cookie("lp_session")
-	var csrfToken string
-	if cookie != nil {
-		sessData := getSessionData(cookie.Value)
-		if sessData != nil {
-			csrfToken = sessData.CSRFToken
-		}
-	}
-
 	_ = htmlRender.ExecuteTemplate(w, "index", map[string]any{
 		"Apps":       list,
 		"Cpu":        cpuVal,
@@ -236,44 +227,11 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
 		"ProcNum":    len(procs),
 		"Uptime":     uptimeStr,
 		"BgUrl":      bgConfig.URL,
-		"CSRFToken":  csrfToken,
 		"Sidebar":    template.HTML(sidebarHTML("/")),
-		"Topbar":     template.HTML(topbarHTML("面板首页")),
+		"Topbar":     template.HTML(topbarHTML("应用管理")),
 		"FailInfo":   getFailInfo(list),
 		"CreateErr":  createErr,
 		"FirstLogin": isFirstLogin(r),
-	})
-}
-
-func appsPage(w http.ResponseWriter, r *http.Request) {
-	apps := make(map[string]models.Project)
-	_ = LoadJSON(config.ConfigApps, &apps)
-
-	list := map[string]models.Project{}
-	for name, app := range apps {
-		app.Name = name
-		checkAppStatus(&app)
-		list[name] = app
-	}
-
-	var bgConfig models.BgConfig
-	_ = LoadJSON(config.ConfigBg, &bgConfig)
-
-	cookie, _ := r.Cookie("lp_session")
-	var csrfToken string
-	if cookie != nil {
-		sessData := getSessionData(cookie.Value)
-		if sessData != nil {
-			csrfToken = sessData.CSRFToken
-		}
-	}
-
-	_ = htmlRender.ExecuteTemplate(w, "apps", map[string]any{
-		"Apps":        list,
-		"BgUrl":       bgConfig.URL,
-		"CSRFToken":   csrfToken,
-		"Sidebar":     template.HTML(sidebarHTML("/apps")),
-		"Topbar":      template.HTML(topbarHTML("管理应用")),
 	})
 }
 

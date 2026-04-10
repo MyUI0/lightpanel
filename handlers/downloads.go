@@ -360,7 +360,6 @@ func startStoreInstall(w http.ResponseWriter, r *http.Request) {
 	dlSetupCmd := app.SetupCmd
 	dlAutoExtract := app.AutoExtract
 	dlMakeExec := app.MakeExec
-	dlIcon := app.Icon
 	id := "dl_" + strconv.FormatInt(time.Now().UnixNano(), 36)
 	log.Printf("[install] Creating task: id=%s, name=%s, url=%s", id, dlName, dlURL)
 	task := &models.DownloadTask{
@@ -373,7 +372,6 @@ func startStoreInstall(w http.ResponseWriter, r *http.Request) {
 		Last:     time.Now(),
 		Version:  dlVersion,
 		SetupCmd: dlSetupCmd,
-		Icon:     dlIcon,
 	}
 	downloadTasks.Store(id, task)
 
@@ -432,7 +430,7 @@ func startStoreInstall(w http.ResponseWriter, r *http.Request) {
 		}
 		_ = f.Close()
 
-if task.GetStatus() == "downloading" {
+	if task.GetStatus() == "downloading" {
 		task.SetStatus("deploying")
 		task.UpdateProgress(task.GetDownloaded(), task.GetSize(), 100)
 		extracted := false
@@ -463,30 +461,30 @@ if task.GetStatus() == "downloading" {
 					Created:   time.Now().Format("2006-01-02 15:04"),
 				}
 			}
-			if result.WorkDir != "" {
-				proj.WorkDir = result.WorkDir
-			}
-			if dlCmd != "" {
-				dlCmd = strings.ReplaceAll(dlCmd, "{{arch}}", getCachedSystemInfo().Arch)
-				dlCmd = strings.ReplaceAll(dlCmd, "{{os}}", getCachedSystemInfo().OS)
-				proj.Cmd = dlCmd
-			} else if result.Binary != "" {
-				proj.Cmd = result.Binary
-			}
-			proj.Version = dlVersion
-			if app.Port > 0 {
-				proj.Port = app.Port
-				if proj.URL == "" {
-					proj.URL = "http://" + getLocalIP() + ":" + strconv.Itoa(app.Port)
-				}
-			}
-			updated[dlName] = proj
-			_ = WriteJSON(config.ConfigApps, updated)
+		if result.WorkDir != "" {
+			proj.WorkDir = result.WorkDir
 		}
-		appOpMu.Unlock()
-		_ = os.WriteFile(filepath.Join(sandbox, "install_note.txt"), []byte(result.Note), 0644)
-		task.SetStatus("completed")
+		if dlCmd != "" {
+			dlCmd = strings.ReplaceAll(dlCmd, "{{arch}}", getCachedSystemInfo().Arch)
+			dlCmd = strings.ReplaceAll(dlCmd, "{{os}}", getCachedSystemInfo().OS)
+			proj.Cmd = dlCmd
+		} else if result.Binary != "" {
+			proj.Cmd = result.Binary
+		}
+		proj.Version = dlVersion
+		if app.Port > 0 {
+			proj.Port = app.Port
+			if proj.URL == "" {
+				proj.URL = "http://" + getLocalIP() + ":" + strconv.Itoa(app.Port)
+			}
+		}
+		updated[dlName] = proj
+		_ = WriteJSON(config.ConfigApps, updated)
 	}
+	appOpMu.Unlock()
+	_ = os.WriteFile(filepath.Join(sandbox, "install_note.txt"), []byte(result.Note), 0644)
+	task.SetStatus("completed")
+}
 	}()
 
 	http.Redirect(w, r, "/downloads", 302)
@@ -722,7 +720,6 @@ func confirmInstallWithParams(w http.ResponseWriter, r *http.Request) {
 	dlVersion := app.Version
 	dlSetupCmd := app.SetupCmd
 	dlWorkDir := app.WorkDir
-	dlIcon := app.Icon
 	id := "dl_" + strconv.FormatInt(time.Now().UnixNano(), 36)
 	task := &models.DownloadTask{
 		ID:       id,
@@ -735,7 +732,6 @@ func confirmInstallWithParams(w http.ResponseWriter, r *http.Request) {
 		Version:  dlVersion,
 		SetupCmd: dlSetupCmd,
 		WorkDir:  dlWorkDir,
-		Icon:     dlIcon,
 	}
 	downloadTasks.Store(id, task)
 
@@ -804,52 +800,52 @@ func confirmInstallWithParams(w http.ResponseWriter, r *http.Request) {
 					_ = os.Remove(fpath)
 				}
 			}
-if !extracted && app.MakeExec {
+			if !extracted && app.MakeExec {
 				if strings.HasSuffix(fname, ".sh") {
 					_ = os.Chmod(fpath, 0755)
 				} else if isSafeBinary(fpath) {
 					_ = os.Chmod(fpath, 0755)
 				}
-			}
-
-			time.Sleep(15 * time.Second)
-			scanTime := time.Now().Add(-20 * time.Second)
-			result := combinedDetect(sandbox, scanTime)
-			appOpMu.Lock()
-			var updated map[string]models.Project
-			if err := LoadJSON(config.ConfigApps, &updated); err == nil {
-				proj, exists := updated[dlName]
-				if !exists {
-					proj = models.Project{
-						Path:      sandbox,
-						Created:   time.Now().Format("2006-01-02 15:04"),
-						Icon:      task.Icon,
-					}
-				}
-				if result.WorkDir != "" {
-					proj.WorkDir = result.WorkDir
-				}
-				if dlCmd != "" {
-					dlCmd = strings.ReplaceAll(dlCmd, "{{arch}}", getCachedSystemInfo().Arch)
-					dlCmd = strings.ReplaceAll(dlCmd, "{{os}}", getCachedSystemInfo().OS)
-					proj.Cmd = dlCmd
-				} else if result.Binary != "" {
-					proj.Cmd = result.Binary
-				}
-				proj.Version = dlVersion
-				if app.Port > 0 {
-					proj.Port = app.Port
-					if proj.URL == "" {
-						proj.URL = "http://" + getLocalIP() + ":" + strconv.Itoa(app.Port)
-					}
-				}
-				updated[dlName] = proj
-				_ = WriteJSON(config.ConfigApps, updated)
-			}
-			appOpMu.Unlock()
-			_ = os.WriteFile(filepath.Join(sandbox, "install_note.txt"), []byte(result.Note), 0644)
-			task.SetStatus("completed")
 		}
+
+		time.Sleep(15 * time.Second)
+		scanTime := time.Now().Add(-20 * time.Second)
+		result := combinedDetect(sandbox, scanTime)
+		appOpMu.Lock()
+		var updated map[string]models.Project
+		if err := LoadJSON(config.ConfigApps, &updated); err == nil {
+			proj, exists := updated[dlName]
+			if !exists {
+				proj = models.Project{
+					Path:      sandbox,
+					Created:   time.Now().Format("2006-01-02 15:04"),
+				}
+			}
+		if result.WorkDir != "" {
+			proj.WorkDir = result.WorkDir
+		}
+		if dlCmd != "" {
+			dlCmd = strings.ReplaceAll(dlCmd, "{{arch}}", getCachedSystemInfo().Arch)
+			dlCmd = strings.ReplaceAll(dlCmd, "{{os}}", getCachedSystemInfo().OS)
+			proj.Cmd = dlCmd
+		} else if result.Binary != "" {
+			proj.Cmd = result.Binary
+		}
+		proj.Version = dlVersion
+		proj.Icon = app.Icon
+		if app.Port > 0 {
+			proj.Port = app.Port
+			if proj.URL == "" {
+				proj.URL = "http://" + getLocalIP() + ":" + strconv.Itoa(app.Port)
+			}
+		}
+		updated[dlName] = proj
+		_ = WriteJSON(config.ConfigApps, updated)
+	}
+	appOpMu.Unlock()
+	_ = os.WriteFile(filepath.Join(sandbox, "install_note.txt"), []byte(result.Note), 0644)
+	task.SetStatus("completed")
+}
 	}()
 
 	http.Redirect(w, r, "/downloads", 302)
@@ -1096,7 +1092,7 @@ func resumeDownload(id string) {
 			if !exists {
 				proj = models.Project{
 					Path:      sandbox,
-					Created:   time.Now().Format("2006-01-02 15:04"),
+				Created:   time.Now().Format("2006-01-02 15:04"),
 				}
 			}
 			if result.WorkDir != "" {
@@ -1107,20 +1103,21 @@ func resumeDownload(id string) {
 				dlCmd = strings.ReplaceAll(dlCmd, "{{os}}", getCachedSystemInfo().OS)
 				proj.Cmd = dlCmd
 			} else if result.Binary != "" {
-				proj.Cmd = result.Binary
+proj.Cmd = result.Binary
+		}
+		proj.Version = dlVersion
+		proj.Icon = app.Icon
+		if app.Port > 0 {
+			proj.Port = app.Port
+			if proj.URL == "" {
+				proj.URL = "http://" + getLocalIP() + ":" + strconv.Itoa(app.Port)
 			}
-			proj.Version = dlVersion
-			if task.Port > 0 {
-				proj.Port = task.Port
-				if proj.URL == "" {
-					proj.URL = "http://" + getLocalIP() + ":" + strconv.Itoa(task.Port)
-				}
-			}
-			updated[dlName] = proj
+		}
+		updated[dlName] = proj
 			_ = WriteJSON(config.ConfigApps, updated)
 		}
-		appOpMu.Unlock()
-		_ = os.WriteFile(filepath.Join(sandbox, "install_note.txt"), []byte(result.Note), 0644)
+	appOpMu.Unlock()
+	_ = os.WriteFile(filepath.Join(sandbox, "install_note.txt"), []byte(result.Note), 0644)
 		task.SetStatus("completed")
 	}
 }
@@ -1154,7 +1151,6 @@ func installDownloadedApp(id string) {
 		Cmd:       task.Cmd,
 		SetupCmd:  task.SetupCmd,
 		WorkDir:   result.WorkDir,
-		Icon:      task.Icon,
 		Created:   time.Now().Format("2006-01-02 15:04"),
 	}
 	_ = WriteJSON(config.ConfigApps, apps)

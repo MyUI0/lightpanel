@@ -5,9 +5,22 @@ var htmlIndex = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>仪表盘 - 朱雀面板</title>
+<title>朱雀面板</title>
 <style>
 ` + layoutCSS + `
+.app-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0.6rem}
+@media(max-width:800px){.app-grid{grid-template-columns:1fr}}
+.app-item{display:flex;gap:0.6rem;padding:0.7rem}
+.app-item .app-icon{width:40px;height:40px;border-radius:10px;background:rgba(229,62,62,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.app-item .app-icon img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+.app-item .app-icon i{font-size:1.1rem;color:#e53e3e}
+.app-item .app-info{flex:1;min-width:0}
+.app-item .app-name-row{display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap}
+.app-item .app-name{font-weight:600;color:var(--text);font-size:0.85rem}
+.app-item .app-cmd{font-size:0.7rem;color:var(--text2);margin-top:0.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app-item .app-actions{display:flex;gap:0.25rem;flex-wrap:wrap;margin-top:0.5rem;border-top:1px solid var(--border);padding-top:0.5rem}
+.app-item .app-actions .btn{padding:0.3rem 0.5rem;font-size:0.65rem}
+.app-item .app-actions .btn-running{background:rgba(16,185,129,0.15);color:#34d399;border:none}
 </style>
 </head>
 <body>
@@ -33,6 +46,10 @@ var htmlIndex = `<!DOCTYPE html>
 {{if .CreateErr}}
 <div class="fail-card"><h4><i class="fa-solid fa-circle-xmark" style="margin-right:0.4rem;"></i>创建失败: {{.CreateErr}}</h4></div>
 {{end}}
+<div id="activeTaskBanner" style="display:none;background:rgba(229,62,62,0.08);border:1px solid rgba(229,62,62,0.2);border-radius:10px;padding:0.7rem 0.8rem;margin-bottom:0.8rem">
+<div style="font-size:0.8rem;color:#fc8181;margin-bottom:0.4rem"><i class="fa-solid fa-spinner fa-spin" style="margin-right:0.3rem"></i><span id="activeTaskMsg">正在创建...</span></div>
+<div class="progress-bar"><div class="progress-fill" id="activeTaskFill" style="width:0%"></div></div>
+</div>
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.6rem;margin-bottom:1rem">
 <div class="card stat-card"><div class="stat-value">{{.Cpu}}%</div><div class="stat-label"><i class="fa-solid fa-microchip" style="margin-right:0.2rem"></i>CPU</div></div>
 <div class="card stat-card"><div class="stat-value">{{.Mem}}%</div><div class="stat-label"><i class="fa-solid fa-memory" style="margin-right:0.2rem"></i>内存</div></div>
@@ -76,88 +93,251 @@ var htmlIndex = `<!DOCTYPE html>
 <p style="font-size:0.68rem;color:var(--text2);text-align:center" id="progressText">准备中...</p>
 </div>
 </div>
+<div id="appListHeader" style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.8rem;flex-wrap:wrap">
+<div style="flex:1;min-width:200px">
+<input type="text" id="appSearch" placeholder="搜索应用名称或命令..." class="input" style="padding:0.5rem 0.7rem;font-size:0.78rem">
 </div>
+<div style="display:flex;gap:0.3rem;align-items:center">
+<button class="btn btn-ghost btn-sm" id="selectAllBtn" title="全选"><i class="fa-solid fa-check-double"></i> 全选</button>
+<button class="btn btn-success btn-sm" id="batchStartBtn" title="批量启动" style="display:none"><i class="fa-solid fa-play"></i> 启动</button>
+<button class="btn btn-warning btn-sm" id="batchStopBtn" title="批量停止" style="display:none"><i class="fa-solid fa-stop"></i> 停止</button>
+<button class="btn btn-danger btn-sm" id="batchDeleteBtn" title="批量删除" style="display:none"><i class="fa-solid fa-trash"></i> 删除</button>
+<button class="btn btn-ghost btn-sm" id="cancelSelectBtn" title="取消选择" style="display:none"><i class="fa-solid fa-xmark"></i> 取消</button>
+<span id="selCount" style="font-size:0.7rem;color:var(--text2);display:none">已选 0</span>
+</div>
+</div>
+<div class="app-grid">
+{{range $name, $app := .Apps}}
+<div class="card app-item" data-name="{{tolower $name}}" data-cmd="{{tolower $app.Cmd}}">
+<label style="display:flex;gap:0.6rem;cursor:pointer">
+<input type="checkbox" class="app-cb" data-name="{{$name}}" style="accent-color:#e53e3e;position:absolute">
+{{if $app.Icon}}
+<div class="app-icon"><img src="{{$app.Icon}}" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-box\\'></i>'"></div>
+{{else}}
+<div class="app-icon"><i class="fa-solid fa-box"></i></div>
+{{end}}
+<div class="app-info">
+<div class="app-name-row">
+<span class="app-name">{{$name}}</span>
+{{if eq $app.Status "运行中"}}<span class="badge badge-running"><span style="width:5px;height:5px;background:#34d399;border-radius:50%"></span>运行中</span>{{else}}<span class="badge badge-stopped"><span style="width:5px;height:5px;background:#f87171;border-radius:50%"></span>已停止</span>{{end}}
+{{if $app.AutoStart}}<span class="badge" style="background:rgba(59,130,246,0.1);color:#60a5fa;border:1px solid rgba(59,130,246,0.2)"><i class="fa-solid fa-power-off" style="margin-right:0.2rem"></i>自启</span>{{end}}
+{{if $app.Version}}<span class="badge" style="background:rgba(229,62,62,0.1);color:#fc8181;border:1px solid rgba(229,62,62,0.2)">v{{$app.Version}}</span>{{end}}
+</div>
+<div class="app-cmd"><i class="fa-solid fa-terminal" style="margin-right:0.2rem"></i>{{escape $app.Cmd}}</div>
+</div>
+</label>
+<div class="app-actions">
+{{if eq $app.Status "运行中"}}
+<form action="/stop/{{$name}}" method="post"><button class="btn btn-warning"><i class="fa-solid fa-stop"></i>停止</button></form>
+<form action="/restart/{{$name}}" method="post"><button class="btn btn-primary"><i class="fa-solid fa-rotate"></i>重启</button></form>
+{{else}}
+<form action="/start/{{$name}}" method="post"><button class="btn btn-success"><i class="fa-solid fa-play"></i>启动</button></form>
+{{end}}
+{{if not $app.AutoStart}}
+<form action="/toggle-auto/{{$name}}" method="post"><button class="btn btn-ghost" title="开启自启"><i class="fa-solid fa-power-off"></i>自启</button></form>
+{{else}}
+<form action="/toggle-auto/{{$name}}" method="post"><button class="btn" style="background:rgba(59,130,246,0.15);color:#60a5fa;border:none" title="关闭自启"><i class="fa-solid fa-power-off"></i>自启</button></form>
+{{end}}
+<a href="/edit/{{$name}}" class="btn btn-ghost"><i class="fa-solid fa-pen"></i>编辑</a>
+<a href="/log/{{$name}}" class="btn btn-ghost"><i class="fa-solid fa-file-lines"></i>日志</a>
+{{if $app.URL}}<a href="{{$app.URL}}" target="_blank" class="btn btn-ghost" title="打开网页"><i class="fa-solid fa-globe"></i>网页</a>{{end}}
+<form action="/delete/{{$name}}" method="post" onsubmit="return confirm('确定删除 {{$name}}？')"><button class="btn btn-danger"><i class="fa-solid fa-trash"></i>删除</button></form>
+</div>
+</div>
+</div>
+{{end}}
+</div>
+{{if eq (len .Apps) 0}}
+<div class="glass" style="padding:2rem;text-align:center"><i class="fa-solid fa-inbox" style="font-size:2rem;color:rgba(255,255,255,0.1);margin-bottom:0.5rem"></i><p style="color:var(--text2);font-size:0.8rem">暂无应用</p></div>
+{{end}}
 </div>
 </div>
 ` + layoutJS + `
-var currentTab = "download";
-function switchTab(tab) {
-	currentTab = tab;
-	var dl = document.getElementById("downloadPanel");
-	var ml = document.getElementById("manualPanel");
-	var td = document.getElementById("tabDownload");
-	var tm = document.getElementById("tabManual");
-	var cb = document.getElementById("createBtn");
-	if (tab === "download") {
-		if (dl) dl.style.display = "block";
-		if (ml) ml.style.display = "none";
-		if (td) td.className = "btn btn-primary btn-sm";
-		if (tm) tm.className = "btn btn-ghost btn-sm";
-		if (cb) cb.innerHTML = "<i class=\"fa-solid fa-plus\"></i>创建应用";
-	} else {
-		if (dl) dl.style.display = "none";
-		if (ml) ml.style.display = "block";
-		if (td) td.className = "btn btn-ghost btn-sm";
-		if (tm) tm.className = "btn btn-primary btn-sm";
-		if (cb) cb.innerHTML = "<i class=\"fa-solid fa-plus\"></i>添加应用";
-	}
+<script>
+(function(){
+var form=document.getElementById('createForm');
+var prog=document.getElementById('createProgress');
+var fill=document.getElementById('progressFill');
+var text=document.getElementById('progressText');
+var btn=document.getElementById('createBtn');
+var banner=document.getElementById('activeTaskBanner');
+var bannerMsg=document.getElementById('activeTaskMsg');
+var bannerFill=document.getElementById('activeTaskFill');
+var downloadPanel=document.getElementById('downloadPanel');
+var manualPanel=document.getElementById('manualPanel');
+var tabDownload=document.getElementById('tabDownload');
+var tabManual=document.getElementById('tabManual');
+window.switchTab=function(tab){
+if(tab==='download'){
+downloadPanel.style.display='block';
+manualPanel.style.display='none';
+tabDownload.className='btn btn-primary btn-sm';
+tabManual.className='btn btn-ghost btn-sm';
+}else{
+downloadPanel.style.display='none';
+manualPanel.style.display='block';
+tabDownload.className='btn btn-ghost btn-sm';
+tabManual.className='btn btn-primary btn-sm';
 }
-var form = document.getElementById("createForm");
-if (form) {
-	form.addEventListener("submit", function(e) {
-		e.preventDefault();
-		var isManual = currentTab === "manual";
-		var nameEl = isManual ? document.getElementById("manualName") : document.getElementById("appName");
-		var prog = document.getElementById("createProgress");
-		var fill = document.getElementById("progressFill");
-		var text = document.getElementById("progressText");
-		if (!nameEl.value.trim()) { alert("请输入应用名称"); return; }
-		prog.style.display = "block";
-		fill.style.width = "10%";
-		text.textContent = isManual ? "添加应用..." : "准备创建...";
-		var fd = new FormData();
-		if (isManual) {
-			fd.append("name", document.getElementById("manualName").value.trim());
-			fd.append("path", document.getElementById("manualPath").value.trim());
-			fd.append("cmd", document.getElementById("manualCmd").value.trim());
-			fd.append("workdir", document.getElementById("manualWorkDir").value.trim());
-			fd.append("url", document.getElementById("manualUrl").value.trim());
-			fd.append("auto", document.getElementById("manualAuto").checked ? "1" : "0");
-			fetch("/create/manual", {method: "POST", body: fd}).then(function(r) { return r.json(); }).then(function(data) {
-				fill.style.width = "100%";
-				text.textContent = data.error || "完成";
-				if (!data.error) { setTimeout(function() { location.reload(); }, 500); }
-				else { prog.style.display = "none"; alert(data.error); }
-			}).catch(function(e) { prog.style.display = "none"; alert("请求失败: " + e); });
-		} else {
-			fd.append("name", document.getElementById("appName").value.trim());
-			fd.append("cmd", document.getElementById("appCmd").value.trim());
-			fd.append("url", document.getElementById("appUrl").value.trim());
-			fd.append("setup_cmd", document.getElementById("appSetup").value.trim());
-			fd.append("auto_extract", document.getElementById("autoExtract").checked ? "on" : "");
-			fd.append("make_exec", document.getElementById("makeExec").checked ? "on" : "");
-			fetch("/create", {method: "POST", body: fd}).then(function(r) { return r.json(); }).then(function(data) {
-				if (data.error) { fill.style.width = "0%"; prog.style.display = "none"; alert(data.error); return; }
-				fill.style.width = "30%";
-				text.textContent = "正在下载...";
-				var taskId = data.task;
-				var pollInt = setInterval(function() {
-					fetch("/create/progress/" + taskId).then(function(r) { return r.json(); }).then(function(t) {
-						if (t && t.status) {
-							fill.style.width = (t.progress || 0) + "%";
-							text.textContent = t.message || t.status;
-							if (t.status === "completed" || t.status === "error") {
-								clearInterval(pollInt);
-								if (t.status === "completed") { location.reload(); }
-								else { prog.style.display = "none"; alert(t.message); }
-							}
-						}
-					}).catch(function() { clearInterval(pollInt); });
-				}, 500);
-			}).catch(function(e) { prog.style.display = "none"; alert("请求失败"); });
-		}
-	});
 }
+var appItems=document.querySelectorAll('.app-item');
+if(appItems.length>0){
+fetch('/api/updates').then(function(r){return r.json()}).then(function(updates){
+if(!updates)return;
+for(var name in updates){
+var el=document.querySelector('.app-item[data-name="'+name.toLowerCase()+'"]');
+if(el){
+var badge=document.createElement('span');
+badge.className='badge';
+badge.style.cssText='background:rgba(245,158,11,0.2);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)';
+badge.innerHTML='<i class="fa-solid fa-arrow-up" style="margin-right:0.2rem"></i>有更新 v'+updates[name];
+var badgeArea=el.querySelector('[style*="flex-wrap:wrap"]');
+if(badgeArea)badgeArea.appendChild(badge);
+}
+}
+}).catch(function(){});
+}
+if(!form)return;
+var pollId=null;
+var activeTaskId=localStorage.getItem('lp_createTask');
+var activeTaskErr=localStorage.getItem('lp_createErr');
+function showBanner(){if(banner)banner.style.display='block'}
+function hideBanner(){if(banner)banner.style.display='none';localStorage.removeItem('lp_createTask');localStorage.removeItem('lp_createErr')}
+function pollProgress(id){
+fetch('/create/progress/'+id).then(function(r){return r.json()}).then(function(t){
+if(!t||!t.status)return;
+if(t.status==='creating'||t.status==='downloading'){
+var pct=t.progress||0;
+if(fill)fill.style.width=pct+'%';
+if(text)text.textContent=t.message||'处理中... '+pct+'%';
+if(bannerMsg)bannerMsg.textContent=t.message||'正在创建...';
+if(bannerFill)bannerFill.style.width=pct+'%';
+showBanner();pollId=setTimeout(function(){pollProgress(id)},500);
+}else if(t.status==='completed'){
+if(fill)fill.style.width='100%';if(text)text.textContent='创建完成！';
+if(bannerFill)bannerFill.style.width='100%';if(bannerMsg)bannerMsg.textContent='创建完成！';
+showBanner();clearTimeout(pollId);hideBanner();setTimeout(function(){location.reload()},600);
+}else if(t.status==='error'){
+if(text){text.textContent='错误: '+t.message;text.style.color='#f87171'}
+if(bannerMsg)bannerMsg.textContent='创建失败: '+t.message;
+if(bannerFill)bannerFill.style.width='100%';
+if(banner)banner.style.borderColor='rgba(239,68,68,0.3)';
+showBanner();btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-plus"></i>创建应用';
+clearTimeout(pollId);localStorage.setItem('lp_createErr','1');localStorage.removeItem('lp_createTask');
+}else if(t.status==='not_found'){hideBanner()}
+}).catch(function(){pollId=setTimeout(function(){pollProgress(id)},1000)});
+}
+if(activeTaskErr){
+if(banner){banner.style.display='block';banner.style.borderColor='rgba(239,68,68,0.3)';bannerMsg.textContent='上次创建失败';bannerFill.style.width='100%'}
+localStorage.removeItem('lp_createErr');
+}
+if(activeTaskId){pollProgress(activeTaskId)}
+form.addEventListener('submit',function(e){
+e.preventDefault();
+var isManual=manualPanel.style.display==='block';
+var nameEl=isManual?document.getElementById('manualName'):document.getElementById('appName');
+if(!nameEl)return;
+var name=nameEl.value.trim();
+if(!name){nameEl.focus();return}
+localStorage.removeItem('lp_createErr');
+btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>处理中...';
+prog.style.display='block';fill.style.width='10%';text.textContent=isManual?'添加应用...':'准备创建...';
+if(isManual){
+var mName=document.getElementById('manualName').value.trim();
+var mPath=document.getElementById('manualPath').value.trim();
+var mCmd=document.getElementById('manualCmd').value.trim();
+var mWorkDir=document.getElementById('manualWorkDir').value.trim();
+var mUrl=document.getElementById('manualUrl').value.trim();
+var mAuto=document.getElementById('manualAuto').checked;
+if(!mPath||!mCmd){text.textContent='路径和命令必填';text.style.color='#f87171';btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-plus"></i>创建应用';return}
+var fd=new FormData();
+fd.append('name',mName);fd.append('path',mPath);fd.append('cmd',mCmd);
+if(mWorkDir)fd.append('work_dir',mWorkDir);
+if(mUrl)fd.append('url',mUrl);
+if(mAuto)fd.append('auto','on');
+fetch('/create/manual',{method:'POST',body:fd}).then(function(r){return r.json()}).then(function(data){
+if(data.ok){text.textContent='添加成功！';fill.style.width='100%';setTimeout(function(){location.reload()},500)}
+else{text.textContent=data.error||'添加失败';text.style.color='#f87171';btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-plus"></i>创建应用'}
+}).catch(function(){text.textContent='网络错误';btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-plus"></i>创建应用'});
+return;
+}
+var fd=new FormData(form);
+fetch('/create',{method:'POST',body:fd}).then(function(r){
+var ct=r.headers.get('content-type')||'';
+if(ct.indexOf('json')===-1){text.textContent='请求失败';btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-plus"></i>创建应用';return}
+return r.json()}).then(function(data){
+if(!data)return;
+if(data.ok&&data.task){localStorage.setItem('lp_createTask',data.task);pollProgress(data.task);setTimeout(function(){window.location.replace(data.redirect||'/')},300)}
+else if(data.error){text.textContent=data.error;text.style.color='#f87171';if(bannerMsg)bannerMsg.textContent='创建失败: '+data.error;if(banner)banner.style.borderColor='rgba(239,68,68,0.3)';showBanner();localStorage.setItem('lp_createErr','1');btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-plus"></i>创建应用'}
+}).catch(function(){text.textContent='网络错误';btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-plus"></i>创建应用'});
+});
+var searchInput=document.getElementById('appSearch');
+if(searchInput){
+searchInput.addEventListener('input',function(){
+var q=this.value.toLowerCase();
+var items=document.querySelectorAll('.app-item');
+var vis=0;
+for(var i=0;i<items.length;i++){
+var n=items[i].getAttribute('data-name')||'';
+var c=items[i].getAttribute('data-cmd')||'';
+if(n.indexOf(q)>=0||c.indexOf(q)>=0){items[i].style.display='';vis++;}
+else{items[i].style.display='none';}
+}
+});
+}
+var selAll=document.getElementById('selectAllBtn');
+var cancelBtn=document.getElementById('cancelSelectBtn');
+if(selAll){
+selAll.addEventListener('click',function(){
+var cbs=document.querySelectorAll('.app-cb');
+var allChecked=true;
+for(var i=0;i<cbs.length;i++){if(!cbs[i].checked){allChecked=false;break;}}
+for(var i=0;i<cbs.length;i++){cbs[i].checked=!allChecked;}
+updateSelCount();
+});
+}
+function updateSelCount(){
+var cbs=document.querySelectorAll('.app-cb:checked');
+var cnt=cbs.length;
+var el=document.getElementById('selCount');
+var sb=document.getElementById('batchStartBtn');
+var st=document.getElementById('batchStopBtn');
+var sd=document.getElementById('batchDeleteBtn');
+var sa=document.getElementById('selectAllBtn');
+if(el){el.textContent='已选 '+cnt;el.style.display=cnt>0?'':'none';}
+if(sb)sb.style.display=cnt>0?'':'none';
+if(st)st.style.display=cnt>0?'':'none';
+if(sd)sd.style.display=cnt>0?'':'none';
+if(sa)sa.style.display=cnt>0?'none':'';
+if(cancelBtn)cancelBtn.style.display=cnt>0?'':'none';
+}
+if(cancelBtn){cancelBtn.addEventListener('click',function(){
+var cbs=document.querySelectorAll('.app-cb');
+for(var i=0;i<cbs.length;i++){cbs[i].checked=false;}
+updateSelCount();
+});}
+document.addEventListener('change',function(e){if(e.target&&e.target.classList.contains('app-cb'))updateSelCount();});
+function batchAction(action,confirmMsg){
+var cbs=document.querySelectorAll('.app-cb:checked');
+if(cbs.length===0)return;
+var names=[];
+for(var i=0;i<cbs.length;i++){names.push(cbs[i].getAttribute('data-name'));}
+if(!confirm(confirmMsg+names.join(', ')))return;
+var csrfEl=document.querySelector('input[name="csrf_token"]');
+for(var i=0;i<names.length;i++){
+var f=document.createElement('form');
+f.method='POST';f.action='/'+action+'/'+names[i];
+if(csrfEl){var inp=document.createElement('input');inp.type='hidden';inp.name='csrf_token';inp.value=csrfEl.value;f.appendChild(inp);}
+document.body.appendChild(f);f.submit();
+}
+}
+var bs=document.getElementById('batchStartBtn');
+if(bs)bs.addEventListener('click',function(){batchAction('start','确定启动: ')});
+var bst=document.getElementById('batchStopBtn');
+if(bst)bst.addEventListener('click',function(){batchAction('stop','确定停止: ')});
+var bd=document.getElementById('batchDeleteBtn');
+if(bd)bd.addEventListener('click',function(){batchAction('delete','确定删除: ')});
+})();
 </script>
 </body>
 </html>`

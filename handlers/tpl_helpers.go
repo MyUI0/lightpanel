@@ -4,8 +4,7 @@ import "strings"
 
 func sidebarHTML(active string) string {
 	items := []struct{ path, icon, long, short string }{
-		{"/", "fa-gauge", "面板首页", "首页"},
-		{"/apps", "fa-layer-group", "管理应用", "应用"},
+		{"/", "fa-server", "应用管理", "应用"},
 		{"/store", "fa-store", "应用商店", "商店"},
 		{"/downloads", "fa-download", "下载管理", "下载"},
 		{"/analyze", "fa-code", "脚本分析", "分析"},
@@ -43,7 +42,7 @@ func sidebarHTML(active string) string {
 </div>
 <nav>` + nav + `</nav>
 <div class="side-footer">
-<a href="#" id="themeBtn"><i class="fa-solid fa-moon"></i><span class="nav-long">切换主题</span><span class="nav-short">主题</span></a>
+<a href="javascript:void(0)" id="themeBtn"><i class="fa-solid fa-moon"></i><span class="nav-long">切换主题</span><span class="nav-short">主题</span></a>
 <a href="/logout" class="logout"><i class="fa-solid fa-right-from-bracket"></i><span class="nav-long">退出登录</span><span class="nav-short">退出</span></a>
 </div>
 </div>`

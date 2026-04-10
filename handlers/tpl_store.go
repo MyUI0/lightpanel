@@ -63,9 +63,9 @@ var htmlStore = `<!DOCTYPE html>
 ` + layoutJS + `
 <script>
 function filterStore(){
-var kw=document.getElementById("storeSearch").value.toLowerCase();
-document.querySelectorAll(".store-item").forEach(function(el){var name=el.getAttribute("data-name")||"";var desc=el.getAttribute("data-desc")||"";el.style.display=(kw&&!name.includes(kw)&&!desc.includes(kw))?"none":""})}
-document.querySelectorAll(".install-form").forEach(function(f){f.addEventListener("submit",function(e){var b=f.querySelector("button");if(b&&b.disabled){e.preventDefault();return}})});
+var kw=document.getElementById('storeSearch').value.toLowerCase();
+document.querySelectorAll('.store-item').forEach(function(el){var name=el.getAttribute('data-name')||'';var desc=el.getAttribute('data-desc')||'';el.style.display=(kw&&!name.includes(kw)&&!desc.includes(kw))?'none':''})}
+document.querySelectorAll('.install-form').forEach(function(f){f.addEventListener('submit',function(e){var b=f.querySelector('button');if(b&&b.disabled){e.preventDefault();return}})});
 </script>
 </body>
 </html>`
@@ -75,7 +75,7 @@ var htmlStoreParams = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>设置参数 - 朱雀面板</title>
+<title>设置参数 - LightPanel</title>
 <style>
 ` + layoutCSS + `
 </style>

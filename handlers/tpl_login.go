@@ -6,6 +6,12 @@ var htmlLogin = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>登录 - 朱雀面板</title>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+var t=localStorage.getItem('lp_theme')||'dark';
+if(t==='light'){document.documentElement.setAttribute('data-theme','light');}
+});
+</script>
 <style>
 *{
 margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-serif}
@@ -79,13 +85,5 @@ else{el.textContent=s;}
 })();
 </script>
 {{end}}
-<script>
-(function(){
-var t=localStorage.getItem('lp_theme');
-if(t==='light'){document.documentElement.setAttribute('data-theme','light');}
-else if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');}
-else if(window.matchMedia('(prefers-color-scheme:light)').matches){document.documentElement.setAttribute('data-theme','light');}
-})();
-</script>
 </body>
 </html>`

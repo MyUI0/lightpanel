@@ -34,8 +34,8 @@ var htmlEdit = `<!DOCTYPE html>
 <div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">工作目录</label><input name="work_dir" value="{{.WorkDir}}" placeholder="留空则使用沙盒路径" class="input"></div>
 <div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">首次运行命令（仅执行一次）</label><input name="setup_cmd" value="{{.SetupCmd}}" placeholder="留空则不执行" class="input"></div>
 <div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">启动命令</label><input name="cmd" value="{{.Cmd}}" required class="input"></div>
+<div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">图标URL</label><input name="icon" value="{{.Icon}}" placeholder="https://..." class="input"></div>
 <div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">网页地址</label><input name="url" value="{{.URL}}" placeholder="如 http://127.0.0.1:8080" class="input"></div>
-<div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">应用图标</label><input name="icon" value="{{.Icon}}" placeholder="图标URL（可选）" class="input"></div>
 <label class="check-label"><input type="checkbox" name="auto"{{if .Auto}} checked{{end}}><div class="check-box"><i class="fa-solid fa-check"></i></div><span style="color:var(--text2);font-size:0.78rem">开机自启（崩溃自动重启）</span></label>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.5rem">
 <button class="btn btn-primary" style="width:100%"><i class="fa-solid fa-save"></i>保存</button>

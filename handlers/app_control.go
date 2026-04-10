@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -143,51 +142,6 @@ func deleteApp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/", 302)
-}
-
-func batchAction(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	action := r.FormValue("action")
-	names := strings.Split(r.FormValue("names"), ",")
-	appOpMu.Lock()
-	defer appOpMu.Unlock()
-	var apps map[string]models.Project
-	_ = LoadJSON(config.ConfigApps, &apps)
-	for _, name := range names {
-		name = strings.TrimSpace(name)
-		if name == "" {
-			continue
-		}
-		app, ok := apps[name]
-		if !ok {
-			continue
-		}
-		switch action {
-		case "start":
-			appOpMu.Unlock()
-			launchApp(name, &app)
-			appOpMu.Lock()
-			if app.AutoStart {
-				apps[name] = app
-			}
-		case "stop":
-			killAppByName(name)
-			go RunHook("app_stop", name)
-		case "delete":
-			killAppByName(name)
-			delete(apps, name)
-			cleanPath := filepath.Clean(app.Path)
-			cleanAppsDir := filepath.Clean(config.AppsDir)
-			realPath, _ := filepath.EvalSymlinks(cleanPath)
-			realAppsDir, _ := filepath.EvalSymlinks(cleanAppsDir)
-			if realPath != "" && realAppsDir != "" && strings.HasPrefix(realPath, realAppsDir) && realPath != realAppsDir {
-				_ = os.RemoveAll(cleanPath)
-			}
-		}
-	}
-	_ = WriteJSON(config.ConfigApps, apps)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"ok": true})
 }
 
 func toggleAutoStart(w http.ResponseWriter, r *http.Request) {

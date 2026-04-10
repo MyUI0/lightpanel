@@ -22,6 +22,23 @@ var sessionDir string
 
 func init() {
 	sessionDir = config.ConfigDir + "/sessions"
+	maxLoginAttempts = 1000
+	go func() {
+		ticker := time.NewTicker(5 * time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			loginAttemptsMu.Lock()
+			now := time.Now()
+			for ip, a := range loginAttempts {
+				if !a.Locked && now.Sub(a.LastFail) > 15*time.Minute {
+					delete(loginAttempts, ip)
+				} else if a.Locked && now.After(a.LockUntil) {
+					delete(loginAttempts, ip)
+				}
+			}
+			loginAttemptsMu.Unlock()
+		}
+	}()
 }
 
 func hash(s string) string {
@@ -110,26 +127,7 @@ func getLoginRemainTime(ip string) int {
 	return remain
 }
 
-// 清理过期登录记录
-func initLoginCleanup() {
-	maxLoginAttempts = 1000
-	go func() {
-		ticker := time.NewTicker(5 * time.Minute)
-		defer ticker.Stop()
-		for range ticker.C {
-			loginAttemptsMu.Lock()
-			now := time.Now()
-			for ip, a := range loginAttempts {
-				if !a.Locked && now.Sub(a.LastFail) > 15*time.Minute {
-					delete(loginAttempts, ip)
-				} else if a.Locked && now.After(a.LockUntil) {
-					delete(loginAttempts, ip)
-				}
-			}
-			loginAttemptsMu.Unlock()
-		}
-	}()
-}
+
 
 // SSRF 防护：检查是否为内网地址（定义见 security.go）
 
