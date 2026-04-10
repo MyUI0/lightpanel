@@ -8,22 +8,19 @@ var htmlIndex = `<!DOCTYPE html>
 <title>朱雀面板</title>
 <style>
 ` + layoutCSS + `
-.app-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0.6rem}
-@media(max-width:800px){.app-grid{grid-template-columns:1fr}}
-.app-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0.6rem}
-@media(max-width:800px){.app-grid{grid-template-columns:1fr}}
-.app-item{display:flex;gap:0.6rem;padding:0.8rem;min-height:90px;position:relative}
-.app-item .app-icon{width:44px;height:44px;border-radius:12px;background:rgba(229,62,62,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
-.app-item .app-icon img{width:100%;height:100%;object-fit:cover;border-radius:12px}
-.app-item .app-icon i{font-size:1.2rem;color:#e53e3e}
-.app-item .app-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
-.app-item .app-name-row{display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap}
-.app-item .app-name{font-weight:600;color:var(--text);font-size:0.88rem}
-.app-item .app-cmd{font-size:0.7rem;color:var(--text2);margin-top:0.2rem;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.app-item .app-actions{display:flex;gap:0.2rem;flex-wrap:wrap;padding:0.5rem 0 0;margin:0.4rem 0 0}
-.app-item .app-actions .btn{padding:0.28rem 0.5rem;font-size:0.64rem;border-radius:6px}
-.app-item .app-cb{width:16px;height:16px;accent-color:#e53e3e;position:absolute;left:0.6rem;top:0.5rem;opacity:0;transition:opacity 0.15s}
-.app-item.selected .app-cb,.app-item:has(.app-cb:checked) .app-cb{opacity:1}
+` + layoutCSS + `
+.app-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0.5rem !important;width:100%;table-layout:fixed}
+@media(max-width:800px){.app-grid{grid-template-columns:1fr !important}}
+.app-item{display:flex;flex-direction:column;gap:0.4rem;padding:0.7rem !important;min-height:90px;width:100%;box-sizing:border-box}
+.app-item .app-icon{width:40px;height:40px;border-radius:10px;background:rgba(229,62,62,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.app-item .app-icon img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+.app-item .app-icon i{font-size:1.1rem;color:#e53e3e}
+.app-item .app-info{flex:1;min-width:0}
+.app-item .app-name-row{display:flex;align-items:center;gap:0.3rem;flex-wrap:wrap}
+.app-item .app-name{font-weight:600;color:var(--text);font-size:0.85rem}
+.app-item .app-cmd{font-size:0.68rem;color:var(--text2);margin-top:0.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app-item .app-actions{display:flex;gap:0.15rem;flex-wrap:wrap;margin-top:0.3rem}
+.app-item .app-actions .btn{padding:0.25rem 0.4rem;font-size:0.62rem;border-radius:5px}
 </style>
 </head>
 <body>
@@ -112,8 +109,8 @@ var htmlIndex = `<!DOCTYPE html>
 <div class="app-grid">
 {{range $name, $app := .Apps}}
 <div class="card app-item" data-name="{{tolower $name}}" data-cmd="{{tolower $app.Cmd}}">
-<input type="checkbox" class="app-cb" data-name="{{$name}}" id="cb-{{$name}}">
-<label style="display:flex;gap:0.6rem;cursor:pointer;flex:1" for="cb-{{$name}}">
+<input type="checkbox" class="app-cb" data-name="{{$name}}" style="display:none">
+<div style="display:flex;gap:0.6rem;cursor:pointer;flex:1">
 {{if $app.Icon}}
 <div class="app-icon"><img src="{{$app.Icon}}" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-box\\'></i>'"></div>
 {{else}}
