@@ -80,27 +80,25 @@ var htmlIndex = `<!DOCTYPE html>
 </div>
 </div>
 ` + layoutJS + `
-<script>
 var currentTab='download';
-var tabDl=document.getElementById('tabDownload');
-var tabMl=document.getElementById('tabManual');
-var dl=document.getElementById('downloadPanel');
-var ml=document.getElementById('manualPanel');
-var createBtn=document.getElementById('createBtn');
 function switchTab(tab){
 currentTab=tab;
+var dl=document.getElementById('downloadPanel'),ml=document.getElementById('manualPanel'),td=document.getElementById('tabDownload'),tm=document.getElementById('tabManual'),cb=document.getElementById('createBtn');
 if(tab==='download'){
-dl.style.display='block';ml.style.display='none';
-if(tabDl){tabDl.className='btn btn-primary btn-sm';}
-if(tabMl){tabMl.className='btn btn-ghost btn-sm';}
-if(createBtn){createBtn.innerHTML='<i class="fa-solid fa-plus"></i>创建应用';}
+if(dl)dl.style.display='block';
+if(ml)ml.style.display='none';
+if(td)td.className='btn btn-primary btn-sm';
+if(tm)tm.className='btn btn-ghost btn-sm';
+if(cb)cb.innerHTML='<i class="fa-solid fa-plus"></i>创建应用';
 }else{
-dl.style.display='none';ml.style.display='block';
-if(tabDl){tabDl.className='btn btn-ghost btn-sm';}
-if(tabMl){tabMl.className='btn btn-primary btn-sm';}
-if(createBtn){createBtn.innerHTML='<i class="fa-solid fa-plus"></i>添加应用';}
+if(dl)dl.style.display='none';
+if(ml)ml.style.display='block';
+if(td)td.className='btn btn-ghost btn-sm';
+if(tm)tm.className='btn btn-primary btn-sm';
+if(cb)cb.innerHTML='<i class="fa-solid fa-plus"></i>添加应用';
 }
 }
+(function(){
 var form=document.getElementById('createForm');
 if(form){
 form.addEventListener('submit',function(e){
@@ -147,6 +145,7 @@ if(t.status==='completed'||t.status==='error'){clearInterval(pollInt);if(t.statu
 }
 });
 }
+})();
 </script>
 </body>
 </html>`

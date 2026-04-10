@@ -8,7 +8,7 @@ var htmlApps = `<!DOCTYPE html>
 <title>管理应用 - 朱雀面板</title>
 <style>
 ` + layoutCSS + `
-.app-item{display:flex;align-items:center;gap:0.8rem}
+.app-item{padding:0.8rem;display:flex;gap:0.8rem;align-items:flex-start}
 .app-name{font-weight:600;color:var(--text);font-size:0.85rem}
 .app-cmd{font-size:0.7rem;color:var(--text2);margin-top:0.15rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .app-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem}
@@ -42,7 +42,6 @@ var htmlApps = `<!DOCTYPE html>
 <div class="app-grid">
 {{range $name, $app := .Apps}}
 <div class="card app-item" data-name="{{tolower $name}}" data-cmd="{{tolower $app.Cmd}}">
-<div style="display:flex;gap:0.8rem;align-items:flex-start">
 {{if $app.Icon}}
 <img src="{{$app.Icon}}" class="app-icon" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
 {{end}}
@@ -67,7 +66,6 @@ var htmlApps = `<!DOCTYPE html>
 <a href="/log/{{$name}}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-file-lines"></i> 日志</a>
 {{if $app.URL}}<a href="{{$app.URL}}" target="_blank" class="btn btn-ghost btn-sm"><i class="fa-solid fa-globe"></i> 网页</a>{{end}}
 <button class="btn btn-danger btn-sm" onclick="if(confirm('确定删除 {{$name}}？'))postAction('/delete/{{$name}}')"><i class="fa-solid fa-trash"></i> 删除</button>
-</div>
 </div>
 </div>
 {{end}}
