@@ -36,8 +36,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -f ${{ env.VERSION }}
-          git push origin ${{ env.VERSION }} -f
+          git tag "$VERSION"
+          git push origin "$VERSION"
 
   build:
     needs: create-tag
@@ -61,12 +61,14 @@ jobs:
       - name: Setup Go environment
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.27.2"
 
       - name: Install dependencies
         run: |
-          go env -w GOPROXY=https://goproxy.cn,direct
-          go mod tidy
+          go env -w GOPROXY=https://proxy.golang.org,direct
+          go mod download
+          go test ./...
+          go vet ./...
 
       - name: Build binary
         env:
@@ -75,17 +77,18 @@ jobs:
           CGO_ENABLED: 0
         run: |
           BIN="lightpanel"
-          PKG="${BIN}-${{ env.VERSION }}-${{ matrix.target.os }}-${{ matrix.target.arch }}"
-          go build -ldflags="-s -w -X lightpanel/config.Version=${{ env.VERSION }}" -o $BIN .
+          PKG="${BIN}-${VERSION}-${GOOS}-${GOARCH}"
+          go build -ldflags="-s -w -X lightpanel/config.Version=$VERSION" -o $BIN .
           mkdir -p $PKG
           mv $BIN $PKG/
-          tar -czf $PKG.tar.gz $PKG
+          tar -czf "$PKG.tar.gz" "$PKG"
+          sha256sum "$PKG.tar.gz" > "$PKG.tar.gz.sha256"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target.os }}-${{ matrix.target.arch }}
-          path: "*.tar.gz"
+          path: "*.tar.gz*"
 
   release:
     needs: build
@@ -128,6 +131,11 @@ jobs:
           esac
           
           VERSION="${1:-latest}"
+          if [ "$VERSION" = latest ]; then
+              RESOLVED=$(curl -fsSL --proto '=https' --proto-redir '=https' -o /dev/null -w '%{url_effective}' "https://github.com/$REPO/releases/latest")
+              VERSION=${RESOLVED##*/}
+          fi
+          case "$VERSION" in *[!a-zA-Z0-9._-]*|"") echo "版本号无效"; exit 1 ;; esac
           
           echo "============================================"
           if [ -f "${INSTALL_DIR}/${BIN_NAME}" ]; then
@@ -141,10 +149,19 @@ jobs:
           cd "$INSTALL_DIR"
           
           echo "下载程序..."
-          curl -L "https://gh.llkk.cc/https://github.com/$REPO/releases/download/$VERSION/${BIN_NAME}-$VERSION-linux-$ARCH_NAME.tar.gz" -o ${BIN_NAME}.tar.gz
-          tar -xzf ${BIN_NAME}.tar.gz --strip-components=1
-          chmod +x $BIN_NAME
-          rm -f ${BIN_NAME}.tar.gz
+          PKG="${BIN_NAME}-$VERSION-linux-$ARCH_NAME"
+          TEMP_DIR=$(mktemp -d)
+          trap 'rm -rf -- "$TEMP_DIR"' EXIT
+          URL="https://github.com/$REPO/releases/download/$VERSION"
+          curl -fsSL --proto '=https' --proto-redir '=https' "$URL/$PKG.tar.gz" -o "$TEMP_DIR/$PKG.tar.gz"
+          curl -fsSL --proto '=https' --proto-redir '=https' "$URL/$PKG.tar.gz.sha256" -o "$TEMP_DIR/checksum"
+          EXPECTED=$(awk 'NR==1{print $1}' "$TEMP_DIR/checksum")
+          ACTUAL=$(sha256sum "$TEMP_DIR/$PKG.tar.gz")
+          ACTUAL=${ACTUAL%% *}
+          [ "$EXPECTED" = "$ACTUAL" ] || { echo "校验失败"; exit 1; }
+          tar -xOzf "$TEMP_DIR/$PKG.tar.gz" "$PKG/lightpanel" > "$TEMP_DIR/lightpanel"
+          install -m 0755 "$TEMP_DIR/lightpanel" "$INSTALL_DIR/$BIN_NAME.new"
+          mv -f "$INSTALL_DIR/$BIN_NAME.new" "$INSTALL_DIR/$BIN_NAME"
           
           detect_init() {
               # 修复 basename 空参数报错
@@ -208,7 +225,8 @@ jobs:
           WantedBy=multi-user.target
           SYSTEMD
                   systemctl daemon-reload
-                  systemctl enable --now $BIN_NAME
+                  systemctl enable $BIN_NAME
+                  systemctl restart $BIN_NAME
                   ;;
               
               openrc)
@@ -219,7 +237,7 @@ jobs:
           name="LightPanel"
           command="/opt/lightpanel/lightpanel"
           command_background="yes"
-          pidfile="/run/$BIN_NAME.pid"
+          pidfile="/run/lightpanel.pid"
           command_user="root"
           
           depend() {
@@ -306,7 +324,7 @@ jobs:
           echo "部署完成"
           echo "安装路径：$INSTALL_DIR"
           echo "访问地址：http://127.0.0.1:31956"
-          echo "默认账号：admin / admin"
+          echo "初始账号：admin，密码见 /opt/lightpanel/data/config/initial-password.txt"
           echo "============================================"
           
           if [ -f "/.dockerenv" ] || [ -f "/.containerenv" ]; then
@@ -327,11 +345,11 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}
           files: |
-            artifacts/*.tar.gz
+            artifacts/*.tar.gz*
             install.sh
           body: |
             ## LightPanel ${{ env.VERSION }}
             
             ### 一键安装（自动适配所有系统/架构/init）
             ```bash
-            curl -L https://gh.llkk.cc/https://github.com/${{ github.repository }}/releases/download/${{ env.VERSION }}/install.sh | bash -s ${{ env.VERSION }}
+            curl -L https://github.com/${{ github.repository }}/releases/download/${{ env.VERSION }}/install.sh | bash -s ${{ env.VERSION }}
