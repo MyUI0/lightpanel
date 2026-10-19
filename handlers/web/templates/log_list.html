@@ -1,0 +1,38 @@
+{{define "log_list"}}<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<link rel="stylesheet" href="/static/panel.css">
+<script src="/static/shell.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>运行日志 - 朱雀面板</title>
+<style>
+{{template "layout_css" .}}
+</style>
+</head>
+<body>
+<div class="bg-layer"{{if getBgUrl}} style="background-image:url('{{getBgUrl}}')"{{end}}></div>
+{{.Sidebar}}
+<div class="main">
+{{.Topbar}}
+<div class="content">
+<div class="glass" style="padding:1rem">
+<h3 style="font-size:0.9rem;font-weight:600;color:var(--text);margin-bottom:0.8rem"><i class="fa-solid fa-file-lines" style="margin-right:0.3rem"></i>选择应用查看日志</h3>
+<div style="display:grid;gap:0.4rem">
+{{range .Apps}}
+<div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0.8rem;background:var(--card);border-radius:9px">
+<span style="font-size:0.82rem;color:var(--text)">{{.}}</span>
+<a href="/log/{{.}}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-eye"></i> 查看日志</a>
+</div>
+{{end}}
+</div>
+{{if eq (len .Apps) 0}}
+<div style="text-align:center;padding:2rem;color:var(--text2)">暂无应用</div>
+{{end}}
+</div>
+</div>
+</div>
+</div>
+{{template "layout_js" .}}
+</body>
+</html>{{end}}

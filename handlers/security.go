@@ -25,6 +25,9 @@ func isPrivateURL(rawURL string) bool {
 	if err != nil {
 		return true
 	}
+	if (u.Scheme != "https" && u.Scheme != "http") || u.User != nil {
+		return true
+	}
 	host := u.Hostname()
 	return isPrivateIP(host)
 }
@@ -38,7 +41,7 @@ func isPrivateIP(host string) bool {
 	}
 	ip := net.ParseIP(host)
 	if ip != nil {
-		if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
+		if !publicIP(ip) {
 			return true
 		}
 	}

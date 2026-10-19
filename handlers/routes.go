@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -33,7 +34,15 @@ func SetupRoutes() {
 	mux.HandleFunc("/login", loginPage)
 	mux.HandleFunc("/login/auth", requirePOST(loginHandler))
 	mux.HandleFunc("/logout", logoutHandler)
-	mux.HandleFunc("/", auth(indexPage))
+	mux.HandleFunc("/", auth(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		indexPage(w, r)
+	}))
+	mux.Handle("/static/", staticHandler())
+	mux.HandleFunc("/api/overview", auth(apiOverview))
 	mux.HandleFunc("/system", auth(systemPage))
 	mux.HandleFunc("/store", auth(storePage))
 	mux.HandleFunc("/source", auth(sourcePage))
@@ -49,7 +58,7 @@ func SetupRoutes() {
 	mux.HandleFunc("/setting/save-bg", authWithCSRF(saveBg))
 	mux.HandleFunc("/setting/save-logo", authWithCSRF(saveLogo))
 	mux.HandleFunc("/setting/save-bark", authWithCSRF(saveBark))
-	mux.HandleFunc("/setting/backup", auth(backupData))
+	mux.HandleFunc("/setting/backup", authWithCSRF(backupData))
 	mux.HandleFunc("/setting/restore", authWithCSRF(restoreData))
 	mux.HandleFunc("/setting/upload-page", authWithCSRF(uploadPage))
 	mux.HandleFunc("/page/", auth(serveCustomPage))
@@ -60,7 +69,13 @@ func SetupRoutes() {
 	mux.HandleFunc("/start/", authWithCSRF(startApp))
 	mux.HandleFunc("/stop/", authWithCSRF(stopApp))
 	mux.HandleFunc("/restart/", authWithCSRF(restartApp))
-	mux.HandleFunc("/edit/", authWithCSRF(editAppHandler))
+	mux.HandleFunc("/edit/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			auth(editAppHandler)(w, r)
+		} else {
+			authWithCSRF(editAppHandler)(w, r)
+		}
+	})
 	mux.HandleFunc("/detect/", authWithCSRF(detectApp))
 	mux.HandleFunc("/toggle-auto/", authWithCSRF(toggleAutoStart))
 	mux.HandleFunc("/log/", auth(logPage))
@@ -84,8 +99,10 @@ func ListenAndServe() error {
 	}()
 
 	srv := &http.Server{
-		Addr:    ":" + config.Port,
-		Handler: securityHeaders(http.DefaultServeMux),
+		Addr:              net.JoinHostPort(config.Host, config.Port),
+		Handler:           securityHeaders(http.DefaultServeMux),
+		ReadHeaderTimeout: 10 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
 	quit := make(chan os.Signal, 1)

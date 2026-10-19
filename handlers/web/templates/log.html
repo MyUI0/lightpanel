@@ -1,0 +1,31 @@
+{{define "log"}}<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<link rel="stylesheet" href="/static/panel.css">
+<script src="/static/shell.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>运行日志 - 朱雀面板</title>
+<style>
+{{template "layout_css" .}}
+.log-box{background:rgba(15,15,35,0.6);border-radius:10px;padding:0.8rem;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:#e2e8f0;max-height:70vh;overflow-y:auto;white-space:pre-wrap;word-break:break-all;line-height:1.6;border:1px solid var(--border)}
+</style>
+</head>
+<body>
+<div class="bg-layer"{{if getBgUrl}} style="background-image:url('{{getBgUrl}}')"{{end}}></div>
+{{.Sidebar}}
+<div class="main">
+{{.Topbar}}
+<div class="content">
+<div style="display:flex;gap:0.5rem;margin-bottom:0.8rem">
+<a href="/" class="btn btn-ghost"><i class="fa-solid fa-arrow-left"></i>返回</a>
+<form action="/log/clear/{{.Name}}" method="post"><button class="btn btn-danger"><i class="fa-solid fa-trash"></i>清空日志</button></form>
+<span style="margin-left:auto;font-size:0.72rem;color:var(--text2)" id="logCount">{{.LineCount}} 行</span>
+</div>
+<div class="log-box" id="logBox">{{.Log}}</div>
+</div>
+</div>
+</div>
+{{template "layout_js" .}}
+</body>
+</html>{{end}}

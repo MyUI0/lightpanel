@@ -3,11 +3,10 @@ package handlers
 import (
 	"html/template"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"lightpanel/config"
@@ -78,123 +77,126 @@ func editAppHandler(w http.ResponseWriter, r *http.Request) {
 
 	appOpMu.Lock()
 	defer appOpMu.Unlock()
-
-	_ = r.ParseForm()
-
-	newName := strings.TrimSpace(r.Form.Get("name"))
-	newPath := strings.TrimSpace(r.Form.Get("path"))
-	newCmd := strings.TrimSpace(r.Form.Get("cmd"))
-	newSetupCmd := strings.TrimSpace(r.Form.Get("setup_cmd"))
-	autoStr := r.Form.Get("auto")
-	newWorkDir := strings.TrimSpace(r.Form.Get("work_dir"))
-	newURL := strings.TrimSpace(r.Form.Get("url"))
-	newIcon := strings.TrimSpace(r.Form.Get("icon"))
-
-	if newName == "" || newCmd == "" || strings.ContainsAny(newName, "./\\") || strings.HasPrefix(newName, ".") || strings.Contains(newName, "..") || strings.ContainsAny(newName, "?*:#") {
-		http.Redirect(w, r, "/edit/"+name+"?err=invalid", 302)
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "无效表单", 400)
 		return
 	}
-	if !validateCommand(newCmd) || !validateCommand(newSetupCmd) {
-		http.Redirect(w, r, "/edit/"+name+"?err=invalid_cmd", 302)
+	apps, err := loadAppsStrict()
+	if err != nil {
+		http.Error(w, err.Error(), 500)
 		return
 	}
-
-	var apps map[string]models.Project
-	_ = LoadJSON(config.ConfigApps, &apps)
-
-	app, ok := apps[name]
+	original, ok := apps[name]
 	if !ok {
-		http.Redirect(w, r, "/", 302)
+		http.NotFound(w, r)
 		return
 	}
-
-	if newPath != "" {
-		cleanPath := filepath.Clean(newPath)
-		cleanAppsDir := filepath.Clean(config.AppsDir)
-		realPath, err := filepath.EvalSymlinks(cleanPath)
-		if err != nil {
-			http.Redirect(w, r, "/edit/"+name+"?err=invalid", 302)
-			return
+	app := original
+	checkAppStatus(&app)
+	if app.PID > 0 {
+		http.Redirect(w, r, "/edit/"+url.PathEscape(name)+"?err=running", 303)
+		return
+	}
+	newName, err := normalizedAppName(r.Form.Get("name"))
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	command, setup := strings.TrimSpace(r.Form.Get("cmd")), strings.TrimSpace(r.Form.Get("setup_cmd"))
+	if command == "" || !validateCommand(command) || !validateCommand(setup) {
+		http.Error(w, "命令无效", 400)
+		return
+	}
+	oldPath, err := managedDirectory(original.Path)
+	if err != nil {
+		http.Error(w, "原应用路径无效", 400)
+		return
+	}
+	target := strings.TrimSpace(r.Form.Get("path"))
+	if target == "" {
+		target = oldPath
+	}
+	if newName != name && pathKey(target) == pathKey(oldPath) {
+		target = filepath.Join(config.AppsDir, newName)
+	}
+	target, err = managedDirectory(target)
+	if err != nil {
+		http.Error(w, "应用路径必须是应用目录的子目录", 400)
+		return
+	}
+	for other, project := range apps {
+		if other == name {
+			continue
 		}
-		realAppsDir, err := filepath.EvalSymlinks(cleanAppsDir)
-		if err != nil || realAppsDir == "" {
-			realAppsDir = cleanAppsDir
-		}
-		if !strings.HasPrefix(realPath+string(os.PathSeparator), realAppsDir+string(os.PathSeparator)) && realPath != realAppsDir {
-			http.Redirect(w, r, "/edit/"+name+"?err=invalid", 302)
+		normalized, _ := normalizedAppName(other)
+		if normalized == newName || pathsOverlap(project.Path, target) {
+			http.Error(w, "应用名称或目录已占用", 409)
 			return
 		}
 	}
-
-	running := false
-	pidFile := filepath.Join(app.Path, "pid.pid")
-	if b, e := os.ReadFile(pidFile); e == nil {
-		if pid, err := strconv.Atoi(strings.TrimSpace(string(b))); err == nil && pid > 0 {
-			if p, e := os.FindProcess(pid); e == nil && p.Signal(syscall.Signal(0)) == nil {
-				running = true
+	for reserved := range installReservations {
+		if pathsOverlap(reserved, target) {
+			http.Error(w, "目标目录已有安装任务", 409)
+			return
+		}
+	}
+	moved := newName != name && pathKey(oldPath) != pathKey(target)
+	if !moved {
+		if info, err := os.Stat(target); err != nil || !info.IsDir() {
+			http.Error(w, "应用目录不存在", 400)
+			return
+		}
+	}
+	if moved {
+		if _, err := os.Lstat(target); !os.IsNotExist(err) {
+			http.Error(w, "重命名目标目录已存在", 409)
+			return
+		}
+	}
+	workDir := strings.TrimSpace(r.Form.Get("work_dir"))
+	if workDir != "" {
+		if !filepath.IsAbs(workDir) {
+			workDir, err = archiveTarget(target, workDir)
+			if err != nil {
+				http.Error(w, "工作目录无效", 400)
+				return
+			}
+		}
+		if moved {
+			if rel, e := filepath.Rel(oldPath, workDir); e == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+				workDir = filepath.Join(target, rel)
 			}
 		}
 	}
-
-	if running {
-		http.Redirect(w, r, "/edit/"+name+"?err=running", 302)
-		return
-	}
-
-	oldPath := app.Path
-	autoStart := autoStr == "on"
-
-	if newPath != "" {
-		app.Path = newPath
-	} else if newName != name {
-		dirName := strings.ReplaceAll(newName, " ", "-")
-		app.Path = filepath.Join(config.AppsDir, dirName)
-	}
-
-	oldName := name
-	isRename := newName != name
-
-	if isRename {
-		if _, exists := apps[newName]; exists {
-			http.Redirect(w, r, "/edit/"+name+"?err=exists", 302)
+	if moved {
+		if err := os.Rename(oldPath, target); err != nil {
+			http.Error(w, "重命名失败", 500)
 			return
 		}
-		newDirPath := app.Path
-		if app.Path == oldPath {
-			dirName := strings.ReplaceAll(newName, " ", "-")
-			newDirPath = filepath.Join(config.AppsDir, dirName)
-		}
-		if err := os.Rename(oldPath, newDirPath); err != nil {
-			http.Redirect(w, r, "/edit/"+name+"?err=rename", 302)
-			return
-		}
-		app.Path = newDirPath
-		delete(apps, oldName)
 	}
-
+	app.Path = target
+	app.Cmd = command
+	app.SetupCmd = setup
+	app.WorkDir = workDir
+	app.AutoStart = r.Form.Get("auto") == "on"
+	app.Icon = strings.TrimSpace(r.Form.Get("icon"))
+	app.URL = strings.TrimSpace(r.Form.Get("url"))
+	delete(apps, name)
 	apps[newName] = app
-
-	app.Cmd = newCmd
-	app.SetupCmd = newSetupCmd
-	app.AutoStart = autoStart
-	app.WorkDir = newWorkDir
-	app.URL = newURL
-	app.Icon = newIcon
-	apps[newName] = app
-
 	if err := WriteJSON(config.ConfigApps, apps); err != nil {
-		if isRename {
-			_ = os.Rename(app.Path, oldPath)
-			apps[oldName] = app
-			app.Path = oldPath
-			delete(apps, newName)
-			_ = WriteJSON(config.ConfigApps, apps)
+		if moved {
+			if rollback := os.Rename(target, oldPath); rollback != nil {
+				http.Error(w, "配置保存及目录回退失败，请检查目标目录", 500)
+				return
+			}
 		}
-		http.Redirect(w, r, "/edit/"+oldName+"?err=save", 302)
+		http.Error(w, "配置保存失败", 500)
 		return
 	}
-
-	http.Redirect(w, r, "/edit/"+newName+"?ok=1", 302)
+	generations[name]++
+	generations[newName]++
+	delete(crashCounts, name)
+	http.Redirect(w, r, "/edit/"+url.PathEscape(newName)+"?ok=1", 303)
 }
 
 func detectApp(w http.ResponseWriter, r *http.Request) {

@@ -1,0 +1,56 @@
+{{define "analyze"}}<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<link rel="stylesheet" href="/static/panel.css">
+<script src="/static/shell.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>脚本分析 - 朱雀面板</title>
+<style>
+{{template "layout_css" .}}
+.tag{display:inline-block;padding:0.2rem 0.5rem;border-radius:5px;font-size:0.7rem;font-family:monospace;margin:0.15rem}
+.tag-dep{background:rgba(245,158,11,0.1);color:#fbbf24;border:1px solid rgba(245,158,11,0.2)}
+.tag-port{background:rgba(16,185,129,0.1);color:#34d399;border:1px solid rgba(16,185,129,0.2)}
+.tag-env{background:rgba(229,62,62,0.1);color:#fc8181;border:1px solid rgba(229,62,62,0.2)}
+</style>
+</head>
+<body>
+<div class="bg-layer"{{if getBgUrl}} style="background-image:url('{{getBgUrl}}')"{{end}}></div>
+{{.Sidebar}}
+<div class="main">
+{{.Topbar}}
+<div class="content">
+<div class="glass" style="padding:1rem">
+<div style="display:flex;gap:0.5rem;margin-bottom:0.8rem">
+<input id="scriptUrl" placeholder="输入脚本 URL" class="input" style="flex:1">
+<button class="btn btn-primary" onclick="analyze()"><i class="fa-solid fa-magnifying-glass"></i>分析</button>
+</div>
+<div id="result" style="display:none">
+<div style="margin-bottom:0.6rem"><h4 style="font-size:0.78rem;color:var(--text2);margin-bottom:0.3rem"><i class="fa-solid fa-cube" style="margin-right:0.2rem"></i>依赖</h4><div id="deps"></div></div>
+<div style="margin-bottom:0.6rem"><h4 style="font-size:0.78rem;color:var(--text2);margin-bottom:0.3rem"><i class="fa-solid fa-network-wired" style="margin-right:0.2rem"></i>端口</h4><div id="ports"></div></div>
+<div><h4 style="font-size:0.78rem;color:var(--text2);margin-bottom:0.3rem"><i class="fa-solid fa-gear" style="margin-right:0.2rem"></i>环境变量</h4><div id="envs"></div></div>
+</div>
+<div id="loading" style="display:none;text-align:center;padding:1.5rem;color:var(--text2)"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.2rem;margin-bottom:0.3rem"></i><p style="font-size:0.78rem">正在分析...</p></div>
+</div>
+</div>
+</div>
+</div>
+{{template "layout_js" .}}
+<script>
+function renderTags(id,values,kind){var target=document.getElementById(id);target.replaceChildren();if(!Array.isArray(values)||!values.length){target.textContent='未检测到';return}values.forEach(function(value){var tag=document.createElement('span');tag.className='tag '+kind;tag.textContent=String(value);target.appendChild(tag)})}
+function analyze(){
+var url=document.getElementById('scriptUrl').value.trim();
+if(!url)return;
+document.getElementById('result').style.display='none';
+document.getElementById('loading').style.display='block';
+fetch('/api/analyze?url='+encodeURIComponent(url)).then(function(r){if(!r.ok)throw new Error('分析失败');return r.json()}).then(function(data){
+document.getElementById('loading').style.display='none';
+document.getElementById('result').style.display='block';
+renderTags('deps',data.deps,'tag-dep');
+renderTags('ports',data.ports,'tag-port');
+renderTags('envs',data.env,'tag-env');
+}).catch(function(){document.getElementById('loading').style.display='none';alert('分析失败')});
+}
+</script>
+</body>
+</html>{{end}}

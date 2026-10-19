@@ -3,9 +3,10 @@ package handlers
 import (
 	"crypto/rand"
 	"crypto/sha256"
-	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -19,6 +20,7 @@ import (
 )
 
 var sessionDir string
+var accountMu sync.Mutex
 
 func init() {
 	sessionDir = config.ConfigDir + "/sessions"
@@ -48,9 +50,9 @@ func hash(s string) string {
 
 // 登录限流
 var (
-	loginAttempts     = make(map[string]*loginAttempt)
-	loginAttemptsMu   sync.Mutex
-	maxLoginAttempts  int
+	loginAttempts    = make(map[string]*loginAttempt)
+	loginAttemptsMu  sync.Mutex
+	maxLoginAttempts int
 )
 
 type loginAttempt struct {
@@ -66,6 +68,9 @@ func checkLoginLimit(ip string) bool {
 
 	a, ok := loginAttempts[ip]
 	if !ok {
+		if len(loginAttempts) >= maxLoginAttempts {
+			return false
+		}
 		loginAttempts[ip] = &loginAttempt{}
 		return true
 	}
@@ -127,8 +132,6 @@ func getLoginRemainTime(ip string) int {
 	return remain
 }
 
-
-
 // SSRF 防护：检查是否为内网地址（定义见 security.go）
 
 func generateSessionToken() string {
@@ -139,36 +142,10 @@ func generateSessionToken() string {
 	return hex.EncodeToString(b)
 }
 
-func isValidSession(token string) bool {
-	if token == "" || len(token) != 64 {
-		return false
-	}
-	for _, c := range token {
-		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) {
-			return false
-		}
-	}
-	sessionFile := filepath.Join(sessionDir, filepath.Base(token)+".json")
-	b, err := os.ReadFile(sessionFile)
-	if err != nil {
-		return false
-	}
-	var sess struct {
-		Expires    int64  `json:"expires"`
-		CSRFToken  string `json:"csrf"`
-		FirstLogin bool   `json:"first_login"`
-	}
-	if err := json.Unmarshal(b, &sess); err != nil {
-		return false
-	}
-	if time.Now().Unix() > sess.Expires {
-		_ = os.Remove(sessionFile)
-		return false
-	}
-	return true
-}
+func isValidSession(token string) bool { return getSessionData(token) != nil }
 
 type sessionData struct {
+	Credential string `json:"credential"`
 	Expires    int64  `json:"expires"`
 	CSRFToken  string `json:"csrf"`
 	FirstLogin bool   `json:"first_login"`
@@ -176,6 +153,9 @@ type sessionData struct {
 
 func getSessionData(token string) *sessionData {
 	if token == "" || len(token) != 64 {
+		return nil
+	}
+	if _, err := hex.DecodeString(token); err != nil {
 		return nil
 	}
 	sessionFile := filepath.Join(sessionDir, filepath.Base(token)+".json")
@@ -189,6 +169,10 @@ func getSessionData(token string) *sessionData {
 	}
 	if time.Now().Unix() > sess.Expires {
 		_ = os.Remove(sessionFile)
+		return nil
+	}
+	var user models.UserConfig
+	if LoadJSON(config.ConfigUsr, &user) != nil || sess.Credential != credentialDigest(user) {
 		return nil
 	}
 	return &sess
@@ -218,7 +202,12 @@ func markPasswordChanged(w http.ResponseWriter, r *http.Request) {
 	_ = os.WriteFile(sessionFile, data, 0600)
 }
 
-func createSession(w http.ResponseWriter, firstLogin bool) string {
+func createSession(w http.ResponseWriter, firstLogin bool, secure ...bool) string {
+	var user models.UserConfig
+	if LoadJSON(config.ConfigUsr, &user) != nil {
+		return ""
+	}
+	secureCookie := os.Getenv("LIGHTPANEL_SECURE_COOKIES") == "1" || (len(secure) > 0 && secure[0])
 	token := generateSessionToken()
 	if token == "" {
 		return ""
@@ -231,11 +220,14 @@ func createSession(w http.ResponseWriter, firstLogin bool) string {
 		return ""
 	}
 	sessData, _ := json.Marshal(sessionData{
+		Credential: credentialDigest(user),
 		Expires:    time.Now().Add(24 * time.Hour).Unix(),
 		CSRFToken:  csrfToken,
 		FirstLogin: firstLogin,
 	})
-	_ = os.WriteFile(filepath.Join(sessionDir, token+".json"), sessData, 0600)
+	if err := os.WriteFile(filepath.Join(sessionDir, token+".json"), sessData, 0600); err != nil {
+		return ""
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     "lp_session",
 		Value:    token,
@@ -243,6 +235,7 @@ func createSession(w http.ResponseWriter, firstLogin bool) string {
 		Expires:  time.Now().Add(24 * time.Hour),
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
+		Secure:   secureCookie,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "lp_csrf",
@@ -251,6 +244,7 @@ func createSession(w http.ResponseWriter, firstLogin bool) string {
 		Expires:  time.Now().Add(24 * time.Hour),
 		HttpOnly: false,
 		SameSite: http.SameSiteStrictMode,
+		Secure:   secureCookie,
 	})
 	return token
 }
@@ -279,6 +273,10 @@ func auth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, _ := r.Cookie("lp_session")
 		if cookie != nil && isValidSession(cookie.Value) {
+			if isFirstLogin(r) && r.URL.Path != "/setting" {
+				http.Redirect(w, r, "/setting?first=1", 303)
+				return
+			}
 			next(w, r)
 			return
 		}
@@ -293,19 +291,39 @@ func authWithCSRF(next http.HandlerFunc) http.HandlerFunc {
 			http.Redirect(w, r, "/login", 302)
 			return
 		}
-		
-		_ = r.ParseForm()
-		
-		csrfToken := r.FormValue("csrf_token")
-		if csrfToken == "" {
-			csrfCookie, _ := r.Cookie("lp_csrf")
-			if csrfCookie != nil {
-				csrfToken = csrfCookie.Value
-			}
+
+		if isFirstLogin(r) && r.URL.Path != "/setting/save-account" {
+			http.Error(w, "请先修改初始密码", 403)
+			return
 		}
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", "POST")
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, int64(config.MaxDownBytes)+1024*1024)
+		defer func() {
+			if r.MultipartForm != nil {
+				_ = r.MultipartForm.RemoveAll()
+			}
+		}()
+		csrfToken := r.Header.Get("X-CSRF-Token")
+		if csrfToken == "" {
+			csrfToken = r.FormValue("csrf_token")
+		}
+
 		sessData := getSessionData(cookie.Value)
 		if sessData == nil || csrfToken == "" || csrfToken != sessData.CSRFToken {
 			http.Error(w, "CSRF validation failed", http.StatusForbidden)
+			return
+		}
+		if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+			if err := r.ParseMultipartForm(16 << 20); err != nil {
+				http.Error(w, "表单格式或大小无效", 400)
+				return
+			}
+		} else if err := r.ParseForm(); err != nil {
+			http.Error(w, "表单格式无效", 400)
 			return
 		}
 		next(w, r)
@@ -322,11 +340,11 @@ func loginPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func getClientIP(r *http.Request) string {
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+	if xff := r.Header.Get("X-Forwarded-For"); os.Getenv("LIGHTPANEL_TRUST_PROXY") == "1" && xff != "" {
 		parts := strings.Split(xff, ",")
 		return strings.TrimSpace(parts[0])
 	}
-	if xri := r.Header.Get("X-Real-IP"); xri != "" {
+	if xri := r.Header.Get("X-Real-IP"); os.Getenv("LIGHTPANEL_TRUST_PROXY") == "1" && xri != "" {
 		return xri
 	}
 	host, _, _ := net.SplitHostPort(r.RemoteAddr)
@@ -337,7 +355,13 @@ func getClientIP(r *http.Request) string {
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	_ = r.ParseForm()
+	r.Body = http.MaxBytesReader(w, r.Body, 8192)
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "登录请求过大或无效", 400)
+		return
+	}
+	accountMu.Lock()
+	defer accountMu.Unlock()
 	user := r.Form.Get("username")
 	pass := r.Form.Get("password")
 
@@ -354,10 +378,26 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user == usr.Username && subtle.ConstantTimeCompare([]byte(hash(pass)), []byte(usr.Password)) == 1 {
+	if user == usr.Username && passwordMatches(usr.Password, pass) {
 		recordLoginSuccess(ip)
-		isDefaultPassword := subtle.ConstantTimeCompare([]byte(usr.Password), []byte(hash("admin"))) == 1
-		createSession(w, isDefaultPassword)
+		isDefaultPassword := accountNeedsChange(usr)
+		if len(usr.Password) == 64 {
+			upgraded, err := passwordHash(pass)
+			if err != nil {
+				http.Error(w, "凭据升级失败", 500)
+				return
+			}
+			usr.Password = upgraded
+			usr.MustChangePassword = isDefaultPassword
+			if err = WriteJSON(config.ConfigUsr, usr); err != nil {
+				http.Error(w, "凭据保存失败", 500)
+				return
+			}
+		}
+		if createSession(w, isDefaultPassword, r.TLS != nil) == "" {
+			http.Error(w, "无法创建会话", 500)
+			return
+		}
 		http.Redirect(w, r, "/", 302)
 		return
 	}
@@ -373,7 +413,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, _ := r.Cookie("lp_session")
-	destroySession(cookie.Value)
+	if cookie != nil {
+		destroySession(cookie.Value)
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     "lp_session",
 		Value:    "",
@@ -397,6 +439,7 @@ func requirePOST(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func InitConfig() error {
+	sessionDir = filepath.Join(config.ConfigDir, "sessions")
 	if err := EnsureDir(config.ConfigDir); err != nil {
 		return err
 	}
@@ -415,9 +458,28 @@ func InitConfig() error {
 		}
 	}
 	if _, e := os.Stat(config.ConfigUsr); e != nil {
-		if err := WriteJSON(config.ConfigUsr, models.UserConfig{Username: "admin", Password: hash("admin")}); err != nil {
+		password := os.Getenv("LIGHTPANEL_INITIAL_PASSWORD")
+		if password == "" {
+			password = generateSessionToken()
+			if len(password) < 24 {
+				return fmt.Errorf("无法生成初始密码")
+			}
+			password = password[:24]
+		}
+		if len(password) < 12 || len(password) > 1024 {
+			return fmt.Errorf("初始密码长度必须为12至1024字节")
+		}
+		encoded, err := passwordHash(password)
+		if err != nil {
 			return err
 		}
+		if err = os.WriteFile(filepath.Join(config.ConfigDir, "initial-password.txt"), []byte(password+"\n"), 0600); err != nil {
+			return err
+		}
+		if err = WriteJSON(config.ConfigUsr, models.UserConfig{Username: "admin", Password: encoded, MustChangePassword: true}); err != nil {
+			return err
+		}
+		log.Printf("首次登录账号：admin；初始密码保存在 %s，登录后必须修改", filepath.Join(config.ConfigDir, "initial-password.txt"))
 	}
 	if _, e := os.Stat(config.ConfigBg); e != nil {
 		if err := WriteJSON(config.ConfigBg, models.BgConfig{Type: "gradient", URL: ""}); err != nil {

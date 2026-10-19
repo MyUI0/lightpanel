@@ -1,0 +1,55 @@
+{{define "login"}}<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<link rel="stylesheet" href="/static/panel.css">
+<script src="/static/shell.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>登录 - 朱雀面板</title>
+
+<style>
+body{min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--bg)}
+.card{width:min(380px,100%);padding:38px;background:var(--bg2);box-shadow:var(--shadow)}
+.logo{width:42px;height:42px;display:grid;place-items:center;background:var(--accent);color:white;font-size:19px;font-weight:750;border-radius:10px;margin-bottom:24px}
+.logo:after{content:'L'}h1{font-size:25px;margin-bottom:6px}.sub{color:var(--text2);font-size:12px;margin-bottom:28px}
+.field{margin:0 0 18px}.field label{display:block;font-size:12px;margin-bottom:7px}.field input{width:100%;padding:11px 12px;border:1px solid var(--input-b);border-radius:6px;background:var(--input-bg);color:var(--text)}
+.btn{width:100%;background:var(--accent);color:white;margin-top:8px;padding:11px}.err{color:var(--red);font-size:12px;margin-bottom:16px}.footer{text-align:center;color:var(--text2);font-size:11px;margin-top:25px}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div class="card">
+  <div class="logo"><i class="fa-solid fa-fire-flame-curved"></i></div>
+  <h1>朱雀面板</h1>
+  <p class="sub">服务器管理面板</p>
+  {{if eq .Err "1"}}
+  <div class="err"><i class="fa-solid fa-circle-exclamation" style="margin-right:0.3rem;"></i>用户名或密码错误</div>
+  {{end}}
+  {{if eq .Err "locked"}}
+  <div class="err"><i class="fa-solid fa-lock" style="margin-right:0.3rem;"></i>登录失败次数过多，请等待 <span id="lockTimer">{{.LockTime}}</span> 秒后重试</div>
+  {{end}}
+  <form action="/login/auth" method="post" onsubmit="var b=document.getElementById('loginBtn');if(b&&b.disabled){event.preventDefault();return false}">
+    <div class="field"><label>用户名</label><input name="username" placeholder="请输入用户名" required autocomplete="username"></div>
+    <div class="field"><label>密码</label><input name="password" type="password" placeholder="请输入密码" required autocomplete="current-password"></div>
+    <button class="btn" type="submit" id="loginBtn"><i class="fa-solid fa-right-to-bracket" style="margin-right:0.4rem;"></i>登录</button>
+  </form>
+  <div class="ft">朱雀面板 · 轻量高效</div>
+</div>
+{{if eq .Err "locked"}}
+<script>
+(function(){
+var el=document.getElementById('lockTimer');
+var btn=document.getElementById('loginBtn');
+if(!el||!btn)return;
+var s=parseInt(el.textContent)||0;
+btn.disabled=true;
+var t=setInterval(function(){
+s--;
+if(s<=0){clearInterval(t);btn.disabled=false;el.textContent='0';}
+else{el.textContent=s;}
+},1000);
+})();
+</script>
+{{end}}
+</body>
+</html>{{end}}

@@ -1,0 +1,58 @@
+{{define "source"}}<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<link rel="stylesheet" href="/static/panel.css">
+<script src="/static/shell.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>源管理 - 朱雀面板</title>
+<style>
+{{template "layout_css" .}}
+.edit-form{display:none;grid-template-columns:1fr 2fr auto auto;gap:0.8rem;align-items:end;margin-top:0.8rem;padding:0.6rem;background:var(--glass);border-radius:10px}
+.edit-form.active{display:grid}
+</style>
+</head>
+<body>
+<div class="bg-layer"{{if getBgUrl}} style="background-image:url('{{getBgUrl}}')"{{end}}></div>
+{{.Sidebar}}
+<div class="main">
+{{.Topbar}}
+<div class="content">
+{{if eq .Message "test_ok"}}<div class="alert alert-success"><i class="fa-solid fa-check" style="margin-right:0.3rem"></i>源连接成功</div>{{end}}
+{{if eq .Error "test_failed"}}<div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.3rem"></i>源连接失败</div>{{end}}
+{{if eq .Error "test_empty"}}<div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.3rem"></i>源返回数据为空</div>{{end}}
+<div style="margin-bottom:0.8rem"><a href="/store" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> 返回商店</a></div>
+<div class="glass" style="padding:1rem;margin-bottom:0.8rem">
+<h3 style="font-size:0.9rem;font-weight:600;color:var(--text);margin-bottom:0.8rem"><i class="fa-solid fa-plus" style="color:#10b981;margin-right:0.3rem"></i>添加源</h3>
+<form action="/source/add" method="post" style="display:grid;grid-template-columns:1fr 2fr auto;gap:0.5rem;align-items:end">
+<input name="name" placeholder="源名称" required class="input">
+<input name="url" placeholder="JSON 地址" required class="input">
+<button class="btn btn-primary" style="height:38px"><i class="fa-solid fa-plus"></i>添加</button>
+</form>
+</div>
+<div style="display:grid;gap:0.5rem">
+{{range $i,$s := .Sources}}
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<div><span style="font-size:0.85rem;font-weight:600;color:var(--text)">{{$s.Name}}</span><br><span style="font-size:0.68rem;color:var(--text2);word-break:break-all">{{$s.URL}}</span></div>
+<div style="display:flex;gap:0.3rem">
+<form action="/source/test/{{$i}}" method="post"><button class="btn btn-ghost btn-sm">测试</button></form>
+<button class="btn btn-ghost btn-sm" onclick="toggleEditForm({{$i}})"><i class="fa-solid fa-pen"></i> 编辑</button>
+<form action="/source/del/{{$i}}" method="post"><button class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i> 删除</button></form>
+</div>
+</div>
+<form id="edit-{{$i}}" class="edit-form" action="/source/edit/{{$i}}" method="post">
+<input name="name" value="{{$s.Name}}" required class="input">
+<input name="url" value="{{$s.URL}}" required class="input">
+<button class="btn btn-primary btn-sm"><i class="fa-solid fa-check"></i> 保存</button>
+<button type="button" class="btn btn-ghost btn-sm" onclick="toggleEditForm({{$i}})"><i class="fa-solid fa-xmark"></i> 取消</button>
+</form>
+</div>
+{{end}}
+</div>
+</div>
+</div>
+</div>
+{{template "layout_js" .}}
+</body>
+</html>{{end}}

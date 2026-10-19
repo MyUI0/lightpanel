@@ -1,12 +1,23 @@
 package handlers
 
 import (
+	"embed"
 	"fmt"
 	"html/template"
+	"io/fs"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
 )
+
+//go:embed web/templates/*.html web/static/*
+var webFiles embed.FS
+
+func staticHandler() http.Handler {
+	sub, _ := fs.Sub(webFiles, "web/static")
+	return http.StripPrefix("/static/", http.FileServer(http.FS(sub)))
+}
 
 var (
 	htmlRender *template.Template
@@ -16,7 +27,13 @@ var (
 func InitTemplates() {
 	renderOnce.Do(func() {
 		funcMap := template.FuncMap{
-			"tolower":    strings.ToLower,
+			"tolower": strings.ToLower,
+			"initial": func(s string) string {
+				for _, r := range s {
+					return strings.ToUpper(string(r))
+				}
+				return "L"
+			},
 			"escape":     template.HTMLEscapeString,
 			"formatSize": formatSize,
 			"formatTime": func(t time.Time) string { return t.Format("2006-01-02 15:04") },
@@ -24,21 +41,7 @@ func InitTemplates() {
 			"getLogoUrl": getLogoURL,
 		}
 
-		tmpl := template.New("").Funcs(funcMap)
-		tmpl = template.Must(tmpl.Parse(
-			`{{define "login"}}`+htmlLogin+`{{end}}`+
-				`{{define "index"}}`+htmlIndex+`{{end}}`+
-				`{{define "store"}}`+htmlStore+`{{end}}`+
-				`{{define "store_params"}}`+htmlStoreParams+`{{end}}`+
-				`{{define "source"}}`+htmlSource+`{{end}}`+
-				`{{define "system"}}`+htmlSystem+`{{end}}`+
-				`{{define "log_list"}}`+htmlLogList+`{{end}}`+
-				`{{define "log"}}`+htmlLog+`{{end}}`+
-				`{{define "setting"}}`+htmlSetting+`{{end}}`+
-				`{{define "edit"}}`+htmlEdit+`{{end}}`+
-				`{{define "downloads"}}`+htmlDownloads+`{{end}}`+
-				`{{define "analyze"}}`+htmlScriptAnalyze+`{{end}}`,
-		))
+		tmpl := template.Must(template.New("").Funcs(funcMap).ParseFS(webFiles, "web/templates/*.html"))
 
 		htmlRender = tmpl
 	})
@@ -49,10 +52,11 @@ func formatSize(b int64) string {
 		return "0 B"
 	}
 	units := []string{"B", "KB", "MB", "GB", "TB"}
+	value := float64(b)
 	i := 0
-	for b >= 1024 && i < len(units)-1 {
-		b /= 1024
+	for value >= 1024 && i < len(units)-1 {
+		value /= 1024
 		i++
 	}
-	return fmt.Sprintf("%.1f %s", float64(b), units[i])
+	return fmt.Sprintf("%.1f %s", value, units[i])
 }

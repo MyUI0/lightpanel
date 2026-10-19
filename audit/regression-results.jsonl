@@ -1,0 +1,235 @@
+{"Time":"2026-10-15T15:38:00.6207417+08:00","Action":"start","Package":"lightpanel"}
+{"Time":"2026-10-15T15:38:00.625238+08:00","Action":"start","Package":"lightpanel/config"}
+{"Time":"2026-10-15T15:38:00.625238+08:00","Action":"output","Package":"lightpanel","Output":"?   \tlightpanel\t[no test files]\n"}
+{"Time":"2026-10-15T15:38:00.625238+08:00","Action":"output","Package":"lightpanel/config","Output":"?   \tlightpanel/config\t[no test files]\n"}
+{"Time":"2026-10-15T15:38:00.6262503+08:00","Action":"skip","Package":"lightpanel","Elapsed":0.006}
+{"Time":"2026-10-15T15:38:00.6262503+08:00","Action":"skip","Package":"lightpanel/config","Elapsed":0.001}
+{"Time":"2026-10-15T15:38:01.600706+08:00","Action":"start","Package":"lightpanel/handlers"}
+{"Time":"2026-10-15T15:38:01.600706+08:00","Action":"start","Package":"lightpanel/models"}
+{"Time":"2026-10-15T15:38:01.600706+08:00","Action":"output","Package":"lightpanel/models","Output":"?   \tlightpanel/models\t[no test files]\n"}
+{"Time":"2026-10-15T15:38:01.600706+08:00","Action":"skip","Package":"lightpanel/models","Elapsed":0}
+{"Time":"2026-10-15T15:38:03.7232574+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestInstallCollisionPreservesExistingFiles"}
+{"Time":"2026-10-15T15:38:03.7247907+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallCollisionPreservesExistingFiles","Output":"=== RUN   TestInstallCollisionPreservesExistingFiles\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.7293967+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallCollisionPreservesExistingFiles","Output":"--- PASS: TestInstallCollisionPreservesExistingFiles (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.7293967+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestInstallCollisionPreservesExistingFiles","Elapsed":0.01}
+{"Time":"2026-10-15T15:38:03.7293967+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestInstallRejectsNullConfigAndReleasesLock"}
+{"Time":"2026-10-15T15:38:03.7293967+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallRejectsNullConfigAndReleasesLock","Output":"=== RUN   TestInstallRejectsNullConfigAndReleasesLock\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.732475+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallRejectsNullConfigAndReleasesLock","Output":"--- PASS: TestInstallRejectsNullConfigAndReleasesLock (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.732475+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestInstallRejectsNullConfigAndReleasesLock","Elapsed":0}
+{"Time":"2026-10-15T15:38:03.732475+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestInstallRejectsUnsafeNamesAndPrivateURL"}
+{"Time":"2026-10-15T15:38:03.732475+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallRejectsUnsafeNamesAndPrivateURL","Output":"=== RUN   TestInstallRejectsUnsafeNamesAndPrivateURL\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.7355408+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallRejectsUnsafeNamesAndPrivateURL","Output":"--- PASS: TestInstallRejectsUnsafeNamesAndPrivateURL (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.7355408+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestInstallRejectsUnsafeNamesAndPrivateURL","Elapsed":0}
+{"Time":"2026-10-15T15:38:03.7355408+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestInstallCancelAndPauseWaitForWorker"}
+{"Time":"2026-10-15T15:38:03.7355408+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallCancelAndPauseWaitForWorker","Output":"=== RUN   TestInstallCancelAndPauseWaitForWorker\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.7355408+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestInstallCancelAndPauseWaitForWorker/delete"}
+{"Time":"2026-10-15T15:38:03.7355408+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallCancelAndPauseWaitForWorker/delete","Output":"=== RUN   TestInstallCancelAndPauseWaitForWorker/delete\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.7391883+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallCancelAndPauseWaitForWorker/delete","Output":"--- PASS: TestInstallCancelAndPauseWaitForWorker/delete (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.7391883+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestInstallCancelAndPauseWaitForWorker/delete","Elapsed":0}
+{"Time":"2026-10-15T15:38:03.7391883+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestInstallCancelAndPauseWaitForWorker/pause"}
+{"Time":"2026-10-15T15:38:03.7391883+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallCancelAndPauseWaitForWorker/pause","Output":"=== RUN   TestInstallCancelAndPauseWaitForWorker/pause\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.784381+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallCancelAndPauseWaitForWorker/pause","Output":"--- PASS: TestInstallCancelAndPauseWaitForWorker/pause (0.04s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.784381+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestInstallCancelAndPauseWaitForWorker/pause","Elapsed":0.04}
+{"Time":"2026-10-15T15:38:03.784381+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallCancelAndPauseWaitForWorker","Output":"--- PASS: TestInstallCancelAndPauseWaitForWorker (0.05s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.784381+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestInstallCancelAndPauseWaitForWorker","Elapsed":0.05}
+{"Time":"2026-10-15T15:38:03.784381+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit"}
+{"Time":"2026-10-15T15:38:03.784381+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit","Output":"=== RUN   TestInstallErrorsNeverCommit\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.784381+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit/http"}
+{"Time":"2026-10-15T15:38:03.784381+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit/http","Output":"=== RUN   TestInstallErrorsNeverCommit/http\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.7884695+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit/http","Output":"--- PASS: TestInstallErrorsNeverCommit/http (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.7884695+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit/http","Elapsed":0}
+{"Time":"2026-10-15T15:38:03.7884695+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit/limit"}
+{"Time":"2026-10-15T15:38:03.7884695+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit/limit","Output":"=== RUN   TestInstallErrorsNeverCommit/limit\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.7930687+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit/limit","Output":"--- PASS: TestInstallErrorsNeverCommit/limit (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.7930687+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit/limit","Elapsed":0}
+{"Time":"2026-10-15T15:38:03.7930687+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit/archive"}
+{"Time":"2026-10-15T15:38:03.7930687+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit/archive","Output":"=== RUN   TestInstallErrorsNeverCommit/archive\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.7978518+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit/archive","Output":"--- PASS: TestInstallErrorsNeverCommit/archive (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.7978518+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit/archive","Elapsed":0}
+{"Time":"2026-10-15T15:38:03.7978518+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit/short"}
+{"Time":"2026-10-15T15:38:03.7978518+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit/short","Output":"=== RUN   TestInstallErrorsNeverCommit/short\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.802645+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit/short","Output":"--- PASS: TestInstallErrorsNeverCommit/short (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.802645+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit/short","Elapsed":0}
+{"Time":"2026-10-15T15:38:03.802645+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit","Output":"--- PASS: TestInstallErrorsNeverCommit (0.02s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.802645+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestInstallErrorsNeverCommit","Elapsed":0.02}
+{"Time":"2026-10-15T15:38:03.802645+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestInstallMetadataAndAtomicCommit"}
+{"Time":"2026-10-15T15:38:03.802645+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallMetadataAndAtomicCommit","Output":"=== RUN   TestInstallMetadataAndAtomicCommit\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.8155529+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallMetadataAndAtomicCommit","Output":"--- PASS: TestInstallMetadataAndAtomicCommit (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.8155529+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestInstallMetadataAndAtomicCommit","Elapsed":0.01}
+{"Time":"2026-10-15T15:38:03.8155529+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestPublicClientChecksRedirectAndAddresses"}
+{"Time":"2026-10-15T15:38:03.8160605+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestPublicClientChecksRedirectAndAddresses","Output":"=== RUN   TestPublicClientChecksRedirectAndAddresses\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.8160605+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestPublicClientChecksRedirectAndAddresses","Output":"--- PASS: TestPublicClientChecksRedirectAndAddresses (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.8160605+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestPublicClientChecksRedirectAndAddresses","Elapsed":0}
+{"Time":"2026-10-15T15:38:03.8160605+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestStoreCacheAndManifestBinding"}
+{"Time":"2026-10-15T15:38:03.8160605+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestStoreCacheAndManifestBinding","Output":"=== RUN   TestStoreCacheAndManifestBinding\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.8160605+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestStoreCacheAndManifestBinding","Output":"--- PASS: TestStoreCacheAndManifestBinding (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.8160605+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestStoreCacheAndManifestBinding","Elapsed":0}
+{"Time":"2026-10-15T15:38:03.8160605+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestRestoreExcludesNormalizedSessionPaths"}
+{"Time":"2026-10-15T15:38:03.8160605+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestRestoreExcludesNormalizedSessionPaths","Output":"=== RUN   TestRestoreExcludesNormalizedSessionPaths\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.8181013+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestRestoreExcludesNormalizedSessionPaths","Output":"--- PASS: TestRestoreExcludesNormalizedSessionPaths (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:03.8181013+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestRestoreExcludesNormalizedSessionPaths","Elapsed":0}
+{"Time":"2026-10-15T15:38:03.8186116+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestPasswordChangeInvalidatesEverySession"}
+{"Time":"2026-10-15T15:38:03.8186116+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestPasswordChangeInvalidatesEverySession","Output":"=== RUN   TestPasswordChangeInvalidatesEverySession\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.2215792+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestPasswordChangeInvalidatesEverySession","Output":"--- PASS: TestPasswordChangeInvalidatesEverySession (0.40s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.2215792+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestPasswordChangeInvalidatesEverySession","Elapsed":0.4}
+{"Time":"2026-10-15T15:38:04.2215792+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestLogoutAnonymousAndSessionWriteFailure"}
+{"Time":"2026-10-15T15:38:04.2215792+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestLogoutAnonymousAndSessionWriteFailure","Output":"=== RUN   TestLogoutAnonymousAndSessionWriteFailure\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.2251579+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestLogoutAnonymousAndSessionWriteFailure","Output":"--- PASS: TestLogoutAnonymousAndSessionWriteFailure (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.2251579+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestLogoutAnonymousAndSessionWriteFailure","Elapsed":0}
+{"Time":"2026-10-15T15:38:04.2251579+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestCustomPageBoundaryAndSandbox"}
+{"Time":"2026-10-15T15:38:04.2251579+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestCustomPageBoundaryAndSandbox","Output":"=== RUN   TestCustomPageBoundaryAndSandbox\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.2326607+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestCustomPageBoundaryAndSandbox","Output":"--- PASS: TestCustomPageBoundaryAndSandbox (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.2326607+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestCustomPageBoundaryAndSandbox","Elapsed":0.01}
+{"Time":"2026-10-15T15:38:04.2326607+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestAnalyzerNoHTMLSinkAndNoTemporaryScript"}
+{"Time":"2026-10-15T15:38:04.2326607+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAnalyzerNoHTMLSinkAndNoTemporaryScript","Output":"=== RUN   TestAnalyzerNoHTMLSinkAndNoTemporaryScript\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.236759+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAnalyzerNoHTMLSinkAndNoTemporaryScript","Output":"--- PASS: TestAnalyzerNoHTMLSinkAndNoTemporaryScript (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.236759+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestAnalyzerNoHTMLSinkAndNoTemporaryScript","Elapsed":0}
+{"Time":"2026-10-15T15:38:04.236759+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestInstallCommitConfigFailureLeavesNoApp"}
+{"Time":"2026-10-15T15:38:04.236759+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallCommitConfigFailureLeavesNoApp","Output":"=== RUN   TestInstallCommitConfigFailureLeavesNoApp\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.2418865+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInstallCommitConfigFailureLeavesNoApp","Output":"--- PASS: TestInstallCommitConfigFailureLeavesNoApp (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.2418865+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestInstallCommitConfigFailureLeavesNoApp","Elapsed":0.01}
+{"Time":"2026-10-15T15:38:04.2418865+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestSecureSessionAndFirstLoginGate"}
+{"Time":"2026-10-15T15:38:04.2418865+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestSecureSessionAndFirstLoginGate","Output":"=== RUN   TestSecureSessionAndFirstLoginGate\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.2455257+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestSecureSessionAndFirstLoginGate","Output":"--- PASS: TestSecureSessionAndFirstLoginGate (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.2455257+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestSecureSessionAndFirstLoginGate","Elapsed":0}
+{"Time":"2026-10-15T15:38:04.2455257+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestProcessIdentityRejectsMismatchedStart"}
+{"Time":"2026-10-15T15:38:04.2455257+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestProcessIdentityRejectsMismatchedStart","Output":"=== RUN   TestProcessIdentityRejectsMismatchedStart\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.2496152+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestProcessIdentityRejectsMismatchedStart","Output":"--- PASS: TestProcessIdentityRejectsMismatchedStart (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.2496152+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestProcessIdentityRejectsMismatchedStart","Elapsed":0}
+{"Time":"2026-10-15T15:38:04.2496152+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestInitialAccountUsesUniqueCredential"}
+{"Time":"2026-10-15T15:38:04.2496152+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInitialAccountUsesUniqueCredential","Output":"=== RUN   TestInitialAccountUsesUniqueCredential\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.356049+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInitialAccountUsesUniqueCredential","Output":"2026/10/15 15:38:04 首次登录账号：admin；初始密码保存在 D:\\CODE\\个人玩意\\lightpanel-refactor\\tools\\audit-temp\\TestInitialAccountUsesUniqueCredential959976268\\001\\config\\initial-password.txt，登录后必须修改\n"}
+{"Time":"2026-10-15T15:38:04.5702224+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestInitialAccountUsesUniqueCredential","Output":"--- PASS: TestInitialAccountUsesUniqueCredential (0.32s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.5702224+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestInitialAccountUsesUniqueCredential","Elapsed":0.32}
+{"Time":"2026-10-15T15:38:04.5702224+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestManagedProcessHelper"}
+{"Time":"2026-10-15T15:38:04.5702224+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestManagedProcessHelper","Output":"=== RUN   TestManagedProcessHelper\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.5702224+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestManagedProcessHelper","Output":"--- PASS: TestManagedProcessHelper (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:04.5702224+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestManagedProcessHelper","Elapsed":0}
+{"Time":"2026-10-15T15:38:04.5702224+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestManualStopDoesNotRestartAutoStartApp"}
+{"Time":"2026-10-15T15:38:04.5702224+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestManualStopDoesNotRestartAutoStartApp","Output":"=== RUN   TestManualStopDoesNotRestartAutoStartApp\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:08.1790117+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestManualStopDoesNotRestartAutoStartApp","Output":"--- PASS: TestManualStopDoesNotRestartAutoStartApp (3.61s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:08.1790117+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestManualStopDoesNotRestartAutoStartApp","Elapsed":3.61}
+{"Time":"2026-10-15T15:38:08.1790117+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestCrashingAppStopsAfterThreeRetries"}
+{"Time":"2026-10-15T15:38:08.1790117+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestCrashingAppStopsAfterThreeRetries","Output":"=== RUN   TestCrashingAppStopsAfterThreeRetries\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.4632707+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestCrashingAppStopsAfterThreeRetries","Output":"--- PASS: TestCrashingAppStopsAfterThreeRetries (12.28s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.4632707+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestCrashingAppStopsAfterThreeRetries","Elapsed":12.28}
+{"Time":"2026-10-15T15:38:20.4632707+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestCSRFHeaderPreservesMultipartFields"}
+{"Time":"2026-10-15T15:38:20.4632707+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestCSRFHeaderPreservesMultipartFields","Output":"=== RUN   TestCSRFHeaderPreservesMultipartFields\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.4668362+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestCSRFHeaderPreservesMultipartFields","Output":"--- PASS: TestCSRFHeaderPreservesMultipartFields (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.4668362+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestCSRFHeaderPreservesMultipartFields","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.4668362+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestFormatSizePreservesFraction"}
+{"Time":"2026-10-15T15:38:20.4669088+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestFormatSizePreservesFraction","Output":"=== RUN   TestFormatSizePreservesFraction\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.4669088+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestFormatSizePreservesFraction","Output":"--- PASS: TestFormatSizePreservesFraction (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.4669088+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestFormatSizePreservesFraction","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.4669088+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestConcurrentJSONWritesRemainValid"}
+{"Time":"2026-10-15T15:38:20.4669088+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestConcurrentJSONWritesRemainValid","Output":"=== RUN   TestConcurrentJSONWritesRemainValid\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.497245+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestConcurrentJSONWritesRemainValid","Output":"--- PASS: TestConcurrentJSONWritesRemainValid (0.03s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.497245+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestConcurrentJSONWritesRemainValid","Elapsed":0.03}
+{"Time":"2026-10-15T15:38:20.497245+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestArchiveRejectsEscapes"}
+{"Time":"2026-10-15T15:38:20.497245+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestArchiveRejectsEscapes","Output":"=== RUN   TestArchiveRejectsEscapes\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.4988187+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestArchiveRejectsEscapes","Output":"--- PASS: TestArchiveRejectsEscapes (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.4988187+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestArchiveRejectsEscapes","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.4988187+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestZipRejectsPrefixSibling"}
+{"Time":"2026-10-15T15:38:20.4988187+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestZipRejectsPrefixSibling","Output":"=== RUN   TestZipRejectsPrefixSibling\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5003615+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestZipRejectsPrefixSibling","Output":"--- PASS: TestZipRejectsPrefixSibling (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5003615+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestZipRejectsPrefixSibling","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5003615+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestArchiveRejectsExistingSymlinks"}
+{"Time":"2026-10-15T15:38:20.5003615+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestArchiveRejectsExistingSymlinks","Output":"=== RUN   TestArchiveRejectsExistingSymlinks\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.501386+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestArchiveRejectsExistingSymlinks","Output":"    refactor_test.go:88: symlinks unavailable: symlink D:\\CODE\\个人玩意\\lightpanel-refactor\\tools\\audit-temp\\TestArchiveRejectsExistingSymlinks3689745648\\002 D:\\CODE\\个人玩意\\lightpanel-refactor\\tools\\audit-temp\\TestArchiveRejectsExistingSymlinks3689745648\\001\\link: A required privilege is not held by the client.\n"}
+{"Time":"2026-10-15T15:38:20.5024069+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestArchiveRejectsExistingSymlinks","Output":"--- SKIP: TestArchiveRejectsExistingSymlinks (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5024069+08:00","Action":"skip","Package":"lightpanel/handlers","Test":"TestArchiveRejectsExistingSymlinks","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5024069+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestBackupRoundTripAndLegacyPrefix"}
+{"Time":"2026-10-15T15:38:20.5024069+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestBackupRoundTripAndLegacyPrefix","Output":"=== RUN   TestBackupRoundTripAndLegacyPrefix\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5106013+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestBackupRoundTripAndLegacyPrefix","Output":"--- PASS: TestBackupRoundTripAndLegacyPrefix (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5106013+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestBackupRoundTripAndLegacyPrefix","Elapsed":0.01}
+{"Time":"2026-10-15T15:38:20.5106013+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestRestoreRejectsInvalidConfig"}
+{"Time":"2026-10-15T15:38:20.5106013+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestRestoreRejectsInvalidConfig","Output":"=== RUN   TestRestoreRejectsInvalidConfig\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5126495+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestRestoreRejectsInvalidConfig","Output":"--- PASS: TestRestoreRejectsInvalidConfig (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5126495+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestRestoreRejectsInvalidConfig","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5126495+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender"}
+{"Time":"2026-10-15T15:38:20.5126495+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender","Output":"=== RUN   TestAllTemplatesRender\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5137161+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/index"}
+{"Time":"2026-10-15T15:38:20.5137161+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/index","Output":"=== RUN   TestAllTemplatesRender/index\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5142268+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/index","Output":"--- PASS: TestAllTemplatesRender/index (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5142268+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/index","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5142268+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/login"}
+{"Time":"2026-10-15T15:38:20.5142268+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/login","Output":"=== RUN   TestAllTemplatesRender/login\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5142268+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/login","Output":"--- PASS: TestAllTemplatesRender/login (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5142268+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/login","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5142268+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/store"}
+{"Time":"2026-10-15T15:38:20.5142268+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/store","Output":"=== RUN   TestAllTemplatesRender/store\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5142268+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/store","Output":"--- PASS: TestAllTemplatesRender/store (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5142268+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/store","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5142268+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/store_params"}
+{"Time":"2026-10-15T15:38:20.5142268+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/store_params","Output":"=== RUN   TestAllTemplatesRender/store_params\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5142268+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/store_params","Output":"--- PASS: TestAllTemplatesRender/store_params (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5142268+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/store_params","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5147438+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/source"}
+{"Time":"2026-10-15T15:38:20.5147438+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/source","Output":"=== RUN   TestAllTemplatesRender/source\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5147438+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/source","Output":"--- PASS: TestAllTemplatesRender/source (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5147438+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/source","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5147438+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/system"}
+{"Time":"2026-10-15T15:38:20.5147438+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/system","Output":"=== RUN   TestAllTemplatesRender/system\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5147438+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/system","Output":"--- PASS: TestAllTemplatesRender/system (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5147438+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/system","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5147438+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/log_list"}
+{"Time":"2026-10-15T15:38:20.5147438+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/log_list","Output":"=== RUN   TestAllTemplatesRender/log_list\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5147438+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/log_list","Output":"--- PASS: TestAllTemplatesRender/log_list (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5147438+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/log_list","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5147438+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/log"}
+{"Time":"2026-10-15T15:38:20.5147438+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/log","Output":"=== RUN   TestAllTemplatesRender/log\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5152536+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/log","Output":"--- PASS: TestAllTemplatesRender/log (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5152536+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/log","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5152536+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/setting"}
+{"Time":"2026-10-15T15:38:20.5152536+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/setting","Output":"=== RUN   TestAllTemplatesRender/setting\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5152536+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/setting","Output":"--- PASS: TestAllTemplatesRender/setting (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5152536+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/setting","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5152536+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/edit"}
+{"Time":"2026-10-15T15:38:20.5152536+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/edit","Output":"=== RUN   TestAllTemplatesRender/edit\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5152536+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/edit","Output":"--- PASS: TestAllTemplatesRender/edit (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5152536+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/edit","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5152536+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/downloads"}
+{"Time":"2026-10-15T15:38:20.5152536+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/downloads","Output":"=== RUN   TestAllTemplatesRender/downloads\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5157687+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/downloads","Output":"--- PASS: TestAllTemplatesRender/downloads (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5157687+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/downloads","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5157687+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/analyze"}
+{"Time":"2026-10-15T15:38:20.5157687+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/analyze","Output":"=== RUN   TestAllTemplatesRender/analyze\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5157687+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/analyze","Output":"--- PASS: TestAllTemplatesRender/analyze (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5157687+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender/analyze","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5157687+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender","Output":"--- PASS: TestAllTemplatesRender (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5157687+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestAllTemplatesRender","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5157687+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestCSRFRequiresExplicitTokenAndPost"}
+{"Time":"2026-10-15T15:38:20.5157687+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestCSRFRequiresExplicitTokenAndPost","Output":"=== RUN   TestCSRFRequiresExplicitTokenAndPost\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5198662+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestCSRFRequiresExplicitTokenAndPost","Output":"--- PASS: TestCSRFRequiresExplicitTokenAndPost (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5198662+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestCSRFRequiresExplicitTokenAndPost","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5198662+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestForwardedIPRequiresTrustedProxy"}
+{"Time":"2026-10-15T15:38:20.5198662+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestForwardedIPRequiresTrustedProxy","Output":"=== RUN   TestForwardedIPRequiresTrustedProxy\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5198662+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestForwardedIPRequiresTrustedProxy","Output":"--- PASS: TestForwardedIPRequiresTrustedProxy (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5198662+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestForwardedIPRequiresTrustedProxy","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5198662+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestMissingAppActionReportsFailure"}
+{"Time":"2026-10-15T15:38:20.5198662+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestMissingAppActionReportsFailure","Output":"=== RUN   TestMissingAppActionReportsFailure\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5224223+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestMissingAppActionReportsFailure","Output":"--- PASS: TestMissingAppActionReportsFailure (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5224223+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestMissingAppActionReportsFailure","Elapsed":0}
+{"Time":"2026-10-15T15:38:20.5224223+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestStaticAssetsEmbedded"}
+{"Time":"2026-10-15T15:38:20.5224223+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestStaticAssetsEmbedded","Output":"=== RUN   TestStaticAssetsEmbedded\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.572321+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestStaticAssetsEmbedded","Output":"--- PASS: TestStaticAssetsEmbedded (0.05s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.572321+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestStaticAssetsEmbedded","Elapsed":0.05}
+{"Time":"2026-10-15T15:38:20.572321+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestReviewRenameRebasesInternalWorkDir"}
+{"Time":"2026-10-15T15:38:20.572321+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestReviewRenameRebasesInternalWorkDir","Output":"=== RUN   TestReviewRenameRebasesInternalWorkDir\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5803685+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestReviewRenameRebasesInternalWorkDir","Output":"--- PASS: TestReviewRenameRebasesInternalWorkDir (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.5803685+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestReviewRenameRebasesInternalWorkDir","Elapsed":0.01}
+{"Time":"2026-10-15T15:38:20.5803685+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestReviewLegacyDefaultLoginIsForcedToChange"}
+{"Time":"2026-10-15T15:38:20.5803685+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestReviewLegacyDefaultLoginIsForcedToChange","Output":"=== RUN   TestReviewLegacyDefaultLoginIsForcedToChange\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.6937536+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestReviewLegacyDefaultLoginIsForcedToChange","Output":"--- PASS: TestReviewLegacyDefaultLoginIsForcedToChange (0.11s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.6937536+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestReviewLegacyDefaultLoginIsForcedToChange","Elapsed":0.11}
+{"Time":"2026-10-15T15:38:20.6937536+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestReviewChangedManifestCannotStartInstall"}
+{"Time":"2026-10-15T15:38:20.6937536+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestReviewChangedManifestCannotStartInstall","Output":"=== RUN   TestReviewChangedManifestCannotStartInstall\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.6984624+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestReviewChangedManifestCannotStartInstall","Output":"--- PASS: TestReviewChangedManifestCannotStartInstall (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.6984624+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestReviewChangedManifestCannotStartInstall","Elapsed":0.01}
+{"Time":"2026-10-15T15:38:20.6984624+08:00","Action":"run","Package":"lightpanel/handlers","Test":"TestReviewRenameRejectsReservedFinalTarget"}
+{"Time":"2026-10-15T15:38:20.6984624+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestReviewRenameRejectsReservedFinalTarget","Output":"=== RUN   TestReviewRenameRejectsReservedFinalTarget\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.7037019+08:00","Action":"output","Package":"lightpanel/handlers","Test":"TestReviewRenameRejectsReservedFinalTarget","Output":"--- PASS: TestReviewRenameRejectsReservedFinalTarget (0.01s)\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.7037019+08:00","Action":"pass","Package":"lightpanel/handlers","Test":"TestReviewRenameRejectsReservedFinalTarget","Elapsed":0.01}
+{"Time":"2026-10-15T15:38:20.7037019+08:00","Action":"output","Package":"lightpanel/handlers","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-15T15:38:20.8648488+08:00","Action":"output","Package":"lightpanel/handlers","Output":"ok  \tlightpanel/handlers\t19.264s\n"}
+{"Time":"2026-10-15T15:38:20.8648488+08:00","Action":"pass","Package":"lightpanel/handlers","Elapsed":19.264}

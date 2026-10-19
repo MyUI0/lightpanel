@@ -1,14 +1,13 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
-	"syscall"
-	"time"
 
 	"lightpanel/config"
 	"lightpanel/models"
@@ -17,80 +16,72 @@ import (
 var appOpMu sync.Mutex
 
 func killAppByName(name string) {
+	generations[name]++
+	delete(crashCounts, name)
 	var apps map[string]models.Project
 	_ = LoadJSON(config.ConfigApps, &apps)
 	app, ok := apps[name]
 	if !ok {
 		return
 	}
-	pidFile := filepath.Join(app.Path, "pid.pid")
-	if b, e := os.ReadFile(pidFile); e == nil {
-		if pid, err := strconv.Atoi(strings.TrimSpace(string(b))); err == nil && pid > 0 {
-			killByPid(pid)
-			for i := 0; i < 20; i++ {
-				if p, e := os.FindProcess(pid); e != nil || p.Signal(syscall.Signal(0)) != nil {
-					break
-				}
-				time.Sleep(100 * time.Millisecond)
-			}
+	checkAppStatus(&app)
+	if app.PID > 0 {
+		killAppProcess(app.PID)
+	}
+	_ = os.Remove(filepath.Join(app.Path, "pid.pid"))
+}
+
+func controlReply(w http.ResponseWriter, r *http.Request, err error) {
+	if strings.Contains(r.Header.Get("Accept"), "application/json") {
+		w.Header().Set("Content-Type", "application/json")
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(map[string]any{"ok": false, "error": err.Error()})
+			return
 		}
-		_ = os.Remove(pidFile)
+		_ = json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+		return
 	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func startApp(w http.ResponseWriter, r *http.Request) {
-	name := strings.TrimPrefix(r.URL.Path, "/start/")
+func startApp(w http.ResponseWriter, r *http.Request)   { controlApp(w, r, "start") }
+func stopApp(w http.ResponseWriter, r *http.Request)    { controlApp(w, r, "stop") }
+func restartApp(w http.ResponseWriter, r *http.Request) { controlApp(w, r, "restart") }
+func controlApp(w http.ResponseWriter, r *http.Request, action string) {
+	name := strings.TrimPrefix(r.URL.Path, "/"+action+"/")
 	appOpMu.Lock()
 	defer appOpMu.Unlock()
 	var apps map[string]models.Project
-	if err := LoadJSON(config.ConfigApps, &apps); err != nil || apps == nil {
-		http.Redirect(w, r, "/", 302)
+	if err := LoadJSON(config.ConfigApps, &apps); err != nil {
+		controlReply(w, r, err)
 		return
 	}
 	app, ok := apps[name]
 	if !ok {
-		http.Redirect(w, r, "/", 302)
+		controlReply(w, r, fmt.Errorf("应用不存在"))
 		return
 	}
-
-	if launchApp(name, &app) {
-		apps[name] = app
-		_ = WriteJSON(config.ConfigApps, apps)
+	if action == "stop" || action == "restart" {
+		killAppByName(name)
 	}
-	http.Redirect(w, r, "/", 302)
-}
-
-func stopApp(w http.ResponseWriter, r *http.Request) {
-	name := strings.TrimPrefix(r.URL.Path, "/stop/")
-	appOpMu.Lock()
-	defer appOpMu.Unlock()
-	killAppByName(name)
-	go RunHook("app_stop", name)
-	http.Redirect(w, r, "/", 302)
-}
-
-func restartApp(w http.ResponseWriter, r *http.Request) {
-	name := strings.TrimPrefix(r.URL.Path, "/restart/")
-	appOpMu.Lock()
-	defer appOpMu.Unlock()
-	var apps map[string]models.Project
-	if err := LoadJSON(config.ConfigApps, &apps); err != nil || apps == nil {
-		http.Redirect(w, r, "/", 302)
-		return
+	if action == "stop" {
+		app.Status, app.PID = "已停止", 0
+		go RunHook("app_stop", name)
+	} else {
+		delete(crashCounts, name)
+		checkAppStatus(&app)
+		if app.PID == 0 && !launchApp(name, &app) {
+			controlReply(w, r, fmt.Errorf("启动失败，请检查应用日志与启动命令"))
+			return
+		}
 	}
-	app, ok := apps[name]
-	if !ok {
-		http.Redirect(w, r, "/", 302)
-		return
-	}
-
-	killAppByName(name)
-
-	if launchApp(name, &app) {
-		apps[name] = app
-		_ = WriteJSON(config.ConfigApps, apps)
-	}
-	http.Redirect(w, r, "/", 302)
+	apps[name] = app
+	controlReply(w, r, WriteJSON(config.ConfigApps, apps))
 }
 
 func deleteApp(w http.ResponseWriter, r *http.Request) {
@@ -98,50 +89,50 @@ func deleteApp(w http.ResponseWriter, r *http.Request) {
 	appOpMu.Lock()
 	defer appOpMu.Unlock()
 	var apps map[string]models.Project
-	if err := LoadJSON(config.ConfigApps, &apps); err != nil || apps == nil {
-		http.Redirect(w, r, "/", 302)
+	if err := LoadJSON(config.ConfigApps, &apps); err != nil {
+		controlReply(w, r, err)
 		return
 	}
 	app, ok := apps[name]
 	if !ok {
-		http.Redirect(w, r, "/", 302)
+		controlReply(w, r, fmt.Errorf("应用不存在"))
 		return
 	}
-
+	base, err := filepath.Abs(config.AppsDir)
+	if err != nil {
+		controlReply(w, r, err)
+		return
+	}
+	target, err := filepath.Abs(app.Path)
+	if err != nil {
+		controlReply(w, r, err)
+		return
+	}
+	rel, err := filepath.Rel(base, target)
+	if err != nil || rel == "." || rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+		controlReply(w, r, fmt.Errorf("应用目录超出允许删除范围"))
+		return
+	}
+	if _, err := archiveTarget(base, rel); err != nil {
+		controlReply(w, r, err)
+		return
+	}
 	killAppByName(name)
-
 	delete(apps, name)
-	_ = WriteJSON(config.ConfigApps, apps)
-
-	cleanPath := filepath.Clean(app.Path)
-	cleanAppsDir := filepath.Clean(config.AppsDir)
-
-	realPath, err := filepath.EvalSymlinks(cleanPath)
-	if err != nil {
-		http.Redirect(w, r, "/", 302)
+	if err := WriteJSON(config.ConfigApps, apps); err != nil {
+		controlReply(w, r, err)
 		return
 	}
-	realAppsDir, err := filepath.EvalSymlinks(cleanAppsDir)
-	if err != nil {
-		http.Redirect(w, r, "/", 302)
+	if err := os.RemoveAll(target); err != nil {
+		apps[name] = app
+		if rollbackErr := WriteJSON(config.ConfigApps, apps); rollbackErr != nil {
+			controlReply(w, r, fmt.Errorf("删除目录失败，恢复配置也失败：%v", rollbackErr))
+			return
+		}
+		controlReply(w, r, fmt.Errorf("删除目录失败：%v", err))
 		return
 	}
-
-	if !strings.HasPrefix(cleanPath+string(os.PathSeparator), cleanAppsDir+string(os.PathSeparator)) {
-		http.Redirect(w, r, "/", 302)
-		return
-	}
-
-	if !strings.HasPrefix(realPath+string(os.PathSeparator), realAppsDir+string(os.PathSeparator)) && realPath != realAppsDir {
-		http.Redirect(w, r, "/", 302)
-		return
-	}
-
-	if realPath != realAppsDir {
-		_ = os.RemoveAll(cleanPath)
-	}
-
-	http.Redirect(w, r, "/", 302)
+	controlReply(w, r, nil)
 }
 
 func toggleAutoStart(w http.ResponseWriter, r *http.Request) {
@@ -150,18 +141,21 @@ func toggleAutoStart(w http.ResponseWriter, r *http.Request) {
 	defer appOpMu.Unlock()
 	var apps map[string]models.Project
 	if err := LoadJSON(config.ConfigApps, &apps); err != nil || apps == nil {
-		http.Redirect(w, r, "/", 302)
+		controlReply(w, r, fmt.Errorf("读取应用配置失败"))
 		return
 	}
 	app, ok := apps[name]
 	if !ok {
-		http.Redirect(w, r, "/", 302)
+		controlReply(w, r, fmt.Errorf("应用不存在"))
 		return
 	}
 
 	app.AutoStart = !app.AutoStart
 	apps[name] = app
-	_ = WriteJSON(config.ConfigApps, apps)
+	if err := WriteJSON(config.ConfigApps, apps); err != nil {
+		controlReply(w, r, err)
+		return
+	}
 
-	http.Redirect(w, r, "/", 302)
+	controlReply(w, r, nil)
 }

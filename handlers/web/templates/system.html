@@ -1,0 +1,53 @@
+{{define "system"}}<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<link rel="stylesheet" href="/static/panel.css">
+<script src="/static/shell.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>系统监控 - 朱雀面板</title>
+<style>
+{{template "layout_css" .}}
+</style>
+</head>
+<body>
+<div class="bg-layer"{{if getBgUrl}} style="background-image:url('{{getBgUrl}}')"{{end}}></div>
+{{.Sidebar}}
+<div class="main">
+{{.Topbar}}
+<div class="content">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.6rem;margin-bottom:1rem">
+<div class="card stat-card"><div class="stat-value">{{.Cpu}}%</div><div class="stat-label"><i class="fa-solid fa-microchip" style="margin-right:0.2rem"></i>CPU</div></div>
+<div class="card stat-card"><div class="stat-value">{{.Mem}}%</div><div class="stat-label"><i class="fa-solid fa-memory" style="margin-right:0.2rem"></i>内存</div></div>
+<div class="card stat-card"><div class="stat-value">{{.Disk}}%</div><div class="stat-label"><i class="fa-solid fa-hard-drive" style="margin-right:0.2rem"></i>磁盘</div></div>
+<div class="card stat-card"><div class="stat-value">{{.ProcNum}}</div><div class="stat-label"><i class="fa-solid fa-list" style="margin-right:0.2rem"></i>进程</div></div>
+</div>
+<div class="glass" style="padding:1rem">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem">
+<h3 style="font-size:0.9rem;font-weight:600;color:var(--text)">进程列表</h3>
+<span style="font-size:0.7rem;color:var(--text2)">自动刷新 5s</span>
+</div>
+<div class="proc-wrap">
+<table class="proc-table">
+<thead><tr><th>名称</th><th>PID</th><th>CPU</th><th>内存</th><th>操作</th></tr></thead>
+<tbody>
+{{range .Procs}}
+<tr>
+<td>{{.Name}}</td>
+<td>{{.PID}}</td>
+<td>{{printf "%.1f" .Cpu}}%</td>
+<td>{{printf "%.2f" .Mem}}%</td>
+<td><form action="/kill/{{.PID}}" method="post"><button class="btn" style="padding:0.3rem 0.8rem;font-size:0.7rem;background:#ef4444;color:#fff;border:none;border-radius:7px;cursor:pointer" onclick="return confirm('确定关闭进程 {{.Name}} (PID: {{.PID}}) 吗？')">关闭</button></form></td>
+</tr>
+{{end}}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+{{template "layout_js" .}}
+<script>setInterval(function(){if(!document.hidden)location.reload()},5000)</script>
+</body>
+</html>{{end}}

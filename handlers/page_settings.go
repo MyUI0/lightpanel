@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"crypto/subtle"
 	"html/template"
 	"io"
 	"net/http"
@@ -29,40 +28,44 @@ func settingPage(w http.ResponseWriter, r *http.Request) {
 	errMsg := r.URL.Query().Get("err")
 
 	_ = htmlRender.ExecuteTemplate(w, "setting", map[string]any{
-		"User":         usr,
-		"Username":     usr.Username,
-		"BgUrl":        bgConfig.URL,
-		"BgType":       bgConfig.Type,
-		"LogoUrl":      getLogoURL(),
-		"BarkEnabled":  barkCfg.Enabled,
-		"BarkDevice":   barkCfg.Device,
-		"BarkGroup":    barkCfg.Group,
-		"CustomPages":  customPages,
-		"Msg":          msg,
-		"Err":          errMsg,
-		"Sidebar":      template.HTML(sidebarHTML("/setting")),
-		"Topbar":       template.HTML(topbarHTML("设置")),
+		"User":        usr,
+		"FirstLogin":  isFirstLogin(r),
+		"Username":    usr.Username,
+		"BgUrl":       bgConfig.URL,
+		"BgType":      bgConfig.Type,
+		"LogoUrl":     getLogoURL(),
+		"BarkEnabled": barkCfg.Enabled,
+		"BarkDevice":  barkCfg.Device,
+		"BarkGroup":   barkCfg.Group,
+		"CustomPages": customPages,
+		"Msg":         msg,
+		"Err":         errMsg,
+		"Sidebar":     template.HTML(sidebarHTML("/setting")),
+		"Topbar":      template.HTML(topbarHTML("设置")),
 	})
 }
 
 func saveAccount(w http.ResponseWriter, r *http.Request) {
 	_ = r.ParseForm()
 	newUsername := strings.TrimSpace(r.Form.Get("new_username"))
-	oldPwd := strings.TrimSpace(r.Form.Get("old"))
-	newPwd := strings.TrimSpace(r.Form.Get("new"))
+	oldPwd := r.Form.Get("old")
+	newPwd := r.Form.Get("new")
 
 	if oldPwd == "" {
 		http.Redirect(w, r, "/setting?err=missing_pwd", 302)
 		return
 	}
 
-	appOpMu.Lock()
-	defer appOpMu.Unlock()
+	accountMu.Lock()
+	defer accountMu.Unlock()
 
 	var usr models.UserConfig
-	_ = LoadJSON(config.ConfigUsr, &usr)
+	if LoadJSON(config.ConfigUsr, &usr) != nil {
+		http.Error(w, "无法读取账号", 500)
+		return
+	}
 
-	if subtle.ConstantTimeCompare([]byte(hash(oldPwd)), []byte(usr.Password)) != 1 {
+	if !passwordMatches(usr.Password, oldPwd) {
 		http.Redirect(w, r, "/setting?err=password", 302)
 		return
 	}
@@ -75,17 +78,30 @@ func saveAccount(w http.ResponseWriter, r *http.Request) {
 		usr.Username = newUsername
 	}
 
+	if accountNeedsChange(usr) && newPwd == "" {
+		http.Error(w, "请设置新密码", 400)
+		return
+	}
 	if newPwd != "" {
-		if len(newPwd) < 6 {
+		if len(newPwd) < 12 || len(newPwd) > 1024 || newPwd == oldPwd {
 			http.Redirect(w, r, "/setting?err=password_weak", 302)
 			return
 		}
-		usr.Password = hash(newPwd)
-		markPasswordChanged(w, r)
+		encoded, err := passwordHash(newPwd)
+		if err != nil {
+			http.Error(w, "密码保存失败", 500)
+			return
+		}
+		usr.Password = encoded
+		usr.MustChangePassword = false
 	}
 
-	_ = WriteJSON(config.ConfigUsr, usr)
-	http.Redirect(w, r, "/setting?ok=1", 302)
+	if err := WriteJSON(config.ConfigUsr, usr); err != nil {
+		http.Error(w, "账号保存失败", 500)
+		return
+	}
+	_ = os.Remove(filepath.Join(config.ConfigDir, "initial-password.txt"))
+	logoutHandler(w, r)
 }
 
 func saveBg(w http.ResponseWriter, r *http.Request) {
@@ -168,16 +184,34 @@ func uploadPage(w http.ResponseWriter, r *http.Request) {
 	_ = os.MkdirAll(pagesDir, 0755)
 	fpath := filepath.Join(pagesDir, filename)
 
-	out, err := os.Create(fpath)
+	if _, err := archiveTarget(pagesDir, filename); err != nil {
+		http.Error(w, "无效页面路径", 400)
+		return
+	}
+	out, err := os.CreateTemp(pagesDir, ".page-*")
 	if err != nil {
 		http.Redirect(w, r, "/setting?err=create", 302)
 		return
 	}
 	defer out.Close()
+	defer os.Remove(out.Name())
 
-	_, err = io.Copy(out, file)
+	_, err = io.Copy(out, io.LimitReader(file, 10*1024*1024+1))
+	if info, _ := out.Stat(); info != nil && info.Size() > 10*1024*1024 {
+		http.Error(w, "页面超过10MB", 400)
+		return
+	}
 	if err != nil {
 		http.Redirect(w, r, "/setting?err=write", 302)
+		return
+	}
+
+	if err = out.Close(); err != nil {
+		http.Error(w, "保存失败", 500)
+		return
+	}
+	if err = os.Rename(out.Name(), fpath); err != nil {
+		http.Error(w, "保存失败", 500)
 		return
 	}
 
@@ -187,27 +221,14 @@ func uploadPage(w http.ResponseWriter, r *http.Request) {
 func deletePage(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimPrefix(r.URL.Path, "/page/del/")
 	pagesDir := config.DataDir + "/pages"
-	fpath := filepath.Join(pagesDir, name)
 
-	cleanPath := filepath.Clean(fpath)
-	cleanDir := filepath.Clean(pagesDir)
-	if !strings.HasPrefix(cleanPath, cleanDir) {
-		http.Redirect(w, r, "/setting", 302)
+	if name == "" || strings.ContainsAny(name, "/\\") {
+		http.Error(w, "无效页面名称", 400)
 		return
 	}
-
-	realPath, err := filepath.EvalSymlinks(fpath)
+	fpath, err := archiveTarget(pagesDir, name)
 	if err != nil {
-		http.Redirect(w, r, "/setting", 302)
-		return
-	}
-	realDir, err := filepath.EvalSymlinks(pagesDir)
-	if err != nil {
-		http.Redirect(w, r, "/setting", 302)
-		return
-	}
-	if !strings.HasPrefix(realPath, realDir) {
-		http.Redirect(w, r, "/setting", 302)
+		http.Error(w, "无效页面路径", 400)
 		return
 	}
 
@@ -283,44 +304,32 @@ func clearLog(w http.ResponseWriter, r *http.Request) {
 }
 
 func killSystemProc(w http.ResponseWriter, r *http.Request) {
-	pid, _ := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/kill/"))
-	if pid <= 1 || pid >= 100000 {
-		http.Redirect(w, r, "/system", 302)
+	pid, err := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/kill/"))
+	if err != nil || pid <= 1 {
+		http.Error(w, "无效 PID", 400)
 		return
 	}
-
-	if protectedPids[pid] {
-		http.Redirect(w, r, "/system", 302)
+	appOpMu.Lock()
+	defer appOpMu.Unlock()
+	apps, err := loadAppsStrict()
+	if err != nil {
+		http.Error(w, "无法读取应用配置", 500)
 		return
 	}
-
-	var apps map[string]models.Project
-	_ = LoadJSON(config.ConfigApps, &apps)
-	allowed := false
-	for _, app := range apps {
-		pidFile := filepath.Join(app.Path, "pid.pid")
-		if b, e := os.ReadFile(pidFile); e == nil {
-			appPid, err := strconv.Atoi(strings.TrimSpace(string(b)))
-			if err == nil && appPid == pid {
-				allowed = true
-				break
+	for name, app := range apps {
+		checkAppStatus(&app)
+		if app.PID == pid {
+			killAppByName(name)
+			app.PID = 0
+			app.Status = "已停止"
+			apps[name] = app
+			if WriteJSON(config.ConfigApps, apps) != nil {
+				http.Error(w, "保存停止状态失败", 500)
+				return
 			}
+			http.Redirect(w, r, "/system", 303)
+			return
 		}
 	}
-	if !allowed {
-		http.Redirect(w, r, "/system", 302)
-		return
-	}
-
-	if p, e := os.FindProcess(pid); e == nil {
-		_ = p.Kill()
-	}
-	http.Redirect(w, r, "/system", 302)
-}
-
-var protectedPids = map[int]bool{
-	1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 7: true, 8: true, 9: true,
-	10: true, 11: true, 12: true, 13: true, 14: true, 15: true, 16: true, 17: true, 18: true,
-	19: true, 20: true, 21: true, 22: true, 23: true, 24: true, 25: true, 26: true, 27: true, 28: true,
-	29: true, 30: true,
+	http.Error(w, "仅可停止身份已确认的受管进程", 403)
 }

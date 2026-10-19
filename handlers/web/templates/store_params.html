@@ -1,0 +1,39 @@
+{{define "store_params"}}<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<link rel="stylesheet" href="/static/panel.css">
+<script src="/static/shell.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>设置参数 - LightPanel</title>
+<style>
+{{template "layout_css" .}}
+</style>
+</head>
+<body>
+<div class="bg-layer"{{if getBgUrl}} style="background-image:url('{{getBgUrl}}')"{{end}}></div>
+{{.Sidebar}}
+<div class="main">
+{{.Topbar}}
+<div class="content">
+<div class="glass" style="padding:1rem">
+<p style="color:var(--text);font-size:0.85rem;margin-bottom:0.8rem">应用 <strong>{{.App.Name}}</strong> 需要设置运行参数</p>
+<div style="font-size:0.72rem;color:var(--text2);margin-bottom:1rem;padding:0.5rem;background:var(--card);border-radius:7px;word-break:break-all">
+检测到下载链接: {{.TestedURL}}
+</div>
+<form action="/install/confirm/{{.Index}}?source={{.SrcIdx}}" method="post">
+<input type="hidden" name="manifest" value="{{.Manifest}}">
+<div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">{{if .App.ParamsHint}}{{.App.ParamsHint}}{{else}}运行参数{{end}}</label>
+<input name="user_params" placeholder="如: -e https://xxx -t token" class="input" style="width:100%"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:1rem">
+<button type="submit" class="btn btn-primary" style="width:100%"><i class="fa-solid fa-download"></i> 确认部署</button>
+<a href="/store" class="btn btn-ghost" style="width:100%;text-align:center"><i class="fa-solid fa-xmark"></i> 取消</a>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+{{template "layout_js" .}}
+</body>
+</html>{{end}}

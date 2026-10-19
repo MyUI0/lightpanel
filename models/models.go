@@ -6,20 +6,21 @@ import (
 )
 
 type Project struct {
-	Name      string `json:"-"`
-	Path      string `json:"path"`
-	Cmd       string `json:"cmd"`
-	SetupCmd  string `json:"setup_cmd,omitempty"`
-	WorkDir   string `json:"work_dir,omitempty"`
-	SourceURL string `json:"source_url,omitempty"`
-	URL       string `json:"url,omitempty"`
-	Port      int    `json:"port,omitempty"`
-	AutoStart bool   `json:"auto_start"`
-	Status    string `json:"status"`
-	PID       int    `json:"pid"`
-	Created   string `json:"created"`
-	Version   string `json:"version,omitempty"`
-	Icon      string `json:"icon,omitempty"`
+	Name       string `json:"-"`
+	Path       string `json:"path"`
+	Cmd        string `json:"cmd"`
+	SetupCmd   string `json:"setup_cmd,omitempty"`
+	WorkDir    string `json:"work_dir,omitempty"`
+	PackageURL string `json:"package_url,omitempty"`
+	SourceURL  string `json:"source_url,omitempty"`
+	URL        string `json:"url,omitempty"`
+	Port       int    `json:"port,omitempty"`
+	AutoStart  bool   `json:"auto_start"`
+	Status     string `json:"status"`
+	PID        int    `json:"pid"`
+	Created    string `json:"created"`
+	Version    string `json:"version,omitempty"`
+	Icon       string `json:"icon,omitempty"`
 }
 
 type StoreSource struct {
@@ -45,15 +46,16 @@ type StoreApp struct {
 }
 
 type StoreManifest struct {
-	SchemaVersion int            `json:"schema_version"`
-	SourceName    string         `json:"source_name"`
-	Maintainer    string         `json:"maintainer,omitempty"`
-	Apps          []StoreApp     `json:"apps"`
+	SchemaVersion int        `json:"schema_version"`
+	SourceName    string     `json:"source_name"`
+	Maintainer    string     `json:"maintainer,omitempty"`
+	Apps          []StoreApp `json:"apps"`
 }
 
 type UserConfig struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	MustChangePassword bool   `json:"must_change_password,omitempty"`
+	Username           string `json:"username"`
+	Password           string `json:"password"`
 }
 
 type BgConfig struct {
@@ -69,28 +71,30 @@ type ProcInfo struct {
 }
 
 type DownloadTask struct {
-	mu        sync.Mutex
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	URL       string    `json:"url"`
-	Size      int64     `json:"size"`
-	Downloaded int64    `json:"downloaded"`
-	Status    string    `json:"status"`
-	Progress  int       `json:"progress"`
-	Cmd       string    `json:"cmd"`
-	Version   string    `json:"version"`
-	SetupCmd  string    `json:"setup_cmd"`
-	WorkDir   string    `json:"work_dir"`
-	Icon      string    `json:"icon"`
+	mu          sync.Mutex
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	URL         string    `json:"url"`
+	Size        int64     `json:"size"`
+	Downloaded  int64     `json:"downloaded"`
+	Status      string    `json:"status"`
+	Progress    int       `json:"progress"`
+	Cmd         string    `json:"cmd"`
+	Version     string    `json:"version"`
+	SetupCmd    string    `json:"setup_cmd"`
+	WorkDir     string    `json:"work_dir"`
+	Icon        string    `json:"icon"`
 	Last        time.Time `json:"-"`
 	AutoExtract bool      `json:"auto_extract"`
 	MakeExec    bool      `json:"make_exec"`
 	Port        int       `json:"port"`
+	Message     string    `json:"message"`
 }
 
 func (t *DownloadTask) SetStatus(s string) {
 	t.mu.Lock()
 	t.Status = s
+	t.Last = time.Now()
 	t.mu.Unlock()
 }
 
@@ -110,6 +114,7 @@ func (t *DownloadTask) Snapshot() DownloadTask {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	return DownloadTask{
+		Message: t.Message, Version: t.Version, SetupCmd: t.SetupCmd, WorkDir: t.WorkDir, Icon: t.Icon, AutoExtract: t.AutoExtract, MakeExec: t.MakeExec, Port: t.Port,
 		ID:         t.ID,
 		Name:       t.Name,
 		URL:        t.URL,
@@ -158,15 +163,21 @@ func (t *DownloadTask) GetProgress() int {
 }
 
 type DownloadHistory struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	URL       string    `json:"url"`
-	Cmd       string    `json:"cmd,omitempty"`
-	Version   string    `json:"version,omitempty"`
-	Status    string    `json:"status"`
-	Size      int64     `json:"size"`
-	Downloaded int64    `json:"downloaded"`
-	Progress  int       `json:"progress"`
-	Installed bool      `json:"installed"`
-	Timestamp time.Time `json:"timestamp"`
+	ID         string    `json:"id"`
+	Name       string    `json:"name"`
+	URL        string    `json:"url"`
+	Cmd        string    `json:"cmd,omitempty"`
+	Version    string    `json:"version,omitempty"`
+	Status     string    `json:"status"`
+	Size       int64     `json:"size"`
+	Downloaded int64     `json:"downloaded"`
+	Progress   int       `json:"progress"`
+	Installed  bool      `json:"installed"`
+	Timestamp  time.Time `json:"timestamp"`
+}
+
+func (t *DownloadTask) SetMessage(message string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.Message = message
 }

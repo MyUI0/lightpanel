@@ -66,6 +66,8 @@ func extractTar(fpath, destDir string) bool {
 
 func extractTarReader(r io.Reader, destDir string) bool {
 	tr := tar.NewReader(r)
+	var total int64
+	count := 0
 	for {
 		hdr, err := tr.Next()
 		if err == io.EOF {
@@ -74,18 +76,29 @@ func extractTarReader(r io.Reader, destDir string) bool {
 		if err != nil {
 			return false
 		}
-		target := filepath.Join(destDir, filepath.FromSlash(hdr.Name))
-		if !strings.HasPrefix(filepath.Clean(target), filepath.Clean(destDir)) {
-			continue
+		count++
+		total += hdr.Size
+		if count > 10000 || hdr.Size < 0 || total > 1024*1024*1024 {
+			return false
+		}
+		target, pathErr := archiveTarget(destDir, hdr.Name)
+		if pathErr != nil {
+			return false
 		}
 		switch hdr.Typeflag {
 		case tar.TypeDir:
-			_ = os.MkdirAll(target, os.FileMode(hdr.Mode))
+			if err := os.MkdirAll(target, 0755); err != nil {
+				return false
+			}
+		case tar.TypeSymlink, tar.TypeLink:
+			return false
 		case tar.TypeReg:
-			_ = os.MkdirAll(filepath.Dir(target), 0755)
-			out, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(hdr.Mode))
+			if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+				return false
+			}
+			out, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(hdr.Mode)&0777)
 			if err != nil {
-				continue
+				return false
 			}
 			if _, err := io.Copy(out, tr); err != nil {
 				_ = out.Close()
@@ -104,24 +117,39 @@ func extractZip(fpath, destDir string) bool {
 	}
 	defer r.Close()
 
+	var total uint64
+	if len(r.File) > 10000 {
+		return false
+	}
 	for _, f := range r.File {
-		target := filepath.Join(destDir, filepath.FromSlash(f.Name))
-		if !strings.HasPrefix(filepath.Clean(target), filepath.Clean(destDir)) {
-			continue
+		if f.UncompressedSize64 > 1024*1024*1024 || total > 1024*1024*1024-f.UncompressedSize64 {
+			return false
+		}
+		total += f.UncompressedSize64
+		if f.Mode()&os.ModeSymlink != 0 {
+			return false
+		}
+		target, pathErr := archiveTarget(destDir, f.Name)
+		if pathErr != nil {
+			return false
 		}
 		if f.FileInfo().IsDir() {
-			_ = os.MkdirAll(target, f.Mode())
+			if err := os.MkdirAll(target, 0755); err != nil {
+				return false
+			}
 			continue
 		}
-		_ = os.MkdirAll(filepath.Dir(target), 0755)
+		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+			return false
+		}
 		rc, err := f.Open()
 		if err != nil {
-			continue
+			return false
 		}
-		out, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, f.Mode())
+		out, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, f.Mode()&0777)
 		if err != nil {
 			rc.Close()
-			continue
+			return false
 		}
 		if _, err := io.Copy(out, rc); err != nil {
 			out.Close()

@@ -19,11 +19,11 @@ func sourcePage(w http.ResponseWriter, r *http.Request) {
 	msg := r.URL.Query().Get("msg")
 	errMsg := r.URL.Query().Get("err")
 	_ = htmlRender.ExecuteTemplate(w, "source", map[string]any{
-		"Sources":     srcs,
-		"Message":     msg,
-		"Error":       errMsg,
-		"Sidebar":     template.HTML(sidebarHTML("/source")),
-		"Topbar":      template.HTML(topbarHTML("源管理")),
+		"Sources": srcs,
+		"Message": msg,
+		"Error":   errMsg,
+		"Sidebar": template.HTML(sidebarHTML("/source")),
+		"Topbar":  template.HTML(topbarHTML("源管理")),
 	})
 }
 
@@ -50,9 +50,8 @@ func addSource(w http.ResponseWriter, r *http.Request) {
 	srcs = append(srcs, models.StoreSource{Name: name, URL: url})
 	_ = WriteJSON(config.ConfigSrc, srcs)
 	storeCacheLock.Lock()
-	var newSrcs []models.StoreSource
-	LoadJSON(config.ConfigSrc, &newSrcs)
-	initStoreCache(newSrcs, len(newSrcs)-1)
+	storeCache.lastInit = time.Time{}
+	storeCache.apps = nil
 	storeCacheLock.Unlock()
 	http.Redirect(w, r, "/store?source="+strconv.Itoa(len(srcs)-1), 302)
 }
@@ -115,7 +114,7 @@ func testSource(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	url := srcs[i].URL
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := remoteClient(10 * time.Second)
 	resp, err := client.Get(url)
 	if err != nil {
 		http.Redirect(w, r, "/source?err=test_failed", 302)
@@ -126,8 +125,8 @@ func testSource(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/source?err=test_failed", 302)
 		return
 	}
-	data, err := io.ReadAll(io.LimitReader(resp.Body, 1024))
-	if err != nil || len(data) == 0 {
+	data, err := io.ReadAll(io.LimitReader(resp.Body, maxStoreResponseSize+1))
+	if err != nil || len(data) == 0 || len(data) > maxStoreResponseSize {
 		http.Redirect(w, r, "/source?err=test_failed", 302)
 		return
 	}

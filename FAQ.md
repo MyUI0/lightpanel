@@ -8,8 +8,8 @@
 
 **解决：**
 ```bash
-wget https://go.dev/dl/go1.22.5.linux-amd64.tar.gz
-rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.5.linux-amd64.tar.gz
+wget https://go.dev/dl/go1.27.2.linux-amd64.tar.gz
+rm -rf /usr/local/go && tar -C /usr/local -xzf go1.27.2.linux-amd64.tar.gz
 echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
 source ~/.bashrc
 go version
@@ -66,7 +66,7 @@ bash build.sh
 ```bash
 ./lightpanel
 # 访问 http://127.0.0.1:31956
-# 默认账号: admin / admin
+# 初始账号: admin；随机密码见 data/config/initial-password.txt，首次登录须改密
 ```
 
 ### 9. 如何后台运行？

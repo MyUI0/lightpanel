@@ -1,0 +1,112 @@
+{{define "setting"}}<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<link rel="stylesheet" href="/static/panel.css">
+<script src="/static/shell.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>设置 - 朱雀面板</title>
+<style>
+{{template "layout_css" .}}
+</style>
+</head>
+<body>
+<div class="bg-layer"{{if getBgUrl}} style="background-image:url('{{getBgUrl}}')"{{end}}></div>
+{{.Sidebar}}
+<div class="main">
+{{.Topbar}}
+<div class="content">
+{{if .FirstLogin}}<div class="alert alert-warning">请先修改初始密码，保存后重新登录以启用管理功能。</div>{{end}}
+{{if eq .Err "password"}}<div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.3rem"></i>原密码错误</div>{{end}}
+{{if eq .Err "password_weak"}}<div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.3rem"></i>密码至少12位，且不能与原密码相同</div>{{end}}
+{{if eq .Err "username_short"}}<div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.3rem"></i>用户名长度至少3位</div>{{end}}
+{{if eq .Err "missing_pwd"}}<div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.3rem"></i>请输入原密码以验证身份</div>{{end}}
+{{if eq .Msg "1"}}<div class="alert alert-success"><i class="fa-solid fa-check" style="margin-right:0.3rem"></i>设置已保存</div>{{end}}
+<div class="glass" style="padding:1rem;margin-bottom:0.8rem">
+<h3 style="font-size:0.9rem;font-weight:600;color:var(--text);margin-bottom:0.8rem"><i class="fa-solid fa-user" style="color:#f59e0b;margin-right:0.3rem"></i>账号设置</h3>
+<form action="/setting/save-account" method="post" style="display:grid;gap:0.5rem">
+<div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">当前用户名</label><input name="current_username" value="{{.Username}}" readonly class="input" style="opacity:0.6"></div>
+<div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">新用户名（留空不修改）</label><input name="new_username" placeholder="至少3位" class="input"></div>
+<div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">原密码（验证身份）</label><input name="old" type="password" class="input"></div>
+<div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">新密码（留空不修改）</label><input name="new" type="password" placeholder="至少12位" class="input"></div>
+<button class="btn btn-primary" style="width:100%"><i class="fa-solid fa-save"></i>保存账号</button>
+</form>
+</div>
+<div class="glass" style="padding:1rem">
+<h3 style="font-size:0.9rem;font-weight:600;color:var(--text);margin-bottom:0.8rem"><i class="fa-solid fa-image" style="color:#f59e0b;margin-right:0.3rem"></i>背景设置</h3>
+<form action="/setting/save-bg" method="post" style="display:grid;gap:0.5rem">
+<div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">背景类型</label>
+<select name="bg_type" class="input">
+<option value="gradient"{{if eq .BgType "gradient"}} selected{{end}}>渐变</option>
+<option value="image"{{if eq .BgType "image"}} selected{{end}}>图片</option>
+</select></div>
+<div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">图片地址</label><input name="bg_url" value="{{.BgUrl}}" placeholder="图片 URL" class="input"></div>
+<button class="btn btn-primary" style="width:100%"><i class="fa-solid fa-save"></i>保存背景</button>
+</form>
+</div>
+<div class="glass" style="padding:1rem;margin-top:0.8rem">
+<h3 style="font-size:0.9rem;font-weight:600;color:var(--text);margin-bottom:0.8rem"><i class="fa-solid fa-icons" style="color:#f59e0b;margin-right:0.3rem"></i>侧栏图标</h3>
+<form action="/setting/save-logo" method="post" style="display:grid;gap:0.5rem">
+<div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">Logo 地址（留空使用默认图标）</label><input name="logo_url" value="{{.LogoUrl}}" placeholder="图片 URL" class="input"></div>
+<button class="btn btn-primary" style="width:100%"><i class="fa-solid fa-save"></i>保存图标</button>
+</form>
+</div>
+<div class="glass" style="padding:1rem;margin-top:0.8rem">
+<h3 style="font-size:0.9rem;font-weight:600;color:var(--text);margin-bottom:0.8rem"><i class="fa-solid fa-database" style="color:#f59e0b;margin-right:0.3rem"></i>备份与恢复</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+<form action="/setting/backup" method="post">
+<button class="btn btn-primary" style="width:100%"><i class="fa-solid fa-download"></i>备份数据</button>
+</form>
+<form action="/setting/restore" method="post" enctype="multipart/form-data" onsubmit="return confirm('恢复将覆盖当前数据，确定继续？')">
+<div style="display:flex;gap:0.3rem;align-items:center">
+<label class="file-input-btn">
+<input type="file" name="backup_file" accept=".tar.gz,.tar" class="file-input" style="display:none" onchange="var f=this.files[0];this.closest('form').querySelector('.file-name').textContent=f?f.name:''">
+<span class="file-name btn btn-warning" style="white-space:nowrap"><i class="fa-solid fa-upload"></i>选择文件</span>
+</label>
+<button type="submit" class="btn btn-warning" style="white-space:nowrap"><i class="fa-solid fa-check"></i>恢复</button>
+</div>
+</form>
+</div>
+</div>
+<div class="glass" style="padding:1rem;margin-top:0.8rem">
+<h3 style="font-size:0.9rem;font-weight:600;color:var(--text);margin-bottom:0.8rem"><i class="fa-solid fa-bell" style="color:#f59e0b;margin-right:0.3rem"></i>Bark 通知</h3>
+<form action="/setting/save-bark" method="post" style="display:grid;gap:0.5rem">
+<label class="check-label"><input type="checkbox" name="bark_enabled"{{if .BarkEnabled}} checked{{end}}><div class="check-box"><i class="fa-solid fa-check"></i></div><span style="color:var(--text2);font-size:0.78rem">启用 Bark 推送（应用崩溃/停止时通知）</span></label>
+<div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">设备 Key（或完整 URL）</label><input name="bark_device" value="{{.BarkDevice}}" placeholder="如 xxxxxxx 或 https://api.day.app/xxxxxxx" class="input"></div>
+<div><label style="font-size:0.7rem;color:var(--text2);margin-bottom:0.2rem;display:block">分组（可选）</label><input name="bark_group" value="{{.BarkGroup}}" placeholder="朱雀面板" class="input"></div>
+<button class="btn btn-primary" style="width:100%"><i class="fa-solid fa-save"></i>保存通知</button>
+</form>
+</div>
+<div class="glass" style="padding:1rem;margin-top:0.8rem">
+<h3 style="font-size:0.9rem;font-weight:600;color:var(--text);margin-bottom:0.8rem"><i class="fa-solid fa-file-circle-plus" style="color:#f59e0b;margin-right:0.3rem"></i>自定义页面</h3>
+<form action="/setting/upload-page" method="post" enctype="multipart/form-data" style="display:grid;gap:0.5rem">
+<div style="display:flex;gap:0.3rem;align-items:center">
+<label class="file-input-btn">
+<input type="file" name="page_file" accept=".html" class="file-input" style="display:none" onchange="var f=this.files[0];this.closest('form').querySelector('.file-name').textContent=f?f.name:''">
+<span class="file-name btn btn-ghost" style="white-space:nowrap"><i class="fa-solid fa-upload"></i>选择HTML文件</span>
+</label>
+<input name="filename" placeholder="页面名称（选填）" class="input" style="flex:1">
+<button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i>上传</button>
+</div>
+</form>
+{{if .CustomPages}}
+<div style="margin-top:0.8rem">
+<p style="font-size:0.7rem;color:var(--text2);margin-bottom:0.5rem">已添加的页面：</p>
+<div style="display:grid;gap:0.3rem">
+{{range .CustomPages}}
+<div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0.6rem;background:var(--card);border-radius:7px">
+<span style="font-size:0.78rem;color:var(--text)">{{.}}</span>
+<a href="/page/{{.}}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-eye"></i> 查看</a>
+<form action="/page/del/{{.}}" method="post" style="display:inline"><button class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button></form>
+</div>
+{{end}}
+</div>
+</div>
+{{end}}
+</div>
+</div>
+</div>
+</div>
+{{template "layout_js" .}}
+</body>
+</html>{{end}}

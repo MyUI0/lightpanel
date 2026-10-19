@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/shirou/gopsutil/v3/cpu"
@@ -21,61 +22,33 @@ import (
 	"lightpanel/models"
 )
 
-var (
-	cpuFirst     = true
-	cpuFirstLock sync.Mutex
-	cpuPercent   int32
-)
+var cpuPercent atomic.Int32
 
 func init() {
 	go func() {
-		val, _ := cpu.Percent(time.Second, false)
-		cpuFirstLock.Lock()
-		if len(val) > 0 {
-			cpuPercent = int32(val[0])
+		for {
+			val, err := cpu.Percent(time.Second, false)
+			if err == nil && len(val) > 0 {
+				cpuPercent.Store(int32(val[0]))
+			}
 		}
-		cpuFirst = false
-		cpuFirstLock.Unlock()
 	}()
 }
 
-func getCpuPercent() int {
-	cpuFirstLock.Lock()
-	if cpuFirst {
-		cpuFirstLock.Unlock()
-		val, _ := cpu.Percent(0, false)
-		if len(val) > 0 {
-			cpuPercent = int32(val[0])
-		}
-		return int(cpuPercent)
-	}
-	cpuFirstLock.Unlock()
-	
-	val, _ := cpu.Percent(0, false)
-	if len(val) > 0 {
-		cpuPercent = int32(val[0])
-	}
-	return int(cpuPercent)
-}
+func getCpuPercent() int { return int(cpuPercent.Load()) }
 
 func autoStartApps() {
 	appOpMu.Lock()
-	apps := make(map[string]models.Project)
-	if err := LoadJSON(config.ConfigApps, &apps); err != nil {
-		appOpMu.Unlock()
+	defer appOpMu.Unlock()
+	apps, err := loadAppsStrict()
+	if err != nil {
 		return
 	}
-	appOpMu.Unlock()
-
-	time.Sleep(1 * time.Second)
-
 	for name, app := range apps {
 		if app.AutoStart {
-			appOpMu.Lock()
 			if launchApp(name, &app) {
 				log.Printf("[auto-start] 已启动: %s", name)
 			}
-			appOpMu.Unlock()
 		}
 	}
 }
@@ -88,15 +61,15 @@ type FailInfo struct {
 }
 
 var depPatterns = map[string][]string{
-	"libssl":    {"libssl.so", "libcrypto.so"},
-	"libcurl":   {"libcurl.so"},
-	"libstdc++": {"libstdc++.so", "GLIBCXX"},
-	"glibc":     {"GLIBC_", "libc.so"},
-	"node":      {"node: not found", "command not found: node"},
-	"python":    {"python: not found", "python3: not found"},
-	"java":      {"java: not found", "JAVA_HOME"},
-	"npm":       {"npm: not found"},
-	"docker":    {"docker: not found", "Cannot connect to Docker"},
+	"libssl":     {"libssl.so", "libcrypto.so"},
+	"libcurl":    {"libcurl.so"},
+	"libstdc++":  {"libstdc++.so", "GLIBCXX"},
+	"glibc":      {"GLIBC_", "libc.so"},
+	"node":       {"node: not found", "command not found: node"},
+	"python":     {"python: not found", "python3: not found"},
+	"java":       {"java: not found", "JAVA_HOME"},
+	"npm":        {"npm: not found"},
+	"docker":     {"docker: not found", "Cannot connect to Docker"},
 	"permission": {"permission denied", "EACCES"},
 }
 
@@ -114,9 +87,9 @@ func detectDeps(logContent string) []string {
 }
 
 var failInfoCache struct {
-	info    *FailInfo
-	ts     time.Time
-	mu     sync.Mutex
+	info *FailInfo
+	ts   time.Time
+	mu   sync.Mutex
 }
 
 func getFailInfo(apps map[string]models.Project) *FailInfo {
@@ -155,9 +128,9 @@ func getFailInfo(apps map[string]models.Project) *FailInfo {
 					count++
 					if firstFail == nil {
 						firstFail = &FailInfo{
-							Name:  name,
-							Log:   recentLog,
-							Deps:  detectDeps(recentLog),
+							Name: name,
+							Log:  recentLog,
+							Deps: detectDeps(recentLog),
 						}
 					}
 				}
@@ -187,7 +160,7 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
 
 	cpuVal := getCpuPercent()
 	memInfo, _ := mem.VirtualMemory()
-	diskInfo, _ := disk.Usage("/")
+	diskInfo, _ := disk.Usage(config.DataDir)
 	procs, _ := process.Processes()
 	uptime, _ := host.Uptime()
 
@@ -252,7 +225,7 @@ func systemPage(w http.ResponseWriter, r *http.Request) {
 
 	cpuVal := getCpuPercent()
 	memInfo, _ := mem.VirtualMemory()
-	diskInfo, _ := disk.Usage("/")
+	diskInfo, _ := disk.Usage(config.DataDir)
 	memVal := 0
 	if memInfo != nil {
 		memVal = int(memInfo.UsedPercent)

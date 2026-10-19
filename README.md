@@ -1,9 +1,11 @@
+> **本地修复版 v1.3.1-hardened**：修复内容、升级步骤与最新验证结果见 [HARDENING.md](HARDENING.md)。此前界面重构说明见 [REFACTOR.md](REFACTOR.md)。本地修复尚未发布到上游；下方上游安装命令不会自动取得本修复版，请使用随附安装包。
+
 <p align="center">
   <h1 align="center">🚀 朱雀面板 LightPanel</h1>
   <p align="center">一个极简的 Linux 服务器自部署二进制项目管理面板 | 单二进制 · 零依赖 · 无Docker</p>
   <p align="center">
-    <img src="https://img.shields.io/badge/version-v1.2.2-blue.svg" alt="Version">
-    <img src="https://img.shields.io/badge/Go-1.21+-00ADD8.svg?logo=go" alt="Go">
+    <img src="https://img.shields.io/badge/version-v1.3.1--hardened-blue.svg" alt="Version">
+    <img src="https://img.shields.io/badge/Go-1.25+-00ADD8.svg?logo=go" alt="Go">
     <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
     <img src="https://img.shields.io/badge/Platform-Linux%2FARM%2FOpenWrt-00ADD8.svg?logo=linux" alt="Platform">
   </p>
@@ -65,7 +67,8 @@ LightPanel 朱雀面板彻底解决这个痛点：
 ### 一键安装 (Linux)
 
 ```bash
-curl -L https://gh.llkk.cc/https://github.com/MyUI0/lightpanel/releases/latest/download/install.sh | bash
+curl -fL https://github.com/MyUI0/lightpanel/releases/latest/download/install.sh -o install.sh
+bash install.sh
 ```
 
 
@@ -98,14 +101,14 @@ chmod +x lightpanel
 
 > 💬 如遇编译问题，请查看 [FAQ.md](FAQ.md)
 
-默认访问 `http://127.0.0.1:31956`，初始账号密码 `admin / admin`。
+默认访问 `http://127.0.0.1:31956`，初始账号 `admin`，随机初始密码见 `data/config/initial-password.txt`，首次登录必须修改。
 
 > ⚠️ **首次登录后请立即修改密码！**
 
 ## 🛡️ 安全提醒
 
 - ❌ **不建议将面板端口暴露到公网**，本项目安全性有限，建议通过内网访问或使用 Nginx/Caddy 反代 + HTTPS
-- ✅ 如需公网访问，请务必配置反向代理、防火墙规则，并修改默认密码
+- ✅ 如需公网访问，请务必配置反向代理、防火墙规则，并启用 HTTPS 并修改初始密码
 - 🛡️ 命令白名单和 SSRF 防护可降低部分风险，但无法完全消除
 
 ## 📂 项目结构
@@ -138,7 +141,7 @@ handlers/
 
 ## 🎨 修改 UI
 
-所有页面集中在 `handlers/tpl_*.go`，改完 `go build` 即可，无需构建工具。
+页面位于 `handlers/web/templates/`，样式与脚本位于 `handlers/web/static/`；通过 `go:embed` 内嵌，改完 `go build` 即可，无需前端构建工具。
 
 ## 🏪 商店源规则
 
@@ -189,7 +192,7 @@ handlers/
 
 ### 商店源
 
-- [https://gh.llkk.cc/https://raw.githubusercontent.com/MyUI0/lightpanel-store/refs/heads/main/yuan/source.json]
+- https://raw.githubusercontent.com/MyUI0/lightpanel-store/refs/heads/main/yuan/source.json
 
 ## ⚖️ 免责声明
 

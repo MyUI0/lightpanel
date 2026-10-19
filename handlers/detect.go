@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -159,72 +160,11 @@ func detectNewExecutable(before time.Time) detectResult {
 }
 
 func combinedDetect(sandboxPath string, before time.Time) detectResult {
-	fsResult := detectNewExecutable(before)
-
-	var scriptPaths []string
-	_ = filepath.WalkDir(sandboxPath, func(path string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
-			return nil
-		}
-		if strings.HasSuffix(d.Name(), ".sh") || strings.Contains(strings.ToLower(d.Name()), "install") {
-			scriptPaths = append(scriptPaths, path)
-		}
-		return nil
-	})
-
-	var analyzedPaths []string
-	for _, sp := range scriptPaths {
-		analyzedPaths = append(analyzedPaths, analyzeScript(sp)...)
+	binary := findBinaryInDir(sandboxPath)
+	if binary == "" {
+		return detectResult{WorkDir: sandboxPath, Note: "应用目录内未检测到可执行文件，请填写启动命令", Confidence: "none"}
 	}
-
-	if fsResult.Confidence == "high" {
-		for _, ap := range analyzedPaths {
-			if strings.HasPrefix(fsResult.WorkDir, ap) || strings.HasPrefix(ap, fsResult.WorkDir) {
-				fsResult.Note += " (脚本确认: " + ap + ")"
-				fsResult.Confidence = "confirmed"
-				break
-			}
-		}
-		return fsResult
-	}
-
-	if len(analyzedPaths) > 0 {
-		best := analyzedPaths[0]
-		for _, p := range analyzedPaths {
-			if len(p) > len(best) {
-				best = p
-			}
-		}
-		if info, err := os.Stat(best); err == nil && info.IsDir() {
-			var foundBin string
-			_ = filepath.WalkDir(best, func(p string, d fs.DirEntry, err error) error {
-				if err != nil || d.IsDir() {
-					return nil
-				}
-				i, e := d.Info()
-				if e != nil {
-					return nil
-				}
-				if i.Mode()&0111 != 0 && i.Size() > 100 {
-					foundBin = "./" + d.Name()
-					return fs.SkipDir
-				}
-				return nil
-			})
-			note := "脚本分析推断目录: " + best
-			if foundBin != "" {
-				note += " (发现: " + foundBin + ")"
-			}
-			return detectResult{
-				WorkDir:    best,
-				Binary:     foundBin,
-				Note:       note,
-				Confidence: "script",
-			}
-		}
-	}
-
-	return fsResult
+	return detectResult{WorkDir: sandboxPath, Binary: binary, Note: "检测到应用目录内的可执行文件：" + binary, Confidence: "local"}
 }
 
 func formatDetectedSize(size int64) string {
@@ -268,10 +208,17 @@ func findBinaryInDir(dir string) string {
 			if excludeNames[base] || excludeExts[filepath.Ext(base)] {
 				return nil
 			}
-			found = path
+			found = rel
 			return fs.SkipDir
 		}
 		return nil
 	})
-	return found
+	if found == "" {
+		return ""
+	}
+	value := "./" + filepath.ToSlash(found)
+	if runtime.GOOS == "windows" {
+		return "\"" + strings.ReplaceAll(value, "\"", "") + "\""
+	}
+	return "'" + strings.ReplaceAll(value, "'", "'\\''") + "'"
 }

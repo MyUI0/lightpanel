@@ -1,6 +1,11 @@
 package handlers
 
-import "strings"
+import (
+	"html"
+	"lightpanel/config"
+	"net/url"
+	"strings"
+)
 
 func sidebarHTML(active string) string {
 	items := []struct{ path, icon, long, short string }{
@@ -12,35 +17,35 @@ func sidebarHTML(active string) string {
 		{"/setting", "fa-gear", "系统设置", "设置"},
 	}
 	var nav string
-	for _, it := range items {
+	for index, it := range items {
 		cls := ""
 		if it.path == active || (it.path != "/" && strings.HasPrefix(active, it.path)) {
 			cls = "active"
 		}
-		nav += `<a href="` + it.path + `" class="` + cls + `"><i class="fa-solid ` + it.icon + `"></i><span class="nav-long">` + it.long + `</span><span class="nav-short">` + it.short + `</span></a>`
+		nav += `<a href="` + it.path + `" class="` + cls + `"><span class="nav-icon">` + string(rune('1'+index)) + `</span><span class="nav-long">` + it.long + `</span><span class="nav-short">` + it.short + `</span></a>`
 	}
 	for _, page := range getCustomPages() {
 		pageName := strings.TrimSuffix(page, ".html")
-		pagePath := "/page/" + page
+		pagePath := "/page/" + url.PathEscape(page)
 		cls := ""
 		if pagePath == active {
 			cls = "active"
 		}
-		nav += `<a href="` + pagePath + `" class="` + cls + `"><i class="fa-solid fa-file"></i><span class="nav-long">` + pageName + `</span><span class="nav-short">` + pageName + `</span></a>`
+		nav += `<a href="` + pagePath + `" class="` + cls + `"><i class="fa-solid fa-file"></i><span class="nav-long">` + html.EscapeString(pageName) + `</span><span class="nav-short">` + html.EscapeString(pageName) + `</span></a>`
 	}
 
 	logoURL := getLogoURL()
-	logoHTML := `<i class="fa-solid fa-server"></i>`
+	logoHTML := `L`
 	if logoURL != "" {
-		logoHTML = `<img src="` + logoURL + `" alt="logo" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\\'fa-solid fa-server\\'></i>'">`
+		logoHTML = `<img src="` + html.EscapeString(logoURL) + `" alt="朱雀面板">`
 	}
 
 	return `<div class="sidebar" id="sidebar">
 <div class="logo-row">
 <div class="logo-icon">` + logoHTML + `</div>
-<span class="logo-text">朱雀面板</span>
+<span class="logo-text">朱雀面板<small>LIGHTPANEL</small></span>
 </div>
-<nav>` + nav + `</nav>
+<div class="nav-caption">工作空间</div><nav aria-label="主导航">` + nav + `</nav>
 <div class="side-footer">
 <a href="javascript:void(0)" id="themeBtn"><i class="fa-solid fa-moon"></i><span class="nav-long">切换主题</span><span class="nav-short">主题</span></a>
 <a href="/logout" class="logout"><i class="fa-solid fa-right-from-bracket"></i><span class="nav-long">退出登录</span><span class="nav-short">退出</span></a>
@@ -49,8 +54,5 @@ func sidebarHTML(active string) string {
 }
 
 func topbarHTML(title string) string {
-	return `<div class="topbar">
-<div class="toggle-btn" id="toggleBtn" title="切换侧栏">&#9776;</div>
-<span class="page-title">` + title + `</span>
-</div>`
+	return `<header class="topbar"><button type="button" class="toggle-btn" id="toggleBtn" aria-label="切换导航" aria-controls="sidebar">☰</button><span class="page-title">` + html.EscapeString(title) + `</span><div class="topbar-meta"><span class="status-dot"></span> 控制台 <span class="version">` + html.EscapeString(config.Version) + `</span></div></header>`
 }

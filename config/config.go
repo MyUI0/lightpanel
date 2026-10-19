@@ -3,7 +3,8 @@ package config
 import "os"
 
 var (
-	Version = "v1.0.5"
+	Version = "v1.3.1-hardened"
+	Host    = getEnv("LIGHTPANEL_HOST", "127.0.0.1")
 	Port    = getEnv("LIGHTPANEL_PORT", "31956")
 
 	DataDir   = getDataDir()
@@ -17,8 +18,8 @@ var (
 	ConfigDl   = ConfigDir + "/downloads.json"
 	ConfigSys  = ConfigDir + "/system.json"
 
-	MaxLogLen         = 102400
-	MaxDownBytes      = 500 * 1024 * 1024
+	MaxLogLen          = 102400
+	MaxDownBytes       = 500 * 1024 * 1024
 	MaxDownloadHistory = 10
 )
 

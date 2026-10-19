@@ -5,11 +5,16 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"lightpanel/config"
 )
 
+var jsonIOMu sync.RWMutex
+
 func LoadJSON(path string, v any) error {
+	jsonIOMu.RLock()
+	defer jsonIOMu.RUnlock()
 	b, e := os.ReadFile(path)
 	if e != nil {
 		return e
@@ -18,24 +23,28 @@ func LoadJSON(path string, v any) error {
 }
 
 func WriteJSON(path string, v any) error {
+	jsonIOMu.Lock()
+	defer jsonIOMu.Unlock()
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
 
-	tmp := path + ".tmp"
-	f, e := os.Create(tmp)
+	f, e := os.CreateTemp(dir, ".json-*")
 	if e != nil {
 		return e
 	}
 
+	tmp := f.Name()
+	defer os.Remove(tmp)
 	enc := json.NewEncoder(f)
 	enc.SetIndent("", "  ")
 	err := enc.Encode(v)
 	if err == nil {
-		err = f.Close()
-	} else {
-		f.Close()
+		err = f.Sync()
+	}
+	if closeErr := f.Close(); err == nil {
+		err = closeErr
 	}
 
 	if err != nil {
